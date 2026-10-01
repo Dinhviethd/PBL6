@@ -1,0 +1,11 @@
+{
+  "name": "eventhub-mvp",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev.cjs",
+    "build": "npm run build --prefix server && npm run build --prefix client",
+    "check": "npm run check:boundaries --prefix server && npm run lint --prefix client",
+    "test": "npm test --prefix server"
+  },
+  "engines": { "node": ">=22.18.0" }
+}

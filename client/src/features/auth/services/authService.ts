@@ -1,5 +1,5 @@
-import api from '../../../lib/api';
-import { useAuth, type User } from '../stores/authStore';
+import api from "../../../lib/api";
+import { useAuth, type User } from "../stores/authStore";
 
 export interface LoginRequest {
   email: string;
@@ -36,7 +36,6 @@ export interface AuthResponse {
   data: {
     user: User;
     accessToken: string;
-    refreshToken: string;
   };
 }
 
@@ -48,30 +47,29 @@ export interface ApiResponse<T = null> {
 
 export const authService = {
   async register(data: RegisterRequest): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/register', data);
-    console.log("test");
+    const response = await api.post<AuthResponse>("/auth/register", data);
     if (response.data.success && response.data.data) {
       const { user, accessToken } = response.data.data;
       useAuth.getState().setAuth(user, accessToken);
     }
-    
+
     return response.data;
   },
 
   async login(data: LoginRequest): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/login', data);
-    
+    const response = await api.post<AuthResponse>("/auth/login", data);
+
     if (response.data.success && response.data.data) {
       const { user, accessToken } = response.data.data;
       useAuth.getState().setAuth(user, accessToken);
     }
-    
+
     return response.data;
   },
 
   async logout(): Promise<ApiResponse> {
     try {
-      const response = await api.post<ApiResponse>('/auth/logout');
+      const response = await api.post<ApiResponse>("/auth/logout");
       return response.data;
     } finally {
       useAuth.getState().clearAuth();
@@ -79,27 +77,32 @@ export const authService = {
   },
 
   async getCurrentUser(): Promise<ApiResponse<User>> {
-    const response = await api.get<ApiResponse<User>>('/auth/me');
-    
+    const response = await api.get<ApiResponse<User>>("/auth/me");
+
     if (response.data.success && response.data.data) {
       useAuth.getState().setUser(response.data.data);
     }
-    
+
     return response.data;
   },
 
   async forgotPassword(data: ForgotPasswordRequest): Promise<ApiResponse> {
-    const response = await api.post<ApiResponse>('/auth/forgot-password', data);
+    const response = await api.post<ApiResponse>("/auth/forgot-password", data);
     return response.data;
   },
 
-  async verifyOTP(data: VerifyOTPRequest): Promise<ApiResponse<{ valid: boolean }>> {
-    const response = await api.post<ApiResponse<{ valid: boolean }>>('/auth/verify-otp', data);
+  async verifyOTP(
+    data: VerifyOTPRequest,
+  ): Promise<ApiResponse<{ valid: boolean }>> {
+    const response = await api.post<ApiResponse<{ valid: boolean }>>(
+      "/auth/verify-otp",
+      data,
+    );
     return response.data;
   },
 
   async resetPassword(data: ResetPasswordRequest): Promise<ApiResponse> {
-    const response = await api.post<ApiResponse>('/auth/reset-password', data);
+    const response = await api.post<ApiResponse>("/auth/reset-password", data);
     return response.data;
   },
 };

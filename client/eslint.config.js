@@ -15,6 +15,7 @@ export default defineConfig([
       reactHooks.configs['recommended-latest'],
       reactRefresh.configs.vite,
     ],
+    rules: {'react-refresh/only-export-components':['error',{allowExportNames:['buttonVariants','badgeVariants','navigationMenuTriggerStyle','useSidebar']}]},
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

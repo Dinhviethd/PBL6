@@ -1,13 +1,15 @@
-import path from "path"
-import react from "@vitejs/plugin-react"
-import { defineConfig } from "vite"
-
-  const __dirname = path.resolve(path.dirname(''))
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import path from "node:path";
 export default defineConfig({
   plugins: [react()],
-  resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
+  resolve: { alias: { "@": path.resolve(__dirname, "src") } },
+  server: {
+    host: "127.0.0.1",
+    port: 5173,
+    proxy: {
+      "/api": "http://127.0.0.1:8000",
+      "/uploads": "http://127.0.0.1:8000",
     },
   },
-})
+});

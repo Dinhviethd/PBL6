@@ -1,32 +1,6 @@
-import "reflect-metadata";
-import { DataSource } from "typeorm";
-import dotenv from "dotenv";
-dotenv.config();
-export const AppDataSource = new DataSource({
-  type: "postgres",
-
-  url: process.env.DATABASE_URL, 
-
-  ssl: { rejectUnauthorized: false },
-
-  entities: [__dirname + "/../modules/**/models/*.model.{ts,js}"],
-  migrations: [__dirname + "/../migrations/*.{ts,js}"],
-  synchronize: false,
-});
-
-
-export const initDatabase = async () => {
-  try {
-    await AppDataSource.initialize();
-    console.log("Connected to Supabase (Postgres)");
-
-    const migrations = await AppDataSource.runMigrations();
-    if (migrations.length > 0) {
-      console.log(`Executed ${migrations.length} migration(s)`);
-    }
-  } catch (error) {
-    console.error("Failed to connect to Supabase");
-    console.error(error);
-    process.exit(1);
-  }
-};
+import 'dotenv/config';
+import 'reflect-metadata';
+import {DataSource} from 'typeorm';
+import {InitialMvp1790812800000} from '../migrations/InitialMvp1790812800000';
+// CLI-only migration connection. Runtime modules receive owner-scoped stores instead.
+export default new DataSource({type:'postgres',url:process.env.DATABASE_URL,ssl:process.env.DB_SSL==='true'?{rejectUnauthorized:true}:false,synchronize:false,migrations:[InitialMvp1790812800000]});
