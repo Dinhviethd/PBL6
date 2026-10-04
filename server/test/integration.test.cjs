@@ -8,6 +8,9 @@ const {
   InitialMvp1790812800000,
 } = require("../dist/migrations/InitialMvp1790812800000");
 const url = process.env.TEST_DATABASE_URL;
+const {
+  EventCheckinStaff1791072000000,
+} = require("../dist/migrations/EventCheckinStaff1791072000000");
 if (!url) {
   test(
     "PostgreSQL integration suite (set TEST_DATABASE_URL)",
@@ -53,10 +56,11 @@ if (!url) {
     const migration = new DataSource({
       type: "postgres",
       url,
-      migrations: [InitialMvp1790812800000],
+      migrations: [InitialMvp1790812800000, EventCheckinStaff1791072000000],
     });
     await migration.initialize();
     await migration.runMigrations();
+    assert.deepEqual(await migration.runMigrations(), []);
     await migration.destroy();
     fixture = createDatabase(url);
     await fixture.start();
@@ -385,6 +389,406 @@ if (!url) {
     assert.equal((await app.orders.one(pending.id)).status, "EXPIRED");
     assert.equal((await app.payments.one(p.id)).requires_review, true);
     assert.equal((await app.orders.tickets(buyer.user.idUser, null)).length, 1);
+  });
+  test("event staff invitation, isolated scan permission, history and revocation", async () => {
+    const staff = await ok("POST", "/auth/register", {
+      name: "Check-in staff",
+      email: `${randomUUID()}@example.test`,
+      password,
+      confirmPassword: password,
+    });
+    const manage = `/organizer/events/${eventId}/staff`;
+    const scan = `/checkin/events/${eventId}/checkins`;
+    const respond = (id) => `/me/checkin-invitations/${id}/respond`;
+    assert.equal(
+      (
+        await call(
+          "POST",
+          manage,
+          { email: staff.user.email },
+          other.accessToken,
+        )
+      ).status,
+      403,
+    );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          manage,
+          { email: organizer.user.email },
+          organizer.accessToken,
+        )
+      ).status,
+      400,
+    );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          manage,
+          { email: "missing@example.test" },
+          organizer.accessToken,
+        )
+      ).status,
+      400,
+    );
+    let invitation = await ok(
+      "POST",
+      manage,
+      { email: staff.user.email.toUpperCase() },
+      organizer.accessToken,
+    );
+    assert.equal(invitation.status, "PENDING");
+    assert.equal(
+      (
+        await call(
+          "POST",
+          manage,
+          { email: staff.user.email },
+          organizer.accessToken,
+        )
+      ).status,
+      409,
+    );
+    assert.equal(
+      (await call("POST", scan, { code: "invalid" }, staff.accessToken)).status,
+      403,
+    );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          respond(invitation.id),
+          { accept: true },
+          buyer.accessToken,
+        )
+      ).status,
+      404,
+    );
+    let assignments = await ok(
+      "GET",
+      "/me/checkin-assignments",
+      undefined,
+      staff.accessToken,
+    );
+    assert.equal(assignments.length, 1);
+    assert.equal(assignments[0].event_id, eventId);
+    await ok(
+      "POST",
+      respond(invitation.id),
+      { accept: false },
+      staff.accessToken,
+    );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          respond(invitation.id),
+          { accept: true },
+          staff.accessToken,
+        )
+      ).status,
+      409,
+    );
+    const oldId = invitation.id;
+    invitation = await ok(
+      "POST",
+      manage,
+      { email: staff.user.email },
+      organizer.accessToken,
+    );
+    assert.notEqual(invitation.id, oldId);
+    assert.equal(
+      (await call("POST", respond(oldId), { accept: true }, staff.accessToken))
+        .status,
+      404,
+    );
+    await fixture
+      .owner("event")
+      .query(
+        "UPDATE event_checkin_staff SET expires_at=now()-interval '1 minute' WHERE id=$1",
+        [invitation.id],
+      );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          respond(invitation.id),
+          { accept: true },
+          staff.accessToken,
+        )
+      ).status,
+      409,
+    );
+    invitation = await ok(
+      "POST",
+      manage,
+      { email: staff.user.email },
+      organizer.accessToken,
+    );
+    const responses = await Promise.all(
+      [true, true].map((accept) =>
+        call("POST", respond(invitation.id), { accept }, staff.accessToken),
+      ),
+    );
+    assert.deepEqual(responses.map((r) => r.status).sort(), [200, 409]);
+    const detail = await ok(
+      "GET",
+      `/checkin/events/${eventId}`,
+      undefined,
+      staff.accessToken,
+    );
+    assert.equal(detail.id, eventId);
+    assert.equal("organizer_id" in detail, false);
+    for (const suffix of [
+      "",
+      "/orders",
+      "/attendees",
+      "/stats",
+      "/staff",
+      "/checkins",
+    ])
+      assert.equal(
+        (
+          await call(
+            "GET",
+            `/organizer/events/${eventId}${suffix}`,
+            undefined,
+            staff.accessToken,
+          )
+        ).status,
+        403,
+        suffix,
+      );
+    assert.equal(
+      (
+        await call(
+          "PATCH",
+          `/organizer/events/${eventId}`,
+          {},
+          staff.accessToken,
+        )
+      ).status,
+      400,
+    );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          `/organizer/events/${eventId}/pause`,
+          { paused: true },
+          staff.accessToken,
+        )
+      ).status,
+      403,
+    );
+    const source = await app.events.one(eventId);
+    const second = await ok(
+      "POST",
+      "/organizer/events",
+      {
+        categoryId: source.category_id,
+        slug: randomUUID(),
+        title: "Unassigned event",
+        description: "Isolated event",
+        venueName: "Hall",
+        address: "Test",
+        cityCode: "DN",
+        startsAt: new Date(source.starts_at).toISOString(),
+        endsAt: new Date(source.ends_at).toISOString(),
+        checkinOpensAt: new Date(source.checkin_opens_at).toISOString(),
+        checkinClosesAt: new Date(source.checkin_closes_at).toISOString(),
+      },
+      organizer.accessToken,
+    );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          `/checkin/events/${second.id}/checkins`,
+          { code: "invalid" },
+          staff.accessToken,
+        )
+      ).status,
+      403,
+    );
+    assert.equal(
+      (
+        await call(
+          "DELETE",
+          `/organizer/events/${second.id}/staff/${invitation.id}`,
+          undefined,
+          organizer.accessToken,
+        )
+      ).status,
+      404,
+    );
+    const order = await ok(
+      "POST",
+      "/orders",
+      { eventId, items: [{ ticketTypeId: typeId, quantity: 1 }] },
+      buyer.accessToken,
+      { "Idempotency-Key": randomUUID() },
+    );
+    const payment = await ok(
+      "POST",
+      `/orders/${order.id}/payments`,
+      {},
+      buyer.accessToken,
+    );
+    await ok(
+      "POST",
+      `/payments/${payment.id}/demo`,
+      { success: true },
+      buyer.accessToken,
+    );
+    const tickets = await app.orders.tickets(buyer.user.idUser, eventId);
+    const ticket = tickets.find((t) => t.status === "VALID");
+    const qr = await app.orders.qr(
+      { userId: buyer.user.idUser, roles: ["USER"] },
+      ticket.id,
+    );
+    const scans = await Promise.all(
+      [qr.code, qr.token].map((code) =>
+        call("POST", scan, { code }, staff.accessToken),
+      ),
+    );
+    assert.ok(
+      scans.every((r) => r.status === 200),
+      JSON.stringify(scans),
+    );
+    assert.equal(scans.filter((r) => !r.body.data.duplicate).length, 1);
+    const history = await ok(
+      "GET",
+      `/organizer/events/${eventId}/checkins`,
+      undefined,
+      organizer.accessToken,
+    );
+    assert.equal(
+      history.find((r) => r.ticket_id === ticket.id).checked_in_by,
+      staff.user.idUser,
+    );
+    assert.equal(
+      history.find((r) => r.ticket_id === ticket.id).checked_in_by_name,
+      staff.user.name,
+    );
+    assert.ok(!JSON.stringify(history).includes(qr.token));
+    await ok(
+      "DELETE",
+      `${manage}/${invitation.id}`,
+      undefined,
+      organizer.accessToken,
+    );
+    for (const endpoint of [scan, `/organizer/events/${eventId}/checkins`])
+      assert.equal(
+        (await call("POST", endpoint, { code: qr.code }, staff.accessToken))
+          .status,
+        403,
+      );
+    assert.equal(
+      (
+        await call(
+          "GET",
+          `/checkin/events/${eventId}`,
+          undefined,
+          staff.accessToken,
+        )
+      ).status,
+      403,
+    );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          respond(invitation.id),
+          { accept: true },
+          staff.accessToken,
+        )
+      ).status,
+      409,
+    );
+    invitation = await ok(
+      "POST",
+      manage,
+      { email: staff.user.email },
+      organizer.accessToken,
+    );
+    await ok(
+      "POST",
+      respond(invitation.id),
+      { accept: true },
+      staff.accessToken,
+    );
+    // An in-flight scan holds the shared event lock. Revocation must wait for
+    // it, then prevent all future scans even with an existing access token.
+    let releaseScan, enteredScan;
+    const entered = new Promise((resolve) => {
+      enteredScan = resolve;
+    });
+    const held = new Promise((resolve) => {
+      releaseScan = resolve;
+    });
+    const originalScan = app.orders.scan;
+    app.orders.scan = async (...args) => {
+      enteredScan();
+      await held;
+      return originalScan(...args);
+    };
+    let revokeCompleted = false;
+    const inflight = call("POST", scan, { code: qr.code }, staff.accessToken);
+    await entered;
+    const revoking = call(
+      "DELETE",
+      `${manage}/${invitation.id}`,
+      undefined,
+      organizer.accessToken,
+    ).then((r) => {
+      revokeCompleted = true;
+      return r;
+    });
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      assert.equal(revokeCompleted, false);
+    } finally {
+      releaseScan();
+      app.orders.scan = originalScan;
+    }
+    assert.equal((await inflight).status, 200);
+    assert.equal((await revoking).status, 200);
+    assert.equal(
+      (await call("POST", scan, { code: qr.code }, staff.accessToken)).status,
+      403,
+    );
+    invitation = await ok(
+      "POST",
+      manage,
+      { email: staff.user.email },
+      organizer.accessToken,
+    );
+    await ok(
+      "POST",
+      respond(invitation.id),
+      { accept: true },
+      staff.accessToken,
+    );
+    await ok(
+      "PATCH",
+      `/admin/users/${staff.user.idUser}`,
+      { status: "ACTIVE", locked: true, reason: "Staff account disabled" },
+      admin.accessToken,
+    );
+    assert.equal(
+      (await call("POST", scan, { code: qr.code }, staff.accessToken)).status,
+      403,
+    );
+    assignments = await ok(
+      "GET",
+      "/me/checkin-assignments",
+      undefined,
+      buyer.accessToken,
+    );
+    assert.equal(assignments.length, 0);
   });
   test("refresh rotates cookie and replay revokes the session", async () => {
     const login = await call("POST", "/auth/login", {

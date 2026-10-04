@@ -131,7 +131,10 @@ export function createApplication(config: {
   const limits = new Map<string, { n: number; until: number }>();
   app.use("/api", (req, res, next) => {
     if (req.method === "GET") return next();
-    const credentialRequest = /^\/auth\/(login|register|forgot-password|verify-otp|reset-password)$/.test(req.path);
+    const credentialRequest =
+      /^\/auth\/(login|register|forgot-password|verify-otp|reset-password)$/.test(
+        req.path,
+      );
     const key = `${req.ip}:${credentialRequest ? "auth" : "write"}`,
       now = Date.now();
     if (limits.size > 10000)
@@ -571,6 +574,76 @@ export function createApplication(config: {
   );
   api.post(
     "/organizer/events/:id/checkins",
+    protect,
+    route((req, res) =>
+      booking.scan(who(res), id(req), text.max(256).parse(req.body.code)),
+    ),
+  );
+  api.get(
+    "/organizer/events/:id/staff",
+    protect,
+    route(async (req, res) => {
+      await events.guard(id(req), who(res));
+      return events.staffList(id(req), page(req) * 50);
+    }),
+  );
+  api.post(
+    "/organizer/events/:id/staff",
+    protect,
+    route((req, res) =>
+      booking.inviteStaff(who(res), id(req), email.parse(req.body.email)),
+    ),
+  );
+  api.delete(
+    "/organizer/events/:id/staff/:staffId",
+    protect,
+    route((req, res) =>
+      booking.revokeStaff(who(res), id(req), id(req, "staffId")),
+    ),
+  );
+  api.get(
+    "/organizer/events/:id/checkins",
+    protect,
+    route((req, res) =>
+      booking.checkinHistory(who(res), id(req), page(req) * 50),
+    ),
+  );
+  api.get(
+    "/me/checkin-assignments",
+    protect,
+    route((req, res) =>
+      events.staffAssignments(who(res).userId, page(req) * 50),
+    ),
+  );
+  api.post(
+    "/me/checkin-invitations/:id/respond",
+    protect,
+    route((req, res) =>
+      booking.respondStaff(
+        who(res),
+        id(req),
+        z.boolean().parse(req.body.accept),
+      ),
+    ),
+  );
+  api.get(
+    "/checkin/events/:id",
+    protect,
+    route(async (req, res) => {
+      const e = await events.checkinGuard(id(req), who(res));
+      return {
+        id: e.id,
+        title: e.title,
+        venue_name: e.venue_name,
+        starts_at: e.starts_at,
+        ends_at: e.ends_at,
+        checkin_opens_at: e.checkin_opens_at,
+        checkin_closes_at: e.checkin_closes_at,
+      };
+    }),
+  );
+  api.post(
+    "/checkin/events/:id/checkins",
     protect,
     route((req, res) =>
       booking.scan(who(res), id(req), text.max(256).parse(req.body.code)),

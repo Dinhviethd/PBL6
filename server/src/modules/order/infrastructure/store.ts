@@ -2,6 +2,13 @@ import { randomUUID } from "node:crypto";
 import type { Store, Row } from "../../../contracts/core";
 export function orderStore(db: Store) {
   return {
+    checkinHistory: (eventId: string, offset: number) =>
+      db.query(
+        `SELECT c.ticket_id,c.checked_in_by,c.checked_in_at,c.method,t.ticket_code,i.ticket_type_name_snapshot
+        FROM checkins c JOIN tickets t ON t.id=c.ticket_id JOIN order_items i ON i.id=t.order_item_id
+        WHERE c.event_id=$1 ORDER BY c.checked_in_at DESC,c.ticket_id LIMIT 50 OFFSET $2`,
+        [eventId, offset],
+      ),
     types: (event: string) =>
       db.query(
         "SELECT * FROM ticket_types WHERE event_id=$1 ORDER BY price_amount,id",

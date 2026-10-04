@@ -285,7 +285,7 @@ export function createBooking(
       }),
     scan: (p: Principal, id: string, code: string) =>
       uow.run(async () => {
-        const event = await events.guard(id, p);
+        const event = await events.checkinGuard(id, p);
         const result = await orders.scan(p, event, code);
         if (!result.duplicate)
           await audit.append(
@@ -296,6 +296,65 @@ export function createBooking(
           );
         return result;
       }),
+    inviteStaff: (p: Principal, eventId: string, email: string) =>
+      uow.run(async () => {
+        const event = await events.guard(eventId, p, true);
+        const user = await auth.checkinInvitee(email);
+        const invitation = await events.inviteCheckinStaff(event, p, user);
+        await audit.append(p, "event.staff_invited", "event", eventId, {
+          invitationId: invitation.id,
+          userId: user.id,
+        });
+        return invitation;
+      }),
+    respondStaff: (p: Principal, id: string, accept: boolean) =>
+      uow.run(async () => {
+        const initial = await events.staffInvitation(id);
+        ensure(
+          initial?.user_id === p.userId,
+          "NOT_FOUND",
+          "Không tìm thấy lời mời.",
+          404,
+        );
+        const event = await events.guard(initial.event_id, undefined, true);
+        const result = await events.respondCheckinInvitation(
+          event,
+          p,
+          id,
+          accept,
+        );
+        await audit.append(
+          p,
+          accept ? "event.staff_accepted" : "event.staff_declined",
+          "event",
+          event.id,
+          { invitationId: id },
+        );
+        return result;
+      }),
+    revokeStaff: (p: Principal, eventId: string, id: string) =>
+      uow.run(async () => {
+        await events.guard(eventId, p, true);
+        const result = await events.revokeCheckinStaff(eventId, id);
+        await audit.append(p, "event.staff_revoked", "event", eventId, {
+          invitationId: id,
+          userId: result.user_id,
+        });
+        return result;
+      }),
+    async checkinHistory(p: Principal, eventId: string, offset: number) {
+      await events.guard(eventId, p);
+      const rows = await orders.checkinHistory(eventId, offset);
+      const names = await auth.checkinActorNames([
+        ...new Set(rows.map((r) => r.checked_in_by as string)),
+      ]);
+      return rows.map((r) => ({
+        ...r,
+        checked_in_by_name:
+          names.find((n) => n.idUser === r.checked_in_by)?.name ??
+          "Tài khoản không còn tồn tại",
+      }));
+    },
     async expire() {
       let count = 0;
       for (const due of await orders.due()) {

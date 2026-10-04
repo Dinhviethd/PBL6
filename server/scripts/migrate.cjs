@@ -8,7 +8,11 @@ const db = new DataSource({
   type: "postgres",
   url: process.env.DATABASE_URL,
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: true } : false,
-  migrations: [InitialMvp1790812800000],
+  migrations: [
+    InitialMvp1790812800000,
+    require("../dist/migrations/EventCheckinStaff1791072000000")
+      .EventCheckinStaff1791072000000,
+  ],
   synchronize: false,
 });
 (async () => {

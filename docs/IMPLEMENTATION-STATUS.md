@@ -1,5 +1,13 @@
 # Trạng thái triển khai MVP — 2026-10-01
 
+## Bổ sung 04/10/2026: nhân viên check-in theo sự kiện
+
+Đã thêm lời mời trong ứng dụng theo email tài khoản, chấp nhận/từ chối, thời hạn lời mời 7 ngày, mời lại, thu hồi quyền, màn hình quét riêng và nhật ký hiển thị người quét. Nhân viên chỉ được check-in sự kiện đã nhận phân công; không có quyền quản lý hay xem doanh thu/đơn hàng. Migration bổ sung bảng `event_checkin_staff` thuộc Event, nâng tổng số bảng nghiệp vụ lên 21. Chi tiết API, nâng cấp và kiểm thử: [CHECKIN-STAFF.md](CHECKIN-STAFF.md).
+
+Đã qua build backend/frontend, lint, boundary checker, 8 kiểm thử backend (gồm PostgreSQL integration, không skip) và 5 E2E Chromium. Đã xem ảnh desktop/mobile 390px của lời mời, quản lý nhân viên và màn hình check-in. Kiểm thử dùng container PostgreSQL riêng `eventhub-staff-tests` tại port 55437, database `eventhub_staff_test` và `eventhub_staff_web_test`; không sửa `server/.env` hay nâng cấp database local của người dùng tại port 55436 vì đích đó không hoạt động trong phiên này. Camera thiết bị thật chưa kiểm thử.
+
+## Baseline MVP 01/10/2026
+
 Phạm vi hiện tại: backend + web local demo theo lựa chọn của người dùng. Dùng Express + TypeORM, một PostgreSQL và các module chặt trong một backend. Chưa tách microservice process.
 
 Build backend/web, lint và boundary checker đã qua. 7 kiểm thử backend trên PostgreSQL và 4 kiểm thử E2E Chromium đã qua. Browser đã xác nhận các luồng khách hàng, quản trị và Organizer tạo/duyệt sự kiện, bao gồm upload ảnh; đã kiểm tra ảnh chụp giao diện desktop và mobile 390px.

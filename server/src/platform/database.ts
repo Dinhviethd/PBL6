@@ -15,7 +15,7 @@ export const ownership: Record<Owner, readonly string[]> = {
     "password_reset_challenges",
     "organizer_applications",
   ],
-  event: ["categories", "events", "event_reviews"],
+  event: ["categories", "events", "event_reviews", "event_checkin_staff"],
   order: [
     "ticket_types",
     "orders",

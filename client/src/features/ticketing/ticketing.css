@@ -1178,3 +1178,5 @@ td small {
     padding: 20px 15px;
   }
 }
+.staff-cards { display: grid; gap: 1rem; margin-top: 1rem; }
+.staff-actions { display: flex; flex-wrap: wrap; gap: .75rem; }

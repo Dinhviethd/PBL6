@@ -28,6 +28,7 @@ import {
 } from "./features/ticketing/management";
 import { Loading, Notice } from "./features/ticketing/shared";
 import { useLoad } from "./features/ticketing/data";
+import { StaffAssignments, StaffCheckin } from "./features/ticketing/staff";
 import type { ReactNode } from "react";
 import "./features/ticketing/ticketing.css";
 function Guard({
@@ -79,6 +80,7 @@ export function App() {
             <>
               <NavLink to="/tickets">Vé của tôi</NavLink>
               <NavLink to="/orders">Đơn hàng</NavLink>
+              <NavLink to="/checkin">Nhân viên check-in</NavLink>
             </>
           )}
           {user?.roles.some((r) => ["ORGANIZER", "ADMIN"].includes(r)) && (
@@ -119,6 +121,22 @@ export function App() {
       )}
       <main className="site-main">
         <Routes>
+          <Route
+            path="/checkin"
+            element={
+              <Guard>
+                <StaffAssignments />
+              </Guard>
+            }
+          />
+          <Route
+            path="/checkin/events/:id"
+            element={
+              <Guard>
+                <StaffCheckin key={location.pathname} />
+              </Guard>
+            }
+          />
           <Route path="/" element={<Explore />} />
           <Route path="/events/:slug" element={<EventDetail />} />
           <Route path="/auth/login" element={<AuthPage />} />

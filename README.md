@@ -26,7 +26,7 @@ Mở http://localhost:5173. API: http://127.0.0.1:8000/api/health. Lệnh dev ch
 
 Tài khoản seed: `customer@example.test`, `organizer@example.test`, `organizer2@example.test`, `admin@example.test`; mật khẩu là `DEMO_PASSWORD`. Seed chạy lại không thay mật khẩu tài khoản đã tồn tại. Chỉ seed dữ liệu demo ở development.
 
-Migration chỉ nhận **database trống**, không tự chuyển đổi các bảng Express/TypeORM cũ. Không bật synchronize. Database hiện hữu cần kế hoạch mapping và backup riêng. Migration không hỗ trợ down xóa dữ liệu.
+Migration đầu tiên chỉ nhận **database trống**, không tự chuyển đổi các bảng Express/TypeORM cũ. Database đã chạy baseline MVP được nâng cấp bằng các migration tiếp theo qua cùng lệnh `db:migrate`; migration nhân viên check-in chỉ thêm bảng và index. Không bật synchronize. Database cũ chưa có baseline cần kế hoạch mapping và backup riêng. Migration không hỗ trợ down xóa dữ liệu.
 
 ## Luồng demo
 
@@ -34,6 +34,7 @@ Migration chỉ nhận **database trống**, không tự chuyển đổi các b�
 2. Organizer tạo sự kiện/loại vé → gửi duyệt; Admin phê duyệt → sự kiện xuất hiện công khai.
 3. Organizer mở quản lý sự kiện → check-in bằng camera hoặc nhập mã vé → xem đơn, người tham dự, doanh thu.
 4. Khách có thể gửi hồ sơ Organizer; Admin xét duyệt, quản lý tài khoản, danh mục và tra cứu giao dịch.
+5. Organizer mở tab **Nhân viên** trong khu vận hành sự kiện để mời bằng email tài khoản đã đăng ký. Người nhận vào **Nhân viên check-in**, chấp nhận rồi quét vé. Organizer xem **Nhật ký check-in** và có thể thu hồi quyền. Lời mời trong ứng dụng có hạn 7 ngày, chưa gửi email. Xem [hướng dẫn nhân viên check-in](docs/CHECKIN-STAFF.md).
 
 Demo có kết quả thành công/thất bại và idempotency. Trường hợp thanh toán tới sau khi nhả kho được đánh dấu cần đối soát, không cấp vé vượt tồn kho. Không có hoàn tiền tự động.
 

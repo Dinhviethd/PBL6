@@ -2,6 +2,54 @@ import { randomUUID } from "node:crypto";
 import type { Store, Row } from "../../../contracts/core";
 export function eventStore(db: Store) {
   return {
+    staffMember: async (eventId: string, userId: string) =>
+      (
+        await db.query(
+          "SELECT * FROM event_checkin_staff WHERE event_id=$1 AND user_id=$2",
+          [eventId, userId],
+        )
+      )[0],
+    staffInvitation: async (id: string) =>
+      (
+        await db.query("SELECT * FROM event_checkin_staff WHERE id=$1", [id])
+      )[0],
+    staffList: (eventId: string, offset: number) =>
+      db.query(
+        "SELECT * FROM event_checkin_staff WHERE event_id=$1 ORDER BY invited_at DESC,id LIMIT 50 OFFSET $2",
+        [eventId, offset],
+      ),
+    staffAssignments: (userId: string, offset: number) =>
+      db.query(
+        `SELECT s.id,s.event_id,s.status,s.invited_at,s.expires_at,e.title,e.venue_name,e.starts_at,e.ends_at,
+        e.checkin_opens_at,e.checkin_closes_at,e.status AS event_status
+        FROM event_checkin_staff s JOIN events e ON e.id=s.event_id
+        WHERE s.user_id=$1 ORDER BY s.invited_at DESC,s.id LIMIT 50 OFFSET $2`,
+        [userId, offset],
+      ),
+    inviteStaff: async (eventId: string, actor: string, user: Row) =>
+      (
+        await db.query(
+          `INSERT INTO event_checkin_staff(id,event_id,user_id,invited_by,staff_name,staff_email)
+        VALUES($1,$2,$3,$4,$5,$6) ON CONFLICT(event_id,user_id) DO UPDATE SET
+        id=EXCLUDED.id,invited_by=EXCLUDED.invited_by,staff_name=EXCLUDED.staff_name,staff_email=EXCLUDED.staff_email,
+        status='PENDING',invited_at=now(),expires_at=now()+interval '7 days',responded_at=NULL,revoked_at=NULL RETURNING *`,
+          [randomUUID(), eventId, user.id, actor, user.name, user.email],
+        )
+      )[0],
+    respondStaff: async (id: string, accept: boolean) =>
+      (
+        await db.query(
+          "UPDATE event_checkin_staff SET status=$2,responded_at=now() WHERE id=$1 RETURNING *",
+          [id, accept ? "ACTIVE" : "DECLINED"],
+        )
+      )[0],
+    revokeStaff: async (id: string) =>
+      (
+        await db.query(
+          "UPDATE event_checkin_staff SET status='REVOKED',revoked_at=now() WHERE id=$1 RETURNING *",
+          [id],
+        )
+      )[0],
     categories: () =>
       db.query(
         "SELECT * FROM categories WHERE archived_at IS NULL ORDER BY name",

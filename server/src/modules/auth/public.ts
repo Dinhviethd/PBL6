@@ -56,6 +56,17 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
   }
   return {
     profile,
+    checkinActorNames: repo.checkinActorNames,
+    async checkinInvitee(email: string) {
+      const user = await repo.byEmail(email);
+      ensure(
+        user && user.status === "ACTIVE" && !user.locked_at,
+        "INVALID_INVITEE",
+        "Email phải thuộc tài khoản đã đăng ký và đang hoạt động.",
+        400,
+      );
+      return { id: user.idUser, name: user.name, email: user.email };
+    },
     async register(d: Row) {
       const hash = await bcrypt.hash(d.password, 12);
       return uow.run(async () => {
