@@ -34,6 +34,16 @@ const profileSchema = z.object({
   phone: z.string().max(30).optional(),
   avatarUrl: imageUrl.optional(),
 });
+const registerSchema = z
+  .object({
+    name: text.max(150),
+    email,
+    password,
+    confirmPassword: password,
+    phone: z.string().max(30).optional(),
+  })
+  .refine((d) => d.password === d.confirmPassword, "Mật khẩu không khớp.");
+const loginSchema = z.object({ email, password: z.string().min(1).max(200) });
 const eventSchema = z
   .object({
     categoryId: uuid,
@@ -132,7 +142,7 @@ export function createApplication(config: {
   app.use("/api", (req, res, next) => {
     if (req.method === "GET") return next();
     const credentialRequest =
-      /^\/auth\/(login|register|forgot-password|verify-otp|reset-password)$/.test(
+      /^\/auth\/(mobile\/)?(login|register|forgot-password|verify-otp|reset-password)$/.test(
         req.path,
       );
     const key = `${req.ip}:${credentialRequest ? "auth" : "write"}`,
@@ -202,25 +212,14 @@ export function createApplication(config: {
   api.post(
     "/auth/register",
     route(async (req, res) => {
-      const d = z
-        .object({
-          name: text.max(150),
-          email,
-          password,
-          confirmPassword: password,
-          phone: z.string().max(30).optional(),
-        })
-        .refine((d) => d.password === d.confirmPassword, "Mật khẩu không khớp.")
-        .parse(req.body);
+      const d = registerSchema.parse(req.body);
       return loginResult(res, await auth.register(d));
     }),
   );
   api.post(
     "/auth/login",
     route(async (req, res) => {
-      const d = z
-        .object({ email, password: z.string().min(1).max(200) })
-        .parse(req.body);
+      const d = loginSchema.parse(req.body);
       return loginResult(res, await auth.login(d.email, d.password));
     }),
   );
@@ -239,6 +238,35 @@ export function createApplication(config: {
         await auth.refresh(text.parse(req.cookies.refreshToken)),
       );
     }),
+  );
+  // Native clients store rotating refresh tokens in OS-backed secure storage.
+  // Browser clients keep the existing HttpOnly cookie flow instead.
+  api.use("/auth/mobile", (req, _res, next) => {
+    if (req.headers.origin)
+      return next(
+        Object.assign(new Error("Trình duyệt phải dùng phiên đăng nhập web."), {
+          status: 403,
+          code: "NATIVE_ONLY",
+        }),
+      );
+    next();
+  });
+  api.post(
+    "/auth/mobile/register",
+    route((req) => auth.register(registerSchema.parse(req.body))),
+  );
+  api.post(
+    "/auth/mobile/login",
+    route((req) => {
+      const d = loginSchema.parse(req.body);
+      return auth.login(d.email, d.password);
+    }),
+  );
+  api.post(
+    "/auth/mobile/refresh-token",
+    route((req) =>
+      auth.refresh(z.string().min(1).max(256).parse(req.body.refreshToken)),
+    ),
   );
   api.post(
     "/auth/forgot-password",

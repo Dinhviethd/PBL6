@@ -1,5 +1,7 @@
 # EventHub — MVP backend & web
 
+Ứng dụng Expo cho khách mua/xem vé và nhân viên check-in nằm tại [`mobile/`](mobile/README.md). Chạy `npm run dev:mobile` để mở API + worker + Expo trên mạng phát triển, hoặc `npm run mobile:preview` sau khi export để xem giao diện trên localhost.
+
 Express 5 + TypeORM + PostgreSQL 17, React + Vite. Một database, một backend với Auth/Event/Order/Payment/Audit tách ownership. Web có khu vực khách hàng, Organizer và Admin. Thanh toán hiện là **demo local, không thu tiền thật**.
 
 ## Chạy local

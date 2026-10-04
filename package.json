@@ -5,7 +5,11 @@
     "dev": "node scripts/dev.cjs",
     "build": "npm run build --prefix server && npm run build --prefix client",
     "check": "npm run check:boundaries --prefix server && npm run lint --prefix client",
-    "test": "npm test --prefix server"
+    "test": "npm test --prefix server",
+    "dev:mobile": "node scripts/mobile-dev.cjs",
+    "mobile": "npm run start --prefix mobile",
+    "mobile:preview": "node scripts/mobile-preview.cjs",
+    "check:mobile": "npm run typecheck --prefix mobile && npm run lint --prefix mobile && npm test --prefix mobile"
   },
   "engines": { "node": ">=22.18.0" }
 }

@@ -1,5 +1,13 @@
 # Trạng thái triển khai MVP — 2026-10-01
 
+## Bổ sung 04/10/2026: migration local và ứng dụng mobile
+
+Đã khởi tạo PostgreSQL qua Compose (`pbl6-db-1`, named volume `pbl6_eventhub_db`, port 55436) và chạy cả baseline + `EventCheckinStaff1791072000000` vào database `postgres` theo `server/.env`. Đã xác nhận migration, bảng phân công và 3 sự kiện seed. Không đổi `.env`; database `eventhub` do Compose tạo vẫn là database riêng.
+
+Đã thêm Expo SDK 57/React Native trong `mobile/`: đăng ký/đăng nhập/khôi phục phiên, khám phá sự kiện, đặt vé, thanh toán demo, lịch sử đơn, ví QR, nhận/từ chối phân công và camera/manual check-in. Backend bổ sung native auth với rotating refresh token trong response body; web giữ cookie HttpOnly. Có script chạy API/worker/Expo và localhost preview; CI kiểm tra mobile.
+
+Đã qua typecheck/lint mobile, 5 kiểm thử API client, 9 kiểm thử backend, Expo Doctor 21/21 và export JS/Hermes cho Android/iOS/web. E2E Expo trên trình duyệt đã xác nhận mua vé → nhận QR → nhận phân công → check-in → thu hồi → đăng xuất. Chưa nghiệm thu camera/SecureStore trên thiết bị vật lý và chưa build/ký APK/IPA. Hướng dẫn: [mobile/README.md](../mobile/README.md).
+
 ## Bổ sung 04/10/2026: nhân viên check-in theo sự kiện
 
 Đã thêm lời mời trong ứng dụng theo email tài khoản, chấp nhận/từ chối, thời hạn lời mời 7 ngày, mời lại, thu hồi quyền, màn hình quét riêng và nhật ký hiển thị người quét. Nhân viên chỉ được check-in sự kiện đã nhận phân công; không có quyền quản lý hay xem doanh thu/đơn hàng. Migration bổ sung bảng `event_checkin_staff` thuộc Event, nâng tổng số bảng nghiệp vụ lên 21. Chi tiết API, nâng cấp và kiểm thử: [CHECKIN-STAFF.md](CHECKIN-STAFF.md).

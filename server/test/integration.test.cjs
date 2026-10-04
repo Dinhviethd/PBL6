@@ -790,6 +790,72 @@ if (!url) {
     );
     assert.equal(assignments.length, 0);
   });
+  test("native auth rotates body refresh tokens without cookies and blocks browser origins", async () => {
+    const credentials = {
+      email: `${randomUUID()}@example.test`,
+      password,
+      confirmPassword: password,
+      name: "Mobile customer",
+    };
+    const registered = await call("POST", "/auth/mobile/register", credentials);
+    assert.equal(registered.status, 200);
+    assert.equal(registered.cookie, null);
+    assert.ok(registered.body.data.refreshToken);
+    const login = await ok("POST", "/auth/mobile/login", credentials);
+    const rotated = await call("POST", "/auth/mobile/refresh-token", {
+      refreshToken: login.refreshToken,
+    });
+    assert.equal(rotated.status, 200);
+    assert.equal(rotated.cookie, null);
+    assert.notEqual(rotated.body.data.refreshToken, login.refreshToken);
+    assert.equal(
+      (await call("GET", "/auth/me", undefined, rotated.body.data.accessToken))
+        .status,
+      200,
+    );
+    assert.equal(
+      (
+        await call("POST", "/auth/mobile/refresh-token", {
+          refreshToken: login.refreshToken,
+        })
+      ).status,
+      401,
+    );
+    assert.equal(
+      (await call("GET", "/auth/me", undefined, rotated.body.data.accessToken))
+        .status,
+      401,
+    );
+    assert.equal(
+      (
+        await call("POST", "/auth/mobile/login", credentials, undefined, {
+          Origin: "http://localhost:5173",
+        })
+      ).status,
+      403,
+    );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          "/auth/mobile/refresh-token",
+          { refreshToken: registered.body.data.refreshToken },
+          undefined,
+          { Origin: "https://untrusted.example" },
+        )
+      ).status,
+      403,
+    );
+    await ok("POST", "/auth/logout", {}, registered.body.data.accessToken);
+    assert.equal(
+      (
+        await call("POST", "/auth/mobile/refresh-token", {
+          refreshToken: registered.body.data.refreshToken,
+        })
+      ).status,
+      401,
+    );
+  });
   test("refresh rotates cookie and replay revokes the session", async () => {
     const login = await call("POST", "/auth/login", {
       email: buyer.user.email,
