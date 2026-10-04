@@ -33,6 +33,8 @@ const local = (s?: string) => {
     .slice(0, 16);
 };
 const iso = (s: string) => new Date(s).toISOString();
+const eventTime = (value: string, original?: string) =>
+  original && value === local(original) ? original : iso(value);
 function statLabel(k: string) {
   return (
     (
@@ -144,6 +146,9 @@ function EditorForm({
       setError(message(e));
     }
   };
+  // Mount the form once its saved category has a matching select option.
+  if (categories.loading) return <Loading />;
+  if (categories.error) return <Notice error={categories.error} />;
   return (
     <>
       <Link className="back" to="/organizer">
@@ -164,10 +169,16 @@ function EditorForm({
               const payload = {
                 ...d,
                 coverImageUrl: d.coverImageUrl || undefined,
-                startsAt: iso(d.startsAt),
-                endsAt: iso(d.endsAt),
-                checkinOpensAt: iso(d.checkinOpensAt),
-                checkinClosesAt: iso(d.checkinClosesAt),
+                startsAt: eventTime(d.startsAt, e?.starts_at),
+                endsAt: eventTime(d.endsAt, e?.ends_at),
+                checkinOpensAt: eventTime(
+                  d.checkinOpensAt,
+                  e?.checkin_opens_at,
+                ),
+                checkinClosesAt: eventTime(
+                  d.checkinClosesAt,
+                  e?.checkin_closes_at,
+                ),
               };
               const result = e
                 ? await api.patch(`/organizer/events/${e.id}`, payload)

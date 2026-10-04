@@ -136,11 +136,22 @@ export function createApiClient(options: {
           if (generation !== epoch)
             throw new ApiError("Phiên đã thay đổi.", 401, "SESSION_CHANGED");
           if (usedToken === accessToken) await refresh();
-          return await perform();
         } catch (retryError) {
           if (
             retryError instanceof ApiError &&
             [401, 403].includes(retryError.status) &&
+            generation === epoch
+          )
+            await clear();
+          throw retryError;
+        }
+        try {
+          return await perform();
+        } catch (retryError) {
+          if (
+            retryError instanceof ApiError &&
+            (retryError.status === 401 ||
+              retryError.code === "ACCOUNT_DISABLED") &&
             generation === epoch
           )
             await clear();

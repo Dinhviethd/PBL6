@@ -158,3 +158,50 @@ test("forbidden event permission does not log out an otherwise valid account", a
   );
   assert.equal(lost, false);
 });
+
+for (const [status, code, shouldClear] of [
+  [403, "FORBIDDEN", false],
+  [403, "ACCOUNT_DISABLED", true],
+  [401, "INVALID_SESSION", true],
+]) {
+  test(`after refresh, ${code} ${shouldClear ? "clears" : "preserves"} the session`, async () => {
+    const storage = memory();
+    let lost = 0;
+    const client = createApiClient({
+      baseUrl: "",
+      native: true,
+      storage,
+      onSessionLost: () => lost++,
+      fetcher: async (url, options) => {
+        if (url.endsWith("/login"))
+          return json({
+            user: { idUser: "u" },
+            accessToken: "old",
+            refreshToken: "r1",
+          });
+        if (url.endsWith("/refresh-token"))
+          return json({ accessToken: "new", refreshToken: "r2" });
+        if (options.headers.Authorization === "Bearer old")
+          return json(null, 401);
+        if (url === "/me/tickets") return json([{ id: "owned-ticket" }]);
+        return new Response(
+          JSON.stringify({ success: false, message: code, code }),
+          { status },
+        );
+      },
+    });
+    await client.authenticate("login", {});
+    await assert.rejects(
+      client.request("/checkin/events/event/checkins", "POST", {
+        code: "ticket",
+      }),
+      (e) => e.status === status && e.code === code,
+    );
+    assert.equal(lost, shouldClear ? 1 : 0);
+    assert.equal(await storage.read(), shouldClear ? null : "r2");
+    if (!shouldClear)
+      assert.deepEqual(await client.request("/me/tickets"), [
+        { id: "owned-ticket" },
+      ]);
+  });
+}

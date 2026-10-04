@@ -21,7 +21,14 @@ import { ensure, role, type Row, type Principal } from "./contracts/core";
 const uuid = z.string().uuid(),
   text = z.string().trim().min(1),
   date = z.string().datetime({ offset: true }),
-  password = z.string().min(8).max(72),
+  password = z
+    .string()
+    .min(8)
+    .max(72)
+    .refine(
+      (value) => Buffer.byteLength(value, "utf8") <= 72,
+      "Mật khẩu quá dài; hãy rút ngắn nếu dùng ký tự có dấu hoặc emoji.",
+    ),
   email = z.string().trim().toLowerCase().email();
 const imageUrl = z
   .string()
@@ -787,7 +794,13 @@ export function createApplication(config: {
     protect,
     multer({
       storage: multer.memoryStorage(),
-      limits: { fileSize: 5 * 1024 * 1024, files: 1 },
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+        files: 1,
+        fields: 0,
+        parts: 1,
+        fieldNameSize: 100,
+      },
     }).single("image"),
     route((req) => {
       ensure(req.file, "NO_IMAGE", "Cần chọn ảnh.", 400);

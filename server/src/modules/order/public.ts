@@ -73,15 +73,18 @@ export function createOrders(db: Store, qrSecret: string) {
       const requestHash = hash(
         JSON.stringify({ eventId: event.id, items: canonical }),
       );
-      const prior = await r.byKey(p.userId, idempotency);
-      if (prior) {
-        ensure(
-          prior.request_hash === requestHash,
-          "IDEMPOTENCY_CONFLICT",
-          "Khóa request đã dùng với dữ liệu khác.",
-        );
+      const existingOrder = async () => {
+        const prior = await r.byKey(p.userId, idempotency);
+        if (prior)
+          ensure(
+            prior.request_hash === requestHash,
+            "IDEMPOTENCY_CONFLICT",
+            "Khóa request đã dùng với dữ liệu khác.",
+          );
         return prior;
-      }
+      };
+      const prior = await existingOrder();
+      if (prior) return prior;
       ensure(
         event.status === "PUBLISHED" &&
           !event.sales_paused &&
@@ -100,6 +103,13 @@ export function createOrders(db: Store, qrSecret: string) {
           "Loại vé không hợp lệ.",
           400,
         );
+        selected.push({ ...t, quantity: i.quantity });
+      }
+      // A matching request can commit while this one waits for inventory locks.
+      // Return that order before interpreting the newly reserved stock as sold out.
+      const concurrent = await existingOrder();
+      if (concurrent) return concurrent;
+      for (const t of selected) {
         ensure(
           new Date(t.sale_starts_at) <= new Date() &&
             new Date(t.sale_ends_at) > new Date(),
@@ -107,13 +117,12 @@ export function createOrders(db: Store, qrSecret: string) {
           "Loại vé chưa mở hoặc đã hết hạn bán.",
         );
         ensure(
-          t.capacity - t.reserved_quantity - t.sold_quantity >= i.quantity,
+          t.capacity - t.reserved_quantity - t.sold_quantity >= t.quantity,
           "SOLD_OUT",
           "Không còn đủ vé.",
         );
-        total += money(t.price_amount) * BigInt(i.quantity);
-        quantity += i.quantity;
-        selected.push({ ...t, quantity: i.quantity });
+        total += money(t.price_amount) * BigInt(t.quantity);
+        quantity += t.quantity;
       }
       ensure(
         quantity > 0 && quantity <= 10,

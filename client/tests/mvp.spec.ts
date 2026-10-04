@@ -7,7 +7,10 @@ async function login(page: Page, email: string) {
     .getByLabel("Mật khẩu (ít nhất 8 ký tự)", { exact: true })
     .fill(password);
   await Promise.all([
-    page.waitForResponse(r => r.url().endsWith('/api/auth/login') && r.request().method() === 'POST'),
+    page.waitForResponse(
+      (r) =>
+        r.url().endsWith("/api/auth/login") && r.request().method() === "POST",
+    ),
     page.getByRole("button", { name: "Đăng nhập", exact: true }).click(),
   ]);
   await expect(page.getByRole("button", { name: "Đăng xuất" })).toBeVisible();
@@ -142,7 +145,9 @@ test("organizer creates event with uploaded cover and admin publishes it", async
     page.getByText("Chờ duyệt", { exact: true }).first(),
   ).toBeVisible();
   await page.getByRole("button", { name: "Đăng xuất" }).click();
-  await expect(page.getByRole("link", { name: "Đăng nhập", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Đăng nhập", exact: true }),
+  ).toBeVisible();
   await login(page, "admin@example.test");
   await page.goto("/admin/events");
   const card = page
@@ -157,4 +162,145 @@ test("organizer creates event with uploaded cover and admin publishes it", async
     page.getByRole("heading", { name: slug, exact: true }),
   ).toBeVisible();
   await expect(page.getByLabel("Số lượng Vé web")).toBeVisible();
+});
+
+test("editing a sold event preserves timestamps while real schedule changes remain blocked", async ({
+  page,
+  request,
+}) => {
+  const owner = (
+    await (
+      await request.post("/api/auth/login", {
+        data: { email: "organizer@example.test", password },
+      })
+    ).json()
+  ).data;
+  const admin = (
+    await (
+      await request.post("/api/auth/login", {
+        data: { email: "admin@example.test", password },
+      })
+    ).json()
+  ).data;
+  const headers = { Authorization: `Bearer ${owner.accessToken}` };
+  const category = (await (await request.get("/api/categories")).json())
+    .data[0];
+  const start = new Date(Date.now() + 86400000);
+  start.setSeconds(37, 123);
+  const body = {
+    categoryId: category.id,
+    slug: `timestamp-${crypto.randomUUID()}`,
+    title: "Timestamp regression",
+    description: "Preserve the original schedule",
+    venueName: "Hall",
+    address: "01 Test",
+    cityCode: "DN",
+    startsAt: start.toISOString(),
+    endsAt: new Date(+start + 7200000).toISOString(),
+    checkinOpensAt: new Date(+start - 3600000).toISOString(),
+    checkinClosesAt: new Date(+start + 3600000).toISOString(),
+  };
+  const created = await request.post("/api/organizer/events", {
+    headers,
+    data: body,
+  });
+  expect(created.ok()).toBeTruthy();
+  const event = (await created.json()).data;
+  const ticket = (
+    await (
+      await request.post(`/api/organizer/events/${event.id}/ticket-types`, {
+        headers,
+        data: {
+          name: "Standard",
+          price: "100000",
+          capacity: 1,
+          saleStartsAt: new Date(Date.now() - 3600000).toISOString(),
+          saleEndsAt: body.startsAt,
+        },
+      })
+    ).json()
+  ).data;
+  expect(
+    (
+      await request.post(`/api/organizer/events/${event.id}/submit`, {
+        headers,
+      })
+    ).ok(),
+  ).toBeTruthy();
+  expect(
+    (
+      await request.post(`/api/admin/events/${event.id}/review`, {
+        headers: { Authorization: `Bearer ${admin.accessToken}` },
+        data: { approve: true },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  const order = (
+    await (
+      await request.post("/api/orders", {
+        headers: { ...headers, "Idempotency-Key": crypto.randomUUID() },
+        data: {
+          eventId: event.id,
+          items: [{ ticketTypeId: ticket.id, quantity: 1 }],
+        },
+      })
+    ).json()
+  ).data;
+  const payment = (
+    await (
+      await request.post(`/api/orders/${order.id}/payments`, { headers })
+    ).json()
+  ).data;
+  expect(
+    (
+      await request.post(`/api/payments/${payment.id}/demo`, {
+        headers,
+        data: { success: true },
+      })
+    ).ok(),
+  ).toBeTruthy();
+  await login(page, "organizer@example.test");
+  await page.goto(`/organizer/events/${event.id}`);
+  await expect(page.getByLabel("Danh mục", { exact: true })).toHaveValue(
+    category.id,
+  );
+  await page
+    .getByLabel("Tên sự kiện", { exact: true })
+    .fill("Updated title, same schedule");
+  const saved = page.waitForResponse(
+    (r) =>
+      r.request().method() === "PATCH" &&
+      r.url().endsWith(`/api/organizer/events/${event.id}`),
+  );
+  await page.getByRole("button", { name: "Lưu bản nháp" }).click();
+  const response = await saved;
+  expect(response.status()).toBe(200);
+  const payload = response.request().postDataJSON();
+  for (const key of [
+    "startsAt",
+    "endsAt",
+    "checkinOpensAt",
+    "checkinClosesAt",
+  ] as const)
+    expect(payload[key]).toBe(body[key]);
+  await expect(
+    page.getByText("Bản nháp", { exact: true }).first(),
+  ).toBeVisible();
+  await expect(page.getByLabel("Tên sự kiện", { exact: true })).toHaveValue(
+    "Updated title, same schedule",
+  );
+  const changed = new Date(+start + 60000);
+  const local = new Date(+changed - changed.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 16);
+  await page.getByLabel("Bắt đầu", { exact: true }).fill(local);
+  const refused = page.waitForResponse(
+    (r) =>
+      r.request().method() === "PATCH" &&
+      r.url().endsWith(`/api/organizer/events/${event.id}`),
+  );
+  await page.getByRole("button", { name: "Lưu bản nháp" }).click();
+  const rejection = await refused;
+  expect(rejection.status()).toBe(409);
+  expect((await rejection.json()).code).toBe("SOLD_EVENT");
 });

@@ -13,6 +13,14 @@ import {
 } from "../../contracts/core";
 
 const sha = (s: string) => createHash("sha256").update(s).digest("hex");
+function checkPasswordLength(value: string) {
+  ensure(
+    Buffer.byteLength(value, "utf8") <= 72,
+    "PASSWORD_TOO_LONG",
+    "Mật khẩu vượt giới hạn độ dài. Nếu đây là mật khẩu cũ, hãy dùng chức năng quên mật khẩu để đặt lại.",
+    400,
+  );
+}
 export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
   const repo = authStore(db);
   const otpHash = (email: string, otp: string) =>
@@ -68,6 +76,7 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
       return { id: user.idUser, name: user.name, email: user.email };
     },
     async register(d: Row) {
+      checkPasswordLength(d.password);
       const hash = await bcrypt.hash(d.password, 12);
       return uow.run(async () => {
         const user = await repo.create({ ...d, password: hash });
@@ -76,6 +85,7 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
       });
     },
     async login(email: string, password: string) {
+      checkPasswordLength(password);
       const user = await repo.byEmail(email);
       ensure(
         user && (await bcrypt.compare(password, user.password)),
@@ -85,7 +95,15 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
       );
       return uow.run(async () => {
         await repo.lockUser(user.idUser);
-        active(await repo.user(user.idUser));
+        const current = await repo.user(user.idUser);
+        active(current);
+        // A password change/reset may commit while bcrypt is running.
+        ensure(
+          current.password === user.password,
+          "INVALID_LOGIN",
+          "Mật khẩu đã thay đổi. Vui lòng đăng nhập lại.",
+          401,
+        );
         return session(user.idUser);
       });
     },
@@ -162,6 +180,8 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
       return profile(p.userId);
     },
     async changePassword(p: Principal, current: string, next: string) {
+      checkPasswordLength(current);
+      checkPasswordLength(next);
       await uow.run(async () => {
         await repo.lockUser(p.userId);
         const user = await repo.user(p.userId);
@@ -206,6 +226,7 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
         });
     },
     async reset(email: string, otp: string, password?: string) {
+      if (password !== undefined) checkPasswordLength(password);
       const user = await repo.byEmail(email);
       ensure(user, "INVALID_OTP", "Mã xác nhận không hợp lệ.", 400);
       const valid = await uow.run(async () => {

@@ -905,4 +905,262 @@ if (!url) {
     });
     assert.equal(refresh.status, 401);
   });
+
+  test(
+    "password changes and OTP resets reject an in-flight login verified against the old hash",
+    { timeout: 15000 },
+    async (t) => {
+      const bcrypt = require("bcryptjs");
+      const { createHmac } = require("node:crypto");
+      const original = bcrypt.compare;
+      for (const mode of ["change", "reset"]) {
+        const account = await app.auth.register({
+          name: "Password race",
+          email: `${randomUUID()}@example.test`,
+          password,
+        });
+        const principal = await app.auth.resolve(account.accessToken);
+        const nextPassword = "ChangedIntegration2026!";
+        let entered, resume;
+        const compared = new Promise((r) => {
+          entered = r;
+        });
+        const held = new Promise((r) => {
+          resume = r;
+        });
+        let intercept = true;
+        const mock = t.mock.method(bcrypt, "compare", async (...args) => {
+          const valid = await original(...args);
+          if (intercept && args[0] === password) {
+            intercept = false;
+            entered();
+            await held;
+          }
+          return valid;
+        });
+        const login = app.auth.login(account.user.email, password);
+        const rejected = assert.rejects(
+          login,
+          (e) => e.status === 401 && e.code === "INVALID_LOGIN",
+        );
+        try {
+          await compared;
+          if (mode === "change") {
+            await app.auth.changePassword(principal, password, nextPassword);
+          } else {
+            const otp = "123456";
+            const hash = createHmac("sha256", "integration-secret-".repeat(3))
+              .update(`${account.user.email}:${otp}`)
+              .digest("hex");
+            await fixture
+              .owner("auth")
+              .query(
+                "INSERT INTO password_reset_challenges(id,user_id,otp_hash,expires_at) VALUES($1,$2,$3,now()+interval '5 minutes')",
+                [randomUUID(), account.user.idUser, hash],
+              );
+            await app.auth.reset(account.user.email, otp, nextPassword);
+          }
+        } finally {
+          resume();
+          await rejected;
+          mock.mock.restore();
+        }
+        assert.equal(
+          (await call("GET", "/auth/me", undefined, account.accessToken))
+            .status,
+          401,
+        );
+        const sessions = await fixture
+          .owner("auth")
+          .query(
+            "SELECT * FROM auth_sessions WHERE user_id=$1 AND revoked_at IS NULL",
+            [account.user.idUser],
+          );
+        assert.equal(sessions.length, 0);
+        const fresh = await app.auth.login(account.user.email, nextPassword);
+        assert.equal(
+          (await call("GET", "/auth/me", undefined, fresh.accessToken)).status,
+          200,
+        );
+      }
+    },
+  );
+
+  test("passwords enforce the UTF-8 byte boundary across web, native, change and reset", async () => {
+    const exact = "ấ".repeat(24),
+      tooLong = exact + "A";
+    assert.equal(Buffer.byteLength(exact), 72);
+    assert.equal(Buffer.byteLength(tooLong), 73);
+    const email = `${randomUUID()}@example.test`;
+    for (const route of ["/auth/register", "/auth/mobile/register"])
+      assert.equal(
+        (
+          await call("POST", route, {
+            name: "Unicode",
+            email,
+            password: tooLong,
+            confirmPassword: tooLong,
+          })
+        ).status,
+        400,
+      );
+    const account = await app.auth.register({
+      name: "Unicode boundary",
+      email,
+      password: exact,
+    });
+    assert.ok((await app.auth.login(email, exact)).accessToken);
+    for (const route of ["/auth/login", "/auth/mobile/login"])
+      assert.equal(
+        (await call("POST", route, { email, password: exact + "B" })).status,
+        400,
+      );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          "/me/password",
+          { currentPassword: exact, newPassword: tooLong },
+          account.accessToken,
+        )
+      ).status,
+      400,
+    );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          "/me/password",
+          { currentPassword: tooLong, newPassword: password },
+          account.accessToken,
+        )
+      ).status,
+      400,
+    );
+    assert.equal(
+      (
+        await call("POST", "/auth/reset-password", {
+          email,
+          otp: "123456",
+          newPassword: tooLong,
+          confirmPassword: tooLong,
+        })
+      ).status,
+      400,
+    );
+    // Legacy oversized credentials must not silently authenticate a truncated suffix.
+    await assert.rejects(
+      app.auth.login(email, tooLong),
+      (e) => e.code === "PASSWORD_TOO_LONG",
+    );
+    assert.ok((await app.auth.login(email, exact)).accessToken);
+  });
+
+  test(
+    "concurrent identical booking retries return the last seat's same order",
+    { timeout: 15000 },
+    async () => {
+      const { createOrders } = require("../dist/modules/order/public");
+      const store = fixture.owner("order");
+      const ticketTypeId = randomUUID();
+      await store.query(
+        "INSERT INTO ticket_types(id,event_id,name,price_amount,capacity,sale_starts_at,sale_ends_at) VALUES($1,$2,'Idempotency last seat',100000,1,now()-interval '1 hour',now()+interval '1 hour')",
+        [ticketTypeId, eventId],
+      );
+      let release,
+        reads = 0;
+      const bothRead = new Promise((r) => {
+        release = r;
+      });
+      const orders = createOrders(
+        {
+          async query(sql, args) {
+            const result = await store.query(sql, args);
+            if (
+              sql.startsWith("SELECT * FROM orders WHERE buyer_id=") &&
+              ++reads <= 2
+            ) {
+              if (reads === 2) release();
+              await bothRead;
+            }
+            return result;
+          },
+        },
+        "integration-qr-secret-".repeat(3),
+      );
+      const key = randomUUID(),
+        event = await app.events.one(eventId);
+      const principal = await app.auth.resolve(buyer.accessToken);
+      const items = [{ ticketTypeId, quantity: 1 }];
+      const create = (payload = items, idempotency = key) =>
+        fixture.uow.run(() =>
+          orders.createOrder(
+            principal,
+            event,
+            buyer.user,
+            payload,
+            idempotency,
+          ),
+        );
+      const result = await Promise.all([create(), create()]);
+      assert.equal(result[0].id, result[1].id);
+      const inventory = await app.orders.type(ticketTypeId);
+      assert.equal(inventory.reserved_quantity, 1);
+      assert.equal(inventory.sold_quantity, 0);
+      assert.equal(
+        (
+          await store.query(
+            "SELECT * FROM orders WHERE buyer_id=$1 AND idempotency_key=$2",
+            [principal.userId, key],
+          )
+        ).length,
+        1,
+      );
+      await assert.rejects(
+        create([{ ticketTypeId, quantity: 2 }]),
+        (e) => e.code === "IDEMPOTENCY_CONFLICT",
+      );
+      await assert.rejects(
+        create(items, randomUUID()),
+        (e) => e.code === "SOLD_OUT",
+      );
+    },
+  );
+
+  test("media accepts one image and rejects multipart fields without taking down the API", async () => {
+    const sharp = require("sharp");
+    const { unlink } = require("node:fs/promises");
+    const path = require("node:path");
+    const { uploadDirectory } = require("../dist/platform/media");
+    const image = await sharp({
+      create: { width: 1, height: 1, channels: 3, background: "white" },
+    })
+      .png()
+      .toBuffer();
+    const send = (body) =>
+      fetch(base + "/api/media", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${buyer.accessToken}` },
+        body,
+      });
+    const valid = new FormData();
+    valid.set("image", new Blob([image], { type: "image/png" }), "pixel.png");
+    const uploaded = await send(valid);
+    const payload = await uploaded.json();
+    assert.equal(uploaded.status, 200, JSON.stringify(payload));
+    assert.match(payload.data.url, /^\/uploads\/[0-9a-f-]+\.webp$/);
+    await unlink(path.join(uploadDirectory, path.basename(payload.data.url)));
+    for (const names of [
+      ["extra"],
+      ["a[__proto__]", "a[length]"],
+      ["a[999999999999999999]"],
+    ]) {
+      const body = new FormData();
+      for (const name of names) body.append(name, "invalid");
+      const response = await send(body);
+      assert.equal(response.status, 400);
+      assert.equal((await response.json()).success, false);
+      assert.equal((await call("GET", "/health")).status, 200);
+    }
+  });
 }
