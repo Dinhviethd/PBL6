@@ -986,6 +986,191 @@ if (!url) {
     },
   );
 
+  test("password changes preserve leading and trailing credential whitespace", async () => {
+    const spaced = "  SpacedPass2026!  ";
+    const email = `${randomUUID()}@example.test`;
+    const account = await ok("POST", "/auth/register", {
+      name: "Whitespace password",
+      email,
+      password: spaced,
+      confirmPassword: spaced,
+    });
+    await ok("POST", "/auth/login", { email, password: spaced });
+    const wrong = await call(
+      "POST",
+      "/me/password",
+      {
+        currentPassword: spaced.trim(),
+        newPassword: password,
+      },
+      account.accessToken,
+    );
+    assert.equal(wrong.body.code, "INVALID_PASSWORD");
+    await ok(
+      "POST",
+      "/me/password",
+      {
+        currentPassword: spaced,
+        newPassword: password,
+      },
+      account.accessToken,
+    );
+    await assert.rejects(
+      app.auth.login(email, spaced),
+      (e) => e.code === "INVALID_LOGIN",
+    );
+    assert.ok((await app.auth.login(email, password)).accessToken);
+    assert.equal(
+      (await call("GET", "/auth/me", undefined, account.accessToken)).status,
+      401,
+    );
+  });
+
+  test("password change invalidates old OTP atomically and permits a newly issued OTP", async (t) => {
+    const nodemailer = require("nodemailer");
+    const oldHost = process.env.SMTP_HOST;
+    process.env.SMTP_HOST = "test.invalid";
+    t.after(() => {
+      if (oldHost === undefined) delete process.env.SMTP_HOST;
+      else process.env.SMTP_HOST = oldHost;
+    });
+    let otp;
+    t.mock.method(nodemailer, "createTransport", () => ({
+      sendMail: async (message) => {
+        otp = message.text.match(/\d{6}/)[0];
+      },
+    }));
+    const account = await app.auth.register({
+      name: "Reset challenge",
+      email: `${randomUUID()}@example.test`,
+      password,
+    });
+    const principal = await app.auth.resolve(account.accessToken);
+    await app.auth.forgot(account.user.email);
+    const oldOtp = otp;
+    await assert.rejects(
+      app.auth.changePassword(principal, "WrongPassword!", "Changed2026!"),
+    );
+    assert.deepEqual(await app.auth.reset(account.user.email, oldOtp), {
+      valid: true,
+    });
+
+    // Force a failure after all change-password writes, proving their rollback together.
+    await assert.rejects(
+      app.uow.run(async () => {
+        await app.auth.changePassword(principal, password, "RolledBack2026!");
+        throw Error("audit rollback");
+      }),
+      /audit rollback/,
+    );
+    assert.deepEqual(await app.auth.reset(account.user.email, oldOtp), {
+      valid: true,
+    });
+    await app.auth.resolve(account.accessToken);
+    assert.ok((await app.auth.login(account.user.email, password)).accessToken);
+
+    await ok(
+      "POST",
+      "/me/password",
+      { currentPassword: password, newPassword: "Changed2026!" },
+      account.accessToken,
+    );
+    const invalid = await call("POST", "/auth/reset-password", {
+      email: account.user.email,
+      otp: oldOtp,
+      newPassword: "StaleReset2026!",
+      confirmPassword: "StaleReset2026!",
+    });
+    assert.equal(invalid.status, 400);
+    assert.equal(invalid.body.code, "INVALID_OTP");
+    const rows = await fixture
+      .owner("auth")
+      .query(
+        "SELECT invalidated_at FROM password_reset_challenges WHERE user_id=$1",
+        [account.user.idUser],
+      );
+    assert.ok(rows.every((r) => r.invalidated_at));
+    await app.auth.forgot(account.user.email);
+    await app.auth.reset(account.user.email, otp, "FreshReset2026!");
+    assert.ok(
+      (await app.auth.login(account.user.email, "FreshReset2026!")).accessToken,
+    );
+  });
+
+  test(
+    "user lock orders concurrent password change against reset and forgot",
+    { timeout: 20000 },
+    async (t) => {
+      const bcrypt = require("bcryptjs"),
+        nodemailer = require("nodemailer");
+      const original = bcrypt.compare,
+        oldHost = process.env.SMTP_HOST;
+      process.env.SMTP_HOST = "test.invalid";
+      t.after(() => {
+        if (oldHost === undefined) delete process.env.SMTP_HOST;
+        else process.env.SMTP_HOST = oldHost;
+      });
+      let otp;
+      t.mock.method(nodemailer, "createTransport", () => ({
+        sendMail: async (message) => {
+          otp = message.text.match(/\d{6}/)[0];
+        },
+      }));
+      for (const mode of ["reset", "forgot"]) {
+        const account = await app.auth.register({
+          name: "Challenge race",
+          email: `${randomUUID()}@example.test`,
+          password,
+        });
+        const principal = await app.auth.resolve(account.accessToken);
+        await app.auth.forgot(account.user.email);
+        let enter, resume;
+        const entered = new Promise((resolve) => {
+          enter = resolve;
+        });
+        const held = new Promise((resolve) => {
+          resume = resolve;
+        });
+        const mock = t.mock.method(bcrypt, "compare", async (...args) => {
+          const valid = await original(...args);
+          enter();
+          await held;
+          return valid;
+        });
+        const change = app.auth.changePassword(
+          principal,
+          password,
+          "RaceChanged2026!",
+        );
+        try {
+          await entered; // changePassword now owns the user lock.
+          const concurrent =
+            mode === "reset"
+              ? assert.rejects(
+                  app.auth.reset(account.user.email, otp, "RaceReset2026!"),
+                  (e) => e.code === "INVALID_OTP",
+                )
+              : app.auth.forgot(account.user.email);
+          resume();
+          await Promise.all([change, concurrent]);
+        } finally {
+          resume();
+          mock.mock.restore();
+        }
+        if (mode === "forgot")
+          await app.auth.reset(account.user.email, otp, "RaceReset2026!");
+        assert.ok(
+          (
+            await app.auth.login(
+              account.user.email,
+              mode === "forgot" ? "RaceReset2026!" : "RaceChanged2026!",
+            )
+          ).accessToken,
+        );
+      }
+    },
+  );
+
   test("passwords enforce the UTF-8 byte boundary across web, native, change and reset", async () => {
     const exact = "ấ".repeat(24),
       tooLong = exact + "A";

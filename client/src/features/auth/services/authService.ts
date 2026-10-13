@@ -1,5 +1,5 @@
 import api from "../../../lib/api";
-import { useAuth, type User } from "../stores/authStore";
+import { notifySessionChange, useAuth, type User } from "../stores/authStore";
 
 export interface LoginRequest {
   email: string;
@@ -51,6 +51,7 @@ export const authService = {
     if (response.data.success && response.data.data) {
       const { user, accessToken } = response.data.data;
       useAuth.getState().setAuth(user, accessToken);
+      notifySessionChange();
     }
 
     return response.data;
@@ -62,17 +63,22 @@ export const authService = {
     if (response.data.success && response.data.data) {
       const { user, accessToken } = response.data.data;
       useAuth.getState().setAuth(user, accessToken);
+      notifySessionChange();
     }
 
     return response.data;
   },
 
   async logout(): Promise<ApiResponse> {
+    const revision = useAuth.getState().revision;
     try {
       const response = await api.post<ApiResponse>("/auth/logout");
       return response.data;
     } finally {
-      useAuth.getState().clearAuth();
+      if (useAuth.getState().revision === revision) {
+        useAuth.getState().clearAuth();
+        notifySessionChange();
+      }
     }
   },
 

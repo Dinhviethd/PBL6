@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 import axios from "axios";
 import api from "../../lib/api";
+import { useAuth } from "../auth/stores/authStore";
 export const money = (value: string | number = 0) =>
   new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -23,6 +24,7 @@ export async function get<T>(url: string): Promise<T> {
   return (await api.get<{ data: T }>(url)).data.data;
 }
 export function useLoad<T>(url: string) {
+  const revision = useAuth((s) => s.revision);
   const [data, setData] = useState<T | null>(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true),
@@ -44,7 +46,7 @@ export function useLoad<T>(url: string) {
     return () => {
       active = false;
     };
-  }, [url, version]);
+  }, [url, version, revision]);
   return {
     data,
     error,

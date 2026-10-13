@@ -130,6 +130,11 @@ export function authStore(db: Store) {
           [id],
         )
       )[0],
+    invalidateResets: (id: string) =>
+      db.query(
+        "UPDATE password_reset_challenges SET invalidated_at=now() WHERE user_id=$1 AND consumed_at IS NULL AND invalidated_at IS NULL",
+        [id],
+      ),
     newReset: async (id: string, hash: string) => {
       await db.query(
         "UPDATE password_reset_challenges SET invalidated_at=now() WHERE user_id=$1 AND consumed_at IS NULL AND invalidated_at IS NULL",

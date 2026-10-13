@@ -192,6 +192,7 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
           400,
         );
         await repo.password(p.userId, await bcrypt.hash(next, 12));
+        await repo.invalidateResets(p.userId);
         await repo.revokeAll(p.userId);
       });
     },

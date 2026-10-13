@@ -332,7 +332,10 @@ export function createApplication(config: {
     protect,
     route((req, res) => {
       const d = z
-        .object({ currentPassword: text, newPassword: password })
+        .object({
+          currentPassword: z.string().min(1).max(200),
+          newPassword: password,
+        })
         .parse(req.body);
       return auth.changePassword(who(res), d.currentPassword, d.newPassword);
     }),

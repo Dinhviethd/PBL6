@@ -50,14 +50,21 @@ function Guard({
   return <>{children}</>;
 }
 export function App() {
-  const { user } = useAuth(),
+  const { user, revision, sessionNotice } = useAuth(),
     config = useLoad<{ paymentMode: string }>("/config"),
     location = useLocation();
   useEffect(() => {
+    const started = useAuth.getState().revision;
     authService
       .getCurrentUser()
-      .catch(() => useAuth.getState().clearAuth())
-      .finally(() => useAuth.getState().setAuthVerified(true));
+      .catch(() => {
+        const state = useAuth.getState();
+        if (state.revision === started && state.user) state.clearAuth();
+      })
+      .finally(() => {
+        if (useAuth.getState().revision === started)
+          useAuth.getState().setAuthVerified(true);
+      });
   }, []);
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -119,7 +126,8 @@ export function App() {
           Bản trải nghiệm MVP · Thanh toán demo, không thu tiền thật
         </div>
       )}
-      <main className="site-main">
+      <main className="site-main" key={revision}>
+        {sessionNotice && <Notice error={sessionNotice} />}
         <Routes>
           <Route
             path="/checkin"
