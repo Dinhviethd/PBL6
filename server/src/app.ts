@@ -14,8 +14,13 @@ import { createDatabase } from "./platform/database";
 import { createAuth } from "./modules/auth/public";
 import { createEvents } from "./modules/event/public";
 import { createOrders } from "./modules/order/public";
-import { createPayments, demoProvider } from "./modules/payment/public";
+import {
+  createPayments,
+  demoProvider,
+  type PaymentProvider,
+} from "./modules/payment/public";
 import { createAudit } from "./modules/audit/public";
+import { createNotifications } from "./modules/notification/public";
 import { createBooking } from "./workflows/booking";
 import { ensure, role, type Row, type Principal } from "./contracts/core";
 const uuid = z.string().uuid(),
@@ -104,6 +109,7 @@ export function createApplication(config: {
   secret: string;
   qrSecret: string;
   demo?: boolean;
+  paymentProvider?: PaymentProvider;
   clientUrl?: string;
 }) {
   ensure(
@@ -125,13 +131,30 @@ export function createApplication(config: {
   const orders = createOrders(db.owner("order"), config.qrSecret),
     payments = createPayments(
       db.owner("payment"),
-      demoProvider(config.demo === true),
+      config.paymentProvider ?? demoProvider(config.demo === true),
     ),
     audit = createAudit(db.owner("audit"));
-  const booking = createBooking(auth, events, orders, payments, audit, uow),
+  const notifications = createNotifications(db.owner("notification"));
+  const booking = createBooking(
+      auth,
+      events,
+      orders,
+      payments,
+      audit,
+      uow,
+      notifications,
+    ),
     app = express(),
     api = express.Router();
   app.disable("x-powered-by");
+  // Local ngrok agent is the only trusted forwarding hop.
+  app.set("trust proxy", "loopback");
+  ensure(
+    !(payments.provider.enabled() && process.env.NODE_ENV === "production"),
+    "CONFIG",
+    "Thanh toán thử không được bật trong production.",
+    500,
+  );
   app.use(
     cors({
       origin: config.clientUrl ?? "http://localhost:5173",
@@ -206,6 +229,35 @@ export function createApplication(config: {
     return safe;
   };
   api.get(
+    "/me/notifications",
+    protect,
+    route((req, res) =>
+      notifications.inbox(
+        who(res),
+        page(req),
+        z.enum(["true", "false"]).default("false").parse(req.query.unread) ===
+          "true",
+      ),
+    ),
+  );
+  api.get(
+    "/me/notifications/count",
+    protect,
+    route((_req, res) => notifications.count(who(res))),
+  );
+  api.post(
+    "/me/notifications/read-all",
+    protect,
+    route(async (_req, res) => {
+      await notifications.markAllRead(who(res));
+    }),
+  );
+  api.post(
+    "/me/notifications/:id/read",
+    protect,
+    route((req, res) => notifications.markRead(who(res), id(req))),
+  );
+  api.get(
     "/health",
     route(async () => {
       await events.categories();
@@ -214,8 +266,67 @@ export function createApplication(config: {
   );
   api.get(
     "/config",
-    route(() => ({ paymentMode: config.demo ? "demo" : "disabled" })),
+    route(() => ({
+      paymentMode: payments.provider.enabled()
+        ? payments.provider.name
+        : "disabled",
+    })),
   );
+  api.get("/payments/vnpay/ipn", async (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    try {
+      const result = await booking.vnpayIpn(req.query);
+      res.json(
+        result === "ALREADY_APPLIED"
+          ? { RspCode: "02", Message: "Order already confirmed" }
+          : { RspCode: "00", Message: "Confirm Success" },
+      );
+    } catch (error) {
+      const code = (error as { code?: string }).code;
+      const codes: Record<string, string> = {
+        VNPAY_SIGNATURE: "97",
+        VNPAY_MERCHANT: "97",
+        VNPAY_NOT_FOUND: "01",
+        VNPAY_AMOUNT: "04",
+      };
+      res.json({
+        RspCode: codes[code ?? ""] ?? "99",
+        Message: "Unable to confirm payment",
+      });
+    }
+  });
+  api.get("/payments/vnpay/return", async (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.setHeader("Referrer-Policy", "no-referrer");
+    res.setHeader(
+      "Content-Security-Policy",
+      "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; frame-ancestors 'none'",
+    );
+    let target = "/orders";
+    try {
+      const result = payments.provider.verifyIpn?.(req.query);
+      if (result) {
+        const payment = await payments.byReference(
+          "vnpay_sandbox",
+          result.merchant,
+          result.reference,
+        );
+        if (payment) target = `/checkout/${payment.order_id}`;
+      }
+    } catch {
+      /* Return never mutates payment state or trusts browser status. */
+    }
+    const url = new URL(target, config.clientUrl ?? "http://localhost:5173");
+    const href = url.href
+      .replaceAll("&", "&amp;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("<", "&lt;");
+    res
+      .type("html")
+      .send(
+        `<!doctype html><html lang="vi"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EventHub · VNPay Sandbox</title><body style="font:18px system-ui;max-width:600px;margin:60px auto;padding:20px"><h1>Quay lại EventHub</h1><p>Máy chủ đang kiểm tra kết quả thanh toán. Vé chỉ được phát hành khi giao dịch đã được xác nhận.</p><p><a href="${href}">Xem đơn hàng trên web</a></p><p>Nếu dùng ứng dụng điện thoại, hãy quay lại EventHub và chọn “Cập nhật trạng thái”.</p></body></html>`,
+      );
+  });
   api.post(
     "/auth/register",
     route(async (req, res) => {
@@ -548,7 +659,7 @@ export function createApplication(config: {
   api.post(
     "/orders/:id/payments",
     protect,
-    route((req, res) => booking.startPayment(who(res), id(req))),
+    route((req, res) => booking.startPayment(who(res), id(req), req.ip)),
   );
   api.post(
     "/orders/:id/cancel",
@@ -867,6 +978,7 @@ export function createApplication(config: {
     events,
     orders,
     payments,
+    notifications,
     uow,
   };
 }

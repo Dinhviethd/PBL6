@@ -56,7 +56,12 @@ if (!url) {
     const migration = new DataSource({
       type: "postgres",
       url,
-      migrations: [InitialMvp1790812800000, EventCheckinStaff1791072000000],
+      migrations: [
+        InitialMvp1790812800000,
+        EventCheckinStaff1791072000000,
+        require("../dist/migrations/Notifications1791331200000")
+          .Notifications1791331200000,
+      ],
     });
     await migration.initialize();
     await migration.runMigrations();
@@ -155,6 +160,305 @@ if (!url) {
     if (server) await new Promise((resolve) => server.close(resolve));
     if (app) await app.close();
     if (fixture) await fixture.close();
+  });
+  test("notification inbox isolation, transactional delivery, reminders and retry deduplication", async () => {
+    const account = async (name) =>
+      app.auth.register({
+        name,
+        email: `${randomUUID()}@example.test`,
+        password,
+      });
+    const customer = await account("Notification buyer"),
+      staff = await account("Notification staff");
+    const cp = await app.auth.resolve(customer.accessToken),
+      sp = await app.auth.resolve(staff.accessToken);
+    const op = await app.auth.resolve(organizer.accessToken),
+      ap = await app.auth.resolve(admin.accessToken);
+    const source = await app.events.one(eventId);
+    const data = {
+      categoryId: source.category_id,
+      slug: randomUUID(),
+      title: "Reminder event",
+      description: "Notifications test",
+      venueName: "Hall A",
+      address: "Test address",
+      cityCode: "DN",
+      startsAt: new Date(Date.now() + 25 * 3600000).toISOString(),
+      endsAt: new Date(Date.now() + 48 * 3600000).toISOString(),
+      checkinOpensAt: new Date(Date.now() - 3600000).toISOString(),
+      checkinClosesAt: new Date(Date.now() + 48 * 3600000).toISOString(),
+    };
+    const e = await app.booking.saveEvent(op, data);
+    const inv = await app.booking.inviteStaff(op, e.id, staff.user.email);
+    let inbox = await ok(
+      "GET",
+      "/me/notifications",
+      undefined,
+      staff.accessToken,
+    );
+    assert.equal(inbox.items.length, 1);
+    assert.equal(inbox.items[0].kind, "STAFF_INVITED");
+    await app.booking.saveEvent(op, { ...data, venueName: "Hall B" }, e.id);
+    inbox = await ok("GET", "/me/notifications", undefined, staff.accessToken);
+    assert.equal(
+      inbox.items.filter((n) => n.kind === "EVENT_UPDATED").length,
+      1,
+    );
+    await app.booking.saveEvent(op, { ...data, venueName: "Hall B" }, e.id);
+    assert.equal((await app.notifications.inbox(sp, 0, false)).items.length, 2);
+    const type = await app.booking.configureType(op, e.id, {
+      name: "Standard",
+      price: "100000",
+      capacity: 10,
+      saleStartsAt: new Date(Date.now() - 3600000).toISOString(),
+      saleEndsAt: data.endsAt,
+    });
+    await app.booking.submit(op, e.id);
+    await app.booking.review(ap, e.id, true, "");
+    const buy = async (p) => {
+      const o = await app.booking.createOrder(
+        p,
+        e.id,
+        [{ ticketTypeId: type.id, quantity: 1 }],
+        randomUUID(),
+      );
+      const pay = await app.booking.startPayment(p, o.id);
+      await Promise.all(
+        [1, 2].map(() => app.booking.demoPayment(p, pay.id, true)),
+      );
+      return o;
+    };
+    const first = await buy(cp);
+    inbox = await app.notifications.inbox(cp, 0, false);
+    assert.equal(inbox.items.length, 1);
+    assert.equal(inbox.items[0].kind, "ORDER_PAID");
+    assert.equal(inbox.items[0].target_id, first.id);
+    await buy(cp); // Multiple orders for one event still get just one reminder.
+    await app.booking.remind();
+    assert.equal(
+      (await app.notifications.inbox(cp, 0, false)).items.filter(
+        (n) => n.kind === "EVENT_REMINDER",
+      ).length,
+      0,
+    );
+    await fixture
+      .owner("event")
+      .query(
+        "UPDATE events SET starts_at=now()+interval '23 hours' WHERE id=$1",
+        [e.id],
+      );
+    await Promise.all([app.booking.remind(), app.booking.remind()]);
+    inbox = await app.notifications.inbox(cp, 0, false);
+    assert.equal(
+      inbox.items.filter((n) => n.kind === "EVENT_REMINDER").length,
+      1,
+    );
+    assert.equal(
+      (await app.notifications.inbox(sp, 0, false)).items.filter(
+        (n) => n.kind === "EVENT_REMINDER",
+      ).length,
+      0,
+    );
+    // Joining after the first worker pass is picked up on the next pass.
+    await app.booking.respondStaff(sp, inv.id, true);
+    await app.booking.remind();
+    assert.equal(
+      (await app.notifications.inbox(sp, 0, false)).items.filter(
+        (n) => n.kind === "EVENT_REMINDER",
+      ).length,
+      1,
+    );
+    assert.equal(await app.booking.remind(), 0);
+    const n = inbox.items[0];
+    assert.equal((await call("GET", "/me/notifications")).status, 401);
+    assert.equal(
+      (
+        await call(
+          "GET",
+          "/me/notifications?page=-1",
+          undefined,
+          customer.accessToken,
+        )
+      ).status,
+      400,
+    );
+    assert.equal(
+      (
+        await call(
+          "GET",
+          "/me/notifications?unread=invalid",
+          undefined,
+          customer.accessToken,
+        )
+      ).status,
+      400,
+    );
+    assert.equal(
+      (
+        await call(
+          "POST",
+          `/me/notifications/${n.id}/read`,
+          {},
+          staff.accessToken,
+        )
+      ).status,
+      404,
+    );
+    await ok(
+      "POST",
+      `/me/notifications/${n.id}/read`,
+      {},
+      customer.accessToken,
+    );
+    const readAt = (await app.notifications.inbox(cp, 0, false)).items.find(
+      (v) => v.id === n.id,
+    ).read_at;
+    await ok(
+      "POST",
+      `/me/notifications/${n.id}/read`,
+      {},
+      customer.accessToken,
+    );
+    assert.equal(
+      String(
+        (await app.notifications.inbox(cp, 0, false)).items.find(
+          (v) => v.id === n.id,
+        ).read_at,
+      ),
+      String(readAt),
+    );
+    await ok("POST", "/me/notifications/read-all", {}, customer.accessToken);
+    assert.equal(
+      (
+        await ok(
+          "GET",
+          "/me/notifications/count",
+          undefined,
+          customer.accessToken,
+        )
+      ).unreadCount,
+      0,
+    );
+    assert.equal(
+      (
+        await ok(
+          "GET",
+          "/me/notifications?unread=true",
+          undefined,
+          customer.accessToken,
+        )
+      ).items.length,
+      0,
+    );
+    assert.ok((await app.notifications.count(sp)).unreadCount > 0);
+    // A failing business transaction cannot leave a success notification behind.
+    const beforeCount = (await app.notifications.inbox(cp, 0, false)).items
+      .length;
+    const payload = {
+      userId: cp.userId,
+      kind: "ORDER_PAID",
+      title: "Rollback",
+      message: "test",
+      target: "ORDER",
+      targetId: first.id,
+      dedupeKey: randomUUID(),
+    };
+    await assert.rejects(
+      app.uow.run(async () => {
+        await app.notifications.send(payload);
+        throw Error("rollback");
+      }),
+    );
+    assert.equal(
+      (await app.notifications.inbox(cp, 0, false)).items.length,
+      beforeCount,
+    );
+    // Ended, cancelled, draft events and void/already-used tickets are excluded.
+    await fixture
+      .owner("notification")
+      .query(
+        "DELETE FROM notifications WHERE kind='EVENT_REMINDER' AND target_id=$1",
+        [e.id],
+      );
+    await app.booking.revokeStaff(op, e.id, inv.id);
+    await fixture
+      .owner("order")
+      .query(
+        "UPDATE tickets SET status='VOID',voided_at=now(),void_reason='test' WHERE event_id=$1",
+        [e.id],
+      );
+    await app.booking.remind();
+    assert.equal(
+      (await app.notifications.inbox(cp, 0, false)).items.filter(
+        (v) => v.kind === "EVENT_REMINDER",
+      ).length,
+      0,
+    );
+    await fixture
+      .owner("order")
+      .query(
+        "UPDATE tickets SET status='CHECKED_IN',voided_at=NULL,void_reason=NULL WHERE event_id=$1",
+        [e.id],
+      );
+    await app.booking.remind();
+    assert.equal(
+      (await app.notifications.inbox(cp, 0, false)).items.filter(
+        (v) => v.kind === "EVENT_REMINDER",
+      ).length,
+      0,
+    );
+    await fixture
+      .owner("order")
+      .query("UPDATE tickets SET status='VALID' WHERE event_id=$1", [e.id]);
+    for (const status of ["CANCELLED", "DRAFT"]) {
+      await fixture
+        .owner("event")
+        .query(
+          "UPDATE events SET status=$2::varchar,cancelled_at=CASE WHEN $2::varchar='CANCELLED' THEN now() ELSE NULL END,cancellation_reason='test' WHERE id=$1",
+          [e.id, status],
+        );
+      await app.booking.remind();
+      assert.equal(
+        (await app.notifications.inbox(cp, 0, false)).items.filter(
+          (v) => v.kind === "EVENT_REMINDER",
+        ).length,
+        0,
+      );
+    }
+    await fixture
+      .owner("event")
+      .query(
+        "UPDATE events SET status='PUBLISHED',starts_at=now()-interval '1 minute' WHERE id=$1",
+        [e.id],
+      );
+    await app.booking.remind();
+    assert.equal(
+      (await app.notifications.inbox(cp, 0, false)).items.filter(
+        (v) => v.kind === "EVENT_REMINDER",
+      ).length,
+      0,
+    );
+    for (let i = 0; i < 51; i++)
+      await app.notifications.send({ ...payload, dedupeKey: randomUUID() });
+    const firstPage = await ok(
+      "GET",
+      "/me/notifications",
+      undefined,
+      customer.accessToken,
+    );
+    const secondPage = await ok(
+      "GET",
+      "/me/notifications?page=1",
+      undefined,
+      customer.accessToken,
+    );
+    assert.equal(firstPage.items.length, 50);
+    assert.equal(firstPage.hasNext, true);
+    assert.equal(secondPage.hasNext, false);
+    assert.equal(
+      new Set([...firstPage.items, ...secondPage.items].map((v) => v.id)).size,
+      53,
+    );
   });
   test("three-role workflow, concurrent inventory, repeated payment, QR and isolation", async () => {
     assert.equal(
@@ -1029,6 +1333,9 @@ if (!url) {
   test("password change invalidates old OTP atomically and permits a newly issued OTP", async (t) => {
     const nodemailer = require("nodemailer");
     const oldHost = process.env.SMTP_HOST;
+    const oldFrom = process.env.SMTP_FROM;
+    process.env.SMTP_FROM = "test@example.test";
+    t.after(() => { if (oldFrom === undefined) delete process.env.SMTP_FROM; else process.env.SMTP_FROM = oldFrom; });
     process.env.SMTP_HOST = "test.invalid";
     t.after(() => {
       if (oldHost === undefined) delete process.env.SMTP_HOST;
@@ -1105,7 +1412,10 @@ if (!url) {
         nodemailer = require("nodemailer");
       const original = bcrypt.compare,
         oldHost = process.env.SMTP_HOST;
-      process.env.SMTP_HOST = "test.invalid";
+      const oldFrom = process.env.SMTP_FROM;
+    process.env.SMTP_FROM = "test@example.test";
+    t.after(() => { if (oldFrom === undefined) delete process.env.SMTP_FROM; else process.env.SMTP_FROM = oldFrom; });
+    process.env.SMTP_HOST = "test.invalid";
       t.after(() => {
         if (oldHost === undefined) delete process.env.SMTP_HOST;
         else process.env.SMTP_HOST = oldHost;

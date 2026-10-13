@@ -2,6 +2,13 @@ import { randomUUID } from "node:crypto";
 import type { Store, Row } from "../../../contracts/core";
 export function orderStore(db: Store) {
   return {
+    reminderBuyers: (eventId: string) =>
+      db.query(
+        `SELECT DISTINCT o.buyer_id AS user_id FROM orders o
+       JOIN order_items i ON i.order_id=o.id JOIN tickets t ON t.order_item_id=i.id
+       WHERE o.event_id=$1 AND o.status='PAID' AND t.status='VALID' ORDER BY o.buyer_id`,
+        [eventId],
+      ),
     checkinHistory: (eventId: string, offset: number) =>
       db.query(
         `SELECT c.ticket_id,c.checked_in_by,c.checked_in_at,c.method,t.ticket_code,i.ticket_type_name_snapshot

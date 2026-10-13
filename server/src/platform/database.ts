@@ -26,6 +26,7 @@ export const ownership: Record<Owner, readonly string[]> = {
   ],
   payment: ["payments", "payment_notifications"],
   audit: ["audit_logs"],
+  notification: ["notifications"],
 };
 
 // Reject unparseable SQL, commands, schema-qualified tables and foreign-owner references.

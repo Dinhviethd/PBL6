@@ -12,6 +12,8 @@ const db = new DataSource({
     InitialMvp1790812800000,
     require("../dist/migrations/EventCheckinStaff1791072000000")
       .EventCheckinStaff1791072000000,
+    require("../dist/migrations/Notifications1791331200000")
+      .Notifications1791331200000,
   ],
   synchronize: false,
 });

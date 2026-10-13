@@ -1,11 +1,13 @@
 import "dotenv/config";
 import { createApplication } from "./app";
+import { paymentProviderFromEnv } from "./modules/payment/public";
 async function main() {
   const app = createApplication({
     databaseUrl: process.env.DATABASE_URL ?? "",
     secret: process.env.JWT_ACCESS_SECRET ?? "",
     qrSecret: process.env.QR_SECRET ?? "",
     demo: process.env.PAYMENT_MODE === "demo",
+    paymentProvider: paymentProviderFromEnv(),
     clientUrl: process.env.CLIENT_URL,
   });
   await app.start();

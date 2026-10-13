@@ -4,7 +4,7 @@ Ngày cập nhật: 01/10/2026. Quyết định của người dùng: dùng chun
 
 **Cách triển khai đã chốt: modular monolith trước, tách process sau.** MVP có một Express process và một database; Auth, Event, Order, Payment và Audit là các module có ranh giới rõ ràng. Interface gọi nội bộ qua dependency injection; chưa thêm HTTP giữa module hoặc message broker. Đây là bước chuẩn bị cho microservices, chưa gọi bản MVP là các microservice triển khai độc lập.
 
-## 1. Ma trận sở hữu 21 bảng nghiệp vụ
+## 1. Ma trận sở hữu 22 bảng nghiệp vụ
 
 | Miền sở hữu | Bảng được trực tiếp SELECT/INSERT/UPDATE/DELETE | Public interface chính |
 | --- | --- | --- |
@@ -13,6 +13,7 @@ Ngày cập nhật: 01/10/2026. Quyết định của người dùng: dùng chun
 | Order | ticket_types, orders, order_items, reservations, tickets, checkins | Cấu hình loại vé, báo giá, giữ/nhả kho, checkout, xác nhận kết quả thanh toán, phát hành vé và check-in |
 | Payment | payments, payment_notifications | Tạo attempt, giao tiếp provider, xác minh webhook, đối chiếu và trả kết quả thanh toán đã xác minh |
 | Audit | audit_logs | Append bản ghi đã lọc và đọc audit theo quyền; không export repository |
+| Notification | notifications | Ghi thông báo theo khóa chống trùng, hộp thư và trạng thái đọc theo principal; workflow lấy người nhận qua Event/Order |
 
 `ticket_types` thuộc Order vì capacity/reserved/sold và reservation cần một bên chịu trách nhiệm. Event không được cập nhật riêng name/price hoặc counter của cùng bảng. API quản lý loại vé có thể đặt trong màn hình Organizer, nhưng handler chuyển tới Order; vị trí trên UI/URL không quyết định owner của dữ liệu.
 

@@ -3,6 +3,15 @@ export interface PaymentIntent {
   merchantAccount: string;
   expiresAt: Date;
   reconcileUntil: Date;
+  checkoutUrl?: string;
+}
+export interface VerifiedPayment {
+  reference: string;
+  merchant: string;
+  amount: string; // VNPay's integer amount, multiplied by 100
+  transactionId: string | null;
+  status: "SUCCEEDED" | "FAILED" | "UNKNOWN";
+  code: string;
 }
 export interface PaymentProvider {
   readonly name: string;
@@ -12,8 +21,15 @@ export interface PaymentProvider {
     orderId: string;
     amount: string;
     expiresAt: Date;
+    reference: string;
+    ip: string;
   }): PaymentIntent;
   demoTransactionId(paymentId: string): string;
+  verifyIpn?(input: unknown): VerifiedPayment;
+  reconcile?(payment: {
+    merchant_reference: string;
+    checkout_url: string;
+  }): Promise<VerifiedPayment | null>;
 }
 // Local simulation only. A network provider needs signed callbacks and reconciliation
 // outside the database transaction before handing verified results to the workflow.

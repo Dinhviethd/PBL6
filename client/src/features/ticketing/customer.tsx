@@ -13,6 +13,7 @@ import {
   Ticket as TicketIcon,
 } from "lucide-react";
 import api from "../../lib/api";
+import { checkoutUrl, paymentMessage } from "./payment";
 import authService from "../auth/services/authService";
 import { useAuth } from "../auth/stores/authStore";
 import {
@@ -529,6 +530,23 @@ export function Checkout() {
     [busy, setBusy] = useState(false),
     [now, setNow] = useState(Date.now());
   const config = useLoad<{ paymentMode: string }>("/config");
+  const pendingVnpay =
+    o?.status === "PENDING_PAYMENT" && o.payment?.provider === "vnpay_sandbox";
+  const reloadOrder = resource.reload;
+  useEffect(() => {
+    if (!pendingVnpay) return;
+    const until = Date.now() + 60000;
+    const poll = setInterval(() => {
+      if (Date.now() < until) reloadOrder();
+      else clearInterval(poll);
+    }, 3000);
+    const refresh = () => reloadOrder();
+    window.addEventListener("focus", refresh);
+    return () => {
+      clearInterval(poll);
+      window.removeEventListener("focus", refresh);
+    };
+  }, [pendingVnpay, reloadOrder]);
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
@@ -540,6 +558,8 @@ export function Checkout() {
       if (success === undefined) {
         const r = await api.post(`/orders/${id}/payments`);
         setPayment(r.data.data);
+        if (r.data.data.provider === "vnpay_sandbox")
+          window.location.assign(checkoutUrl(r.data.data.checkout_url));
       } else {
         const p = payment ?? o?.payment;
         if (!p) return;
@@ -561,7 +581,7 @@ export function Checkout() {
       setBusy(false);
     }
   }
-  if (resource.loading) return <Loading />;
+  if (resource.loading && !o) return <Loading />;
   if (!o) return <Notice error={resource.error} />;
   const remaining = Math.max(
     0,
@@ -600,6 +620,17 @@ export function Checkout() {
         <aside className="panel">
           <h2>{o.status === "PAID" ? "Đặt vé thành công" : "Thanh toán"}</h2>
           <Notice error={error} />
+          <Notice>{paymentMessage(o.latest_payment)}</Notice>
+          {o.status === "EXPIRED" && (
+            <Notice>Đơn hàng đã hết hạn giữ chỗ.</Notice>
+          )}
+          <button
+            className="btn ghost full"
+            disabled={resource.loading || busy}
+            onClick={resource.reload}
+          >
+            Cập nhật trạng thái
+          </button>
           {o.status === "PENDING_PAYMENT" && (
             <>
               <p>
@@ -611,13 +642,33 @@ export function Checkout() {
               </p>
               {config.data?.paymentMode === "demo" ? (
                 <Notice>Chế độ demo local — không thu tiền thật.</Notice>
+              ) : config.data?.paymentMode === "vnpay_sandbox" ? (
+                <Notice>
+                  VNPay Sandbox — chỉ dùng thông tin thanh toán thử.
+                </Notice>
               ) : (
                 <Notice>
                   Chưa cấu hình cổng thanh toán. Bạn có thể xem đơn và hủy giữ
                   chỗ.
                 </Notice>
               )}
-              {payment || o.payment ? (
+              {config.data?.paymentMode === "vnpay_sandbox" ? (
+                <button
+                  className="btn primary full"
+                  disabled={
+                    busy ||
+                    !remaining ||
+                    Boolean(
+                      o.payment?.provider_expires_at &&
+                      Date.parse(o.payment.provider_expires_at) <= now,
+                    )
+                  }
+                  onClick={() => void pay()}
+                >
+                  Thanh toán qua VNPay
+                </button>
+              ) : (payment || o.payment) &&
+                config.data?.paymentMode === "demo" ? (
                 <>
                   <p>Chọn kết quả để thử luồng thanh toán demo.</p>
                   <button

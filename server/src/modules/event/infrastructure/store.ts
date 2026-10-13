@@ -2,6 +2,20 @@ import { randomUUID } from "node:crypto";
 import type { Store, Row } from "../../../contracts/core";
 export function eventStore(db: Store) {
   return {
+    reminderEvents: (after: string | null) =>
+      db.query(
+        `SELECT id FROM events WHERE status='PUBLISHED' AND starts_at>now()
+       AND starts_at<=now()+interval '24 hours' AND ($1::uuid IS NULL OR id>$1)
+       ORDER BY id LIMIT 100`,
+        [after],
+      ),
+    notificationStaff: (eventId: string, includePending = false) =>
+      db.query(
+        `SELECT user_id FROM event_checkin_staff WHERE event_id=$1 AND
+       (status='ACTIVE' OR ($2::boolean=true AND status='PENDING' AND expires_at>now()))
+       ORDER BY user_id`,
+        [eventId, includePending],
+      ),
     staffMember: async (eventId: string, userId: string) =>
       (
         await db.query(

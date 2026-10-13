@@ -54,8 +54,12 @@ export interface Order {
     line_total: string;
   }[];
   payment?: Payment;
+  latest_payment?: Payment;
 }
 export interface Payment {
+  provider?: string;
+  checkout_url?: string | null;
+  provider_expires_at?: string;
   id: string;
   order_id: string;
   merchant_reference: string;

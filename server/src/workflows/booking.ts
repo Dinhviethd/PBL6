@@ -1,8 +1,10 @@
 import type { Auth } from "../modules/auth/public";
 import type { Events } from "../modules/event/public";
 import type { Orders } from "../modules/order/public";
-import type { Payments } from "../modules/payment/public";
+import type { Payments, VerifiedPayment } from "../modules/payment/public";
 import type { createAudit } from "../modules/audit/public";
+import type { Notifications } from "../modules/notification/public";
+import { randomUUID } from "node:crypto";
 import {
   ensure,
   role,
@@ -17,7 +19,14 @@ export function createBooking(
   payments: Payments,
   audit: ReturnType<typeof createAudit>,
   uow: UnitOfWork,
+  notifications: Notifications,
 ) {
+  const schedule = (e: Row) =>
+    `${new Date(e.starts_at).toLocaleString("vi-VN", {
+      timeZone: "Asia/Ho_Chi_Minh",
+      dateStyle: "medium",
+      timeStyle: "short",
+    })} (UTC+7), ${e.venue_name}, ${e.address}`;
   async function lockedOrder(id: string, p?: Principal) {
     const initial = await orders.one(id);
     ensure(initial, "NOT_FOUND", "Không tìm thấy đơn hàng.", 404);
@@ -32,7 +41,97 @@ export function createBooking(
       );
     return { order, event };
   }
+  async function applyVerified(result: VerifiedPayment) {
+    return uow.run(async () => {
+      const initial = await payments.byReference(
+        "vnpay_sandbox",
+        result.merchant,
+        result.reference,
+      );
+      ensure(initial, "VNPAY_NOT_FOUND", "Không tìm thấy giao dịch.", 404);
+      const { order } = await lockedOrder(initial.order_id);
+      await orders.lockInventory(order);
+      const payment = await payments.one(initial.id, true);
+      ensure(
+        BigInt(payment.amount) * 100n === BigInt(result.amount) &&
+          payment.currency === "VND",
+        "VNPAY_AMOUNT",
+        "Số tiền không khớp.",
+        400,
+      );
+      // A later failure/query snapshot cannot overwrite confirmed success.
+      if (
+        payment.status === "SUCCEEDED" ||
+        (payment.status === "FAILED" && result.status !== "SUCCEEDED")
+      )
+        return "ALREADY_APPLIED";
+      await payments.verifiedResult(payment.id, result);
+      const outcome =
+        result.status === "SUCCEEDED"
+          ? await orders.complete(order, payment)
+          : result.status;
+      if (outcome === "APPLIED" || outcome === "FAILED")
+        await payments.clearTransientReview(payment.id);
+      if (
+        ["LATE_PAYMENT", "DIFFERENT_PAYMENT_ALREADY_APPLIED"].includes(outcome)
+      )
+        await payments.review(payment.id, outcome);
+      if (
+        result.status === "UNKNOWN" &&
+        !["00:01", "01:01"].includes(result.code)
+      )
+        await payments.review(payment.id, "VNPAY_UNRESOLVED");
+      await payments.recordVerified(payment, result);
+      if (outcome === "APPLIED")
+        await notifications.send({
+          userId: order.buyer_id,
+          kind: "ORDER_PAID",
+          title: "Đặt vé thành công",
+          message: `Đơn ${order.order_code} cho ${order.event_title_snapshot} đã thanh toán. Vé QR đã sẵn sàng.`,
+          target: "ORDER",
+          targetId: order.id,
+          dedupeKey: `paid:${order.id}`,
+        });
+      await audit.append(null, "payment.verified", "payment", payment.id, {
+        outcome,
+      });
+      return outcome;
+    });
+  }
   return {
+    async vnpayIpn(input: unknown) {
+      ensure(
+        payments.provider.verifyIpn,
+        "VNPAY_DISABLED",
+        "VNPay chưa được bật.",
+        503,
+      );
+      return applyVerified(payments.provider.verifyIpn(input));
+    },
+    async reconcile() {
+      const provider = payments.provider;
+      if (!provider.reconcile) return 0;
+      let count = 0;
+      for (const candidate of await payments.due()) {
+        if (!(await payments.claim(candidate.id))) continue;
+        try {
+          const result = await provider.reconcile({
+            merchant_reference: candidate.merchant_reference,
+            checkout_url: candidate.checkout_url,
+          });
+          if (result) {
+            await applyVerified(result);
+            count++;
+          }
+        } catch {
+          // Network and signature failures leave the payment unresolved, never FAILED.
+          console.warn("VNPay reconciliation pending", candidate.id);
+        } finally {
+          await payments.defer(candidate.id);
+        }
+      }
+      return count;
+    },
     async createOrder(
       p: Principal,
       eventId: string,
@@ -64,9 +163,10 @@ export function createBooking(
         ...o,
         items: await orders.items(id),
         payment: await payments.active(id),
+        latest_payment: await payments.latest(id),
       };
     },
-    startPayment: (p: Principal, id: string) =>
+    startPayment: (p: Principal, id: string, ip = "127.0.0.1") =>
       uow.run(async () => {
         payments.requireProvider();
         const { order, event } = await lockedOrder(id, p);
@@ -77,8 +177,15 @@ export function createBooking(
         );
         await orders.prepare(order, p);
         const prior = await payments.active(id);
-        if (prior) return prior;
-        const attempt = await payments.create(order);
+        if (prior) {
+          ensure(
+            prior.provider === payments.provider.name,
+            "PAYMENT_PROVIDER_CHANGED",
+            "Đơn đang có giao dịch từ chế độ thanh toán cũ. Vui lòng dùng đơn mới.",
+          );
+          return prior;
+        }
+        const attempt = await payments.create(order, ip);
         await orders.extend(id, new Date(attempt.reconcile_until));
         await audit.append(p, "payment.created", "payment", attempt.id);
         return attempt;
@@ -104,6 +211,16 @@ export function createBooking(
         )
           await payments.review(id, outcome);
         await payments.notification(payment, success);
+        if (outcome === "APPLIED")
+          await notifications.send({
+            userId: order.buyer_id,
+            kind: "ORDER_PAID",
+            title: "Đặt vé thành công",
+            message: `Đơn ${order.order_code} cho ${order.event_title_snapshot} đã thanh toán. Vé QR đã sẵn sàng.`,
+            target: "ORDER",
+            targetId: order.id,
+            dedupeKey: `paid:${order.id}`,
+          });
         await audit.append(p, "payment.result", "payment", id, { outcome });
         return { outcome };
       }),
@@ -204,7 +321,31 @@ export function createBooking(
           "Danh mục không hợp lệ.",
           400,
         );
-        return events.save(e.organizer_id, d, id);
+        const saved = await events.save(e.organizer_id, d, id);
+        const changed =
+          new Date(d.startsAt).getTime() !== new Date(e.starts_at).getTime() ||
+          new Date(d.endsAt).getTime() !== new Date(e.ends_at).getTime() ||
+          d.address !== e.address ||
+          d.venueName !== e.venue_name ||
+          d.cityCode !== e.city_code ||
+          new Date(d.checkinOpensAt).getTime() !==
+            new Date(e.checkin_opens_at).getTime() ||
+          new Date(d.checkinClosesAt).getTime() !==
+            new Date(e.checkin_closes_at).getTime();
+        if (changed) {
+          const revision = randomUUID();
+          for (const staff of await events.notificationStaff(id, true))
+            await notifications.send({
+              userId: staff.user_id,
+              kind: "EVENT_UPDATED",
+              title: "Lịch hoặc địa điểm đã thay đổi",
+              message: `${saved.title}: ${schedule(saved)}. Vui lòng kiểm tra lại giờ check-in trong phân công.`,
+              target: "STAFF",
+              targetId: id,
+              dedupeKey: `event-update:${id}:${revision}`,
+            });
+        }
+        return saved;
       }),
     submit: (p: Principal, id: string) =>
       uow.run(async () => {
@@ -301,6 +442,15 @@ export function createBooking(
         const event = await events.guard(eventId, p, true);
         const user = await auth.checkinInvitee(email);
         const invitation = await events.inviteCheckinStaff(event, p, user);
+        await notifications.send({
+          userId: user.id,
+          kind: "STAFF_INVITED",
+          title: "Lời mời nhân viên check-in",
+          message: `Bạn được mời hỗ trợ check-in cho ${event.title}. Vào mục phân công để xem và trả lời lời mời.`,
+          target: "STAFF",
+          targetId: eventId,
+          dedupeKey: `staff-invite:${invitation.id}`,
+        });
         await audit.append(p, "event.staff_invited", "event", eventId, {
           invitationId: invitation.id,
           userId: user.id,
@@ -354,6 +504,51 @@ export function createBooking(
           names.find((n) => n.idUser === r.checked_in_by)?.name ??
           "Tài khoản không còn tồn tại",
       }));
+    },
+    async remind() {
+      let after: string | null = null,
+        count = 0;
+      // Keyset pagination avoids starving later events; each retry recomputes
+      // recipients so purchases made within the last 24 hours are included.
+      for (;;) {
+        const candidates = await events.reminderEvents(after);
+        if (!candidates.length) break;
+        for (const candidate of candidates) {
+          count += await uow.run(async () => {
+            const e = await events.guard(candidate.id);
+            const remaining = new Date(e.starts_at).getTime() - Date.now();
+            if (
+              e.status !== "PUBLISHED" ||
+              remaining <= 0 ||
+              remaining > 86400000
+            )
+              return 0;
+            const recipients = new Map<string, "TICKETS" | "STAFF">();
+            for (const s of await events.notificationStaff(e.id))
+              recipients.set(s.user_id, "STAFF");
+            for (const b of await orders.reminderBuyers(e.id))
+              recipients.set(b.user_id, "TICKETS");
+            let sent = 0;
+            // Stable ordering also prevents deadlocks between concurrent workers.
+            for (const [userId, target] of [...recipients].sort(([a], [b]) =>
+              a.localeCompare(b),
+            )) {
+              sent += await notifications.send({
+                userId,
+                kind: "EVENT_REMINDER",
+                title: "Sự kiện sắp bắt đầu",
+                message: `${e.title} bắt đầu lúc ${schedule(e)}. ${target === "STAFF" ? "Kiểm tra giờ check-in trong phân công của bạn." : "Chuẩn bị vé QR để check-in."}`,
+                target,
+                targetId: e.id,
+                dedupeKey: `reminder:${e.id}:${new Date(e.starts_at).toISOString()}`,
+              });
+            }
+            return sent;
+          });
+        }
+        after = candidates[candidates.length - 1].id;
+      }
+      return count;
     },
     async expire() {
       let count = 0;

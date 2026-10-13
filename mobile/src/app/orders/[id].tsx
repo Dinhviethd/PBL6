@@ -1,5 +1,7 @@
 import { useCallback, useState } from "react";
-import { Text, View } from "react-native";
+import { AppState, Text, View } from "react-native";
+import * as Linking from "expo-linking";
+import { checkoutUrl, paymentMessage } from "../../lib/payment";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { api } from "../../lib/api";
 import { useSession } from "../../lib/session";
@@ -32,25 +34,43 @@ export default function OrderScreen() {
   const order = r.data,
     pending = order?.status === "PENDING_PAYMENT",
     payment = order?.payment;
+  const reloadOrder = r.reload,
+    paymentId = payment?.id;
   useFocusEffect(
     useCallback(() => {
       if (!pending) return;
+      const until = Date.now() + 60000;
       const clock = setInterval(() => setNow(Date.now()), 1000),
-        poll = setInterval(r.reload, 5000);
+        poll = paymentId
+          ? setInterval(() => {
+              if (Date.now() < until) reloadOrder();
+              else clearInterval(poll);
+            }, 3000)
+          : undefined;
+      const subscription = AppState.addEventListener("change", (state) => {
+        if (state === "active") reloadOrder();
+      });
       return () => {
         clearInterval(clock);
         clearInterval(poll);
+        subscription.remove();
       };
-    }, [pending, r.reload]),
+    }, [pending, paymentId, reloadOrder]),
   );
   async function act(action: "start" | "cancel" | "success" | "failure") {
     setBusy(true);
     setError("");
     setResult("");
     try {
-      if (action === "start")
-        await api.request<Payment>(`/orders/${id}/payments`, "POST", {});
-      else if (action === "cancel")
+      if (action === "start") {
+        const attempt = await api.request<Payment>(
+          `/orders/${id}/payments`,
+          "POST",
+          {},
+        );
+        if (attempt.provider === "vnpay_sandbox")
+          await Linking.openURL(checkoutUrl(attempt.checkout_url));
+      } else if (action === "cancel")
         await api.request(`/orders/${id}/cancel`, "POST", {});
       else if (payment) {
         const r = await api.request<{ outcome: string }>(
@@ -87,6 +107,7 @@ export default function OrderScreen() {
       <Screen refresh={r.reload} loading={r.loading}>
         <Notice error text={r.error || error} />
         <Notice text={result} />
+        <Notice text={paymentMessage(order?.latest_payment)} />
         {r.loading && !order ? (
           <Loading />
         ) : (
@@ -131,6 +152,8 @@ export default function OrderScreen() {
                 <>
                   {config.data?.paymentMode === "demo" ? (
                     <Notice text="Thanh toán demo · Không thu tiền thật." />
+                  ) : config.data?.paymentMode === "vnpay_sandbox" ? (
+                    <Notice text="VNPay Sandbox · Chỉ dùng thông tin thanh toán thử." />
                   ) : (
                     <Notice text="Thanh toán chưa được bật. Bạn có thể quay lại sau hoặc hủy đơn." />
                   )}
@@ -138,6 +161,19 @@ export default function OrderScreen() {
                     <Button
                       title="Tiếp tục thanh toán"
                       disabled={busy}
+                      onPress={() => void act("start")}
+                    />
+                  )}
+                  {config.data?.paymentMode === "vnpay_sandbox" && (
+                    <Button
+                      title="Thanh toán qua VNPay"
+                      disabled={
+                        busy ||
+                        Boolean(
+                          payment?.provider_expires_at &&
+                          Date.parse(payment.provider_expires_at) <= now,
+                        )
+                      }
                       onPress={() => void act("start")}
                     />
                   )}

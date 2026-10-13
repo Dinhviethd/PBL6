@@ -74,3 +74,5 @@ Enforcement ở code phục vụ modular monolith; các module vẫn dùng chung
 Dockerfile/Compose/CI đã được bổ sung nhưng chưa nghiệm thu cloud deployment. Trước staging cần provider sandbox thật, xác thực callback/đối soát nhà cung cấp, SMTP/Cloudinary, HTTPS, secret management và kiểm thử camera thiết bị thật. Rate limit hiện trong memory, phù hợp một API instance; cần storage chung khi scale.
 
 Xem [trạng thái triển khai](docs/IMPLEMENTATION-STATUS.md), [kế hoạch](docs/MVP-BACKEND-WEB-PLAN.md), [thiết kế DB](docs/database/MVP-DATABASE-DESIGN.md), [ownership](docs/SERVICE-OWNERSHIP.md).
+
+Gmail SMTP + VNPay Sandbox (web/mobile, local HTTPS tunnel): [Hướng dẫn setup](docs/EMAIL-PAYMENT-SETUP.md).

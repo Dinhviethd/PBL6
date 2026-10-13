@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "nodemon --watch ./src --ext ts --exec ts-node -r tsconfig-paths/register src/main.ts",
     "build": "tsc && tsc-alias && node scripts/copy-schema.cjs",
-    "test": "node --test test/*.test.cjs",
+    "test": "node --test --test-concurrency=1 test/*.test.cjs",
+    "smtp:check": "npm run build && node scripts/check-smtp.cjs",
     "migration:generate": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -d src/configs/database.config.ts",
     "migration:run": "node scripts/migrate.cjs",
     "migration:revert": "ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:revert -d src/configs/database.config.ts",

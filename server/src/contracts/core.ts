@@ -1,5 +1,6 @@
 export type Row = Record<string, any>;
-export type Owner = "auth" | "event" | "order" | "payment" | "audit";
+export type Owner =
+  "auth" | "event" | "order" | "payment" | "audit" | "notification";
 export interface Store {
   query<T extends Row = Row>(sql: string, args?: unknown[]): Promise<T[]>;
 }

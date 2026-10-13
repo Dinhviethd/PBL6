@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { createHash, createHmac, randomInt, randomUUID } from "node:crypto";
 import nodemailer from "nodemailer";
+import { smtpOptions } from "../../platform/smtp";
 import { authStore } from "./infrastructure/store";
 import {
   ensure,
@@ -197,12 +198,7 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
       });
     },
     async forgot(email: string) {
-      ensure(
-        process.env.SMTP_HOST,
-        "EMAIL_NOT_CONFIGURED",
-        "Chưa cấu hình dịch vụ email.",
-        503,
-      );
+      const options = smtpOptions();
       const user = await repo.byEmail(email);
       if (!user) return;
       const otp = String(randomInt(100000, 1000000));
@@ -211,19 +207,20 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
         await repo.newReset(user.idUser, otpHash(email, otp));
       });
       await nodemailer
-        .createTransport({
-          host: process.env.SMTP_HOST,
-          port: Number(process.env.SMTP_PORT || 587),
-          secure: process.env.SMTP_SECURE === "true",
-          auth: process.env.SMTP_USER
-            ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
-            : undefined,
-        })
+        .createTransport(options)
         .sendMail({
           from: process.env.SMTP_FROM,
           to: email,
           subject: "Đặt lại mật khẩu EventHub",
           text: `Mã xác nhận: ${otp}. Hết hạn sau 5 phút.`,
+        })
+        .catch(() => {
+          ensure(
+            false,
+            "EMAIL_SEND_FAILED",
+            "Chưa gửi được email. Vui lòng thử lại sau.",
+            503,
+          );
         });
     },
     async reset(email: string, otp: string, password?: string) {
