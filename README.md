@@ -40,6 +40,8 @@ Migration đầu tiên chỉ nhận **database trống**, không tự chuyển �
 
 Demo có kết quả thành công/thất bại và idempotency. Trường hợp thanh toán tới sau khi nhả kho được đánh dấu cần đối soát, không cấp vé vượt tồn kho. Không có hoàn tiền tự động.
 
+Web và mobile có **Thông báo** qua biểu tượng chuông: mua vé thành công, lời mời nhân viên, cập nhật lịch/địa điểm cho nhân viên và nhắc lịch trong 24 giờ trước sự kiện. Worker tự tạo nhắc lịch, chống trùng; hỗ trợ lọc chưa đọc và đánh dấu đã đọc. Chạy migration mới trước khi dùng. Đây là thông báo trong ứng dụng, chưa có email/push. Xem [hướng dẫn thông báo](docs/NOTIFICATIONS.md).
+
 Ảnh local lưu ở `server/.local/uploads` và được chuyển sang WebP; cấu hình Cloudinary để lưu ngoài máy. Quên mật khẩu cần SMTP, không xuất OTP ra log/chat; cấu hình `SMTP_*` trong `.env`.
 
 ## Kiểm tra

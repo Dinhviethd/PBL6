@@ -17,6 +17,7 @@ export default function RootLayout() {
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="auth" options={{ title: "Tài khoản EventHub" }} />
+        <Stack.Screen name="notifications" options={{ title: "Thông báo" }} />
         <Stack.Screen
           name="events/[slug]"
           options={{ title: "Chi tiết sự kiện" }}

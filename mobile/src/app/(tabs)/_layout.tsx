@@ -1,15 +1,64 @@
-import { Tabs } from "expo-router";
+import { Tabs, router, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
+import { Pressable, Text } from "react-native";
+import { useSession } from "../../lib/session";
+import { useResource } from "../../lib/data";
 import Feather from "@expo/vector-icons/Feather";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors } from "../../components/ui";
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { user } = useSession();
+  const count = useResource<{ unreadCount: number }>(
+    user ? "/me/notifications/count" : null,
+  );
+  const reloadCount = count.reload;
+  useFocusEffect(
+    useCallback(() => {
+      if (!user) return;
+      const timer = setInterval(reloadCount, 30000);
+      return () => clearInterval(timer);
+    }, [user, reloadCount]),
+  );
   return (
     <Tabs
       screenOptions={{
         headerStyle: { backgroundColor: colors.bg },
         headerTintColor: colors.ink,
         headerShadowVisible: false,
+        headerRight: () =>
+          user ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`Thông báo, ${count.data?.unreadCount ?? 0} chưa đọc`}
+              onPress={() => router.push("/notifications")}
+              style={{
+                minWidth: 48,
+                minHeight: 48,
+                marginRight: 12,
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Feather name="bell" color={colors.green} size={22} />
+              {!!count.data?.unreadCount && (
+                <Text
+                  style={{
+                    position: "absolute",
+                    right: 0,
+                    top: 0,
+                    color: "white",
+                    backgroundColor: colors.green,
+                    borderRadius: 10,
+                    paddingHorizontal: 5,
+                    fontSize: 11,
+                  }}
+                >
+                  {count.data.unreadCount > 99 ? "99+" : count.data.unreadCount}
+                </Text>
+              )}
+            </Pressable>
+          ) : null,
         tabBarActiveTintColor: colors.green,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {

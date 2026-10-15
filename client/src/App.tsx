@@ -29,6 +29,10 @@ import {
 import { Loading, Notice } from "./features/ticketing/shared";
 import { useLoad } from "./features/ticketing/data";
 import { StaffAssignments, StaffCheckin } from "./features/ticketing/staff";
+import {
+  NotificationLink,
+  Notifications,
+} from "./features/ticketing/notifications";
 import type { ReactNode } from "react";
 import "./features/ticketing/ticketing.css";
 function Guard({
@@ -98,6 +102,7 @@ export function App() {
           )}
         </nav>
         <div className="header-account">
+          {user && <NotificationLink key={user.idUser} />}
           {user ? (
             <>
               <Link className="avatar-link" to="/profile">
@@ -129,6 +134,14 @@ export function App() {
       <main className="site-main" key={revision}>
         {sessionNotice && <Notice error={sessionNotice} />}
         <Routes>
+          <Route
+            path="/notifications"
+            element={
+              <Guard>
+                <Notifications key={user?.idUser} />
+              </Guard>
+            }
+          />
           <Route
             path="/checkin"
             element={

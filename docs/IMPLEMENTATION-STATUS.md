@@ -1,5 +1,17 @@
 # Trạng thái triển khai MVP — 2026-10-01
 
+## Xác nhận 12/10/2026: migration thông báo và PostgreSQL thật
+
+Đã chạy `Notifications1791331200000` vào database `postgres` tại `127.0.0.1:55436` (container `pbl6-db-1`) theo cấu hình hiện có. Database có đủ ba migration; chạy lại trả `Applied migrations: []`. Đã xác nhận bảng `notifications`, không sửa `.env` hoặc seed lại dữ liệu dự án.
+
+Build backend thành công. Toàn bộ **16/16 kiểm thử backend đạt, 0 lỗi, 0 bỏ qua**, gồm 12 bài integration trên PostgreSQL 17.11 thật và 4 bài logic/ownership. Database xác nhận riêng: `eventhub_notifications_verified_20261012_test` trên container `eventhub-staff-tests`, cổng 55437. Bao gồm chống trùng callback/nhắc lịch đồng thời, rollback, phân quyền hộp thư, người nhận tham gia muộn, loại trừ vé/sự kiện không hợp lệ và phân trang. Đã sửa ép kiểu `varchar` cho tham số trạng thái trong fixture integration mà PostgreSQL báo lỗi `42P08`. E2E trình duyệt với API thật chưa chạy trong lần xác nhận này.
+
+## Bổ sung 07/10/2026: thông báo và nhắc lịch
+
+Thêm module Notification, migration `Notifications1791331200000`, thông báo mua vé/lời mời nhân viên/cập nhật lịch cho nhân viên trong cùng transaction nghiệp vụ và worker nhắc sự kiện trong 24 giờ tới. Web/mobile có biểu tượng chuông, số chưa đọc, hộp thư phân trang, lọc và đánh dấu đã đọc. Chi tiết: [NOTIFICATIONS.md](NOTIFICATIONS.md).
+
+Đã qua build backend/web, lint/boundary checker, mobile typecheck/lint và 8 kiểm thử API client; 2 kiểm thử logic/SQL thông báo và 3 kiểm thử Chromium UI dùng API giả lập (web 1280px/390px và Expo web 390px). Đã xem ảnh cả ba giao diện và export Expo Android/iOS/web thành công. Bộ PostgreSQL integration và E2E với API thật đã được bổ sung nhưng chưa chạy trong phiên này: Docker Desktop lỗi khởi động socket `sailor-ingest.sock`, không có PostgreSQL local hoạt động. Chưa áp dụng migration vào database người dùng. Chưa có email/push hệ điều hành.
+
 ## Bổ sung 04/10/2026: migration local và ứng dụng mobile
 
 Đã khởi tạo PostgreSQL qua Compose (`pbl6-db-1`, named volume `pbl6_eventhub_db`, port 55436) và chạy cả baseline + `EventCheckinStaff1791072000000` vào database `postgres` theo `server/.env`. Đã xác nhận migration, bảng phân công và 3 sự kiện seed. Không đổi `.env`; database `eventhub` do Compose tạo vẫn là database riêng.
