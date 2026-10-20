@@ -68,10 +68,9 @@ Return URL được backend tự đưa vào mỗi URL thanh toán. Truy cập l�
 
 ## 4. Chạy local
 
-Từ thư mục gốc, sau khi cấu hình database và các secret nền tảng trong `server/.env`:
+Từ thư mục gốc, sau khi cấu hình kết nối Supabase, chứng chỉ CA và các secret nền tảng trong `server/.env` theo README. Không cần khởi động PostgreSQL local:
 
 ```powershell
-docker compose up -d db
 npm run db:migrate --prefix server
 npm run dev
 ```

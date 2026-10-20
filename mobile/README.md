@@ -18,7 +18,7 @@ Tại thư mục gốc repository:
 ```powershell
 npm ci --prefix server
 npm ci --prefix mobile
-docker compose up -d db
+# Cấu hình Supabase và chứng chỉ CA trong server/.env theo README ở thư mục gốc.
 npm run db:migrate --prefix server
 # Chỉ khi cần dữ liệu demo và server/.env đã có DEMO_PASSWORD:
 npm run db:seed --prefix server

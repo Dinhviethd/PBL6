@@ -1,18 +1,53 @@
+x-backend: &backend
+  image: eventhub-local
+  build: .
+  env_file:
+    - path: ./server/.env
+      format: raw
+  environment:
+    # Local Docker development, including HTTP cookies and sandbox payments.
+    NODE_ENV: development
+    HOST: 0.0.0.0
+    PORT: 8080
+    CLIENT_URL: ${DOCKER_CLIENT_URL:-http://localhost:8000}
+    DB_SSL: "true"
+    DB_SSL_CA_FILE: /app/certs/supabase-ca.crt
+    STATIC_DIR: /app/public
+  volumes:
+    - type: bind
+      source: ./server/.local/certs/supabase-ca.crt
+      target: /app/certs/supabase-ca.crt
+      read_only: true
+      bind:
+        create_host_path: false
+  init: true
+  restart: unless-stopped
+
 services:
-  db:
-    image: postgres:17-alpine
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: localdev
-      POSTGRES_DB: eventhub
+  api:
+    <<: *backend
     ports:
-      - '127.0.0.1:55436:5432'
+      - "127.0.0.1:8000:8080"
     volumes:
-      - eventhub_db:/var/lib/postgresql/data
+      - type: bind
+        source: ./server/.local/certs/supabase-ca.crt
+        target: /app/certs/supabase-ca.crt
+        read_only: true
+        bind:
+          create_host_path: false
+      - uploads:/app/.local/uploads
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres -d eventhub']
-      interval: 5s
-      timeout: 5s
-      retries: 10
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+  worker:
+    <<: *backend
+    command: ["node", "scripts/worker.cjs"]
+    depends_on:
+      api:
+        condition: service_healthy
+
 volumes:
-  eventhub_db:
+  uploads:

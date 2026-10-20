@@ -1,5 +1,11 @@
 # Trạng thái triển khai MVP — 2026-10-01
 
+## Cập nhật 20/10/2026: chuyển DB sang Supabase
+
+Backend local dùng Supabase Session pooler qua SSL có xác minh CA. Đã áp dụng đủ 3 migration, xác nhận 23 bảng và seed 4 tài khoản, 3 sự kiện, 3 danh mục. Compose hiện chạy API + worker kết nối Supabase, không khai báo service PostgreSQL local. Các container `pbl6-db-1`, `eventhub-staff-tests`, `supabase_db_pbl6` đã dừng và đặt restart policy `no`; container và dữ liệu được giữ nguyên. Các ghi nhận PostgreSQL local bên dưới là lịch sử trước khi chuyển đổi.
+
+Sau đó đã chuyển dữ liệu từ database `postgres` trong `pbl6-db-1` lên Supabase, thay phần seed ban đầu. Sao lưu cả nguồn và đích bằng `pg_dump` tại `.local/db-transfer-20261020/`; kiểm tra đọc được hai archive. Nhập thử trong transaction rồi rollback trước khi nhập chính thức. Đã đối chiếu đầy đủ nội dung của 22 bảng ứng dụng trước và sau commit, giữ nguyên ID, quan hệ, mật khẩu băm và lịch sử migration. Dữ liệu gồm 6 tài khoản, 5 sự kiện, 6 đơn hàng, 6 thanh toán, 1 vé và 37 audit log; ảnh local được tham chiếu đã chuyển vào volume uploads. API healthy; web, API sự kiện và ảnh đều HTTP 200. Khi bật lại, worker xử lý 1 đơn hết hạn và tạo 1 nhắc lịch theo nghiệp vụ, nên dữ liệu runtime tiếp tục thay đổi sau thời điểm đối chiếu. DB local đã tắt lại, không xóa dữ liệu.
+
 ## Xác nhận 12/10/2026: migration thông báo và PostgreSQL thật
 
 Đã chạy `Notifications1791331200000` vào database `postgres` tại `127.0.0.1:55436` (container `pbl6-db-1`) theo cấu hình hiện có. Database có đủ ba migration; chạy lại trả `Applied migrations: []`. Đã xác nhận bảng `notifications`, không sửa `.env` hoặc seed lại dữ liệu dự án.

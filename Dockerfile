@@ -21,6 +21,8 @@ COPY --from=server-builder /app/server/node_modules ./node_modules
 COPY --from=server-builder /app/server/dist ./dist
 COPY --from=server-builder /app/server/scripts ./scripts
 COPY --from=client-builder /app/client/dist ./public
+RUN mkdir -p /app/.local/uploads && chown -R node:node /app/.local
+ENV NODE_OPTIONS="--require=/app/scripts/container-database.cjs"
 USER node
 EXPOSE 8080
 CMD ["node", "dist/main.js"]

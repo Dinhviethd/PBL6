@@ -6,17 +6,16 @@ Express 5 + TypeORM + PostgreSQL 17, React + Vite. Một database, một backend
 
 ## Chạy local
 
-Yêu cầu Node.js 22.18+, npm và PostgreSQL 17 (hoặc Docker Desktop).
+Yêu cầu Node.js 22.18+, npm và PostgreSQL (hiện dùng Supabase).
 
 ```powershell
 npm ci --prefix server
 npm ci --prefix client
-docker compose up -d db
 Copy-Item server/.env.example server/.env
 node -e "console.log(require('node:crypto').randomBytes(48).toString('hex'))"
 ```
 
-Không ghi đè `.env` nếu đã có. Tạo hai secret riêng cho `JWT_ACCESS_SECRET` và `QR_SECRET`. Trong `server/.env`, đặt `PAYMENT_MODE=demo`, thêm `DEMO_PASSWORD` dài ít nhất 12 ký tự. DATABASE_URL mặc định trong ví dụ trỏ tới database `eventhub` của Compose. Không chạy Compose cùng container khác đang dùng port 55436.
+Không ghi đè `.env` nếu đã có. Tạo hai secret riêng cho `JWT_ACCESS_SECRET` và `QR_SECRET`. Trong `server/.env`, đặt `PAYMENT_MODE=demo`, thêm `DEMO_PASSWORD` dài ít nhất 12 ký tự. Điền Session pooler của Supabase vào DATABASE_URL trong `.env.example`, đặt `DB_SSL=true`. Lưu CA tải từ Supabase tại `server/.local/certs/supabase-ca.crt`; URL kết nối local cần `sslmode=verify-full` và `sslrootcert` trỏ đến file CA trên máy (URL-encode đường dẫn). Compose bên dưới tự đổi đường dẫn CA sang đường dẫn trong container.
 
 ```powershell
 npm run db:migrate --prefix server
@@ -49,7 +48,8 @@ Web và mobile có **Thông báo** qua biểu tượng chuông: mua vé thành c
 ```powershell
 npm run build
 npm run check
-$env:TEST_DATABASE_URL='postgresql://postgres:localdev@127.0.0.1:55436/eventhub_test'
+# Chỉ đặt TEST_DATABASE_URL khi có PostgreSQL kiểm thử riêng, tên DB kết thúc _test.
+# Không dùng DATABASE_URL Supabase của ứng dụng cho integration tests.
 npm test
 # Database test phải được tạo trước và có tên kết thúc bằng _test.
 # Nếu không đặt TEST_DATABASE_URL, integration suite bị skip.
@@ -72,6 +72,29 @@ Enforcement ở code phục vụ modular monolith; các module vẫn dùng chung
 ## Container và phần còn lại
 
 `docker build -t eventhub-mvp .` đóng gói API và web cùng origin. Image mặc định production, chặn payment demo. Cấp DATABASE_URL/secrets/CLIENT_URL bằng môi trường; chạy `node scripts/migrate.cjs` một lần ở bước release. Worker dùng cùng image và cấu hình, command `node scripts/worker.cjs`, phải được giám sát riêng. Không có migration tự động khi app start. Cloud Build hiện chỉ build image cho project đang chạy, không deploy vào project cũ.
+
+### Docker local dùng Supabase
+
+Compose chạy API + web tại `http://localhost:8000` và worker; không tạo PostgreSQL local. Yêu cầu Docker Desktop chạy Linux containers và Docker Compose >= 2.30 (hỗ trợ `env_file.format: raw` để giữ nguyên ký tự trong secrets).
+
+- Giữ cấu hình Supabase/secrets trong `server/.env`; Compose đọc file này lúc khởi động.
+- Đặt chứng chỉ tại `server/.local/certs/supabase-ca.crt`. File được mount chỉ đọc, không đóng vào image.
+- Preload `server/scripts/container-database.cjs` đổi `sslrootcert` trong URL sang `/app/certs/supabase-ca.crt`, bật `verify-full` cho API, worker và migration. `.env` trên máy không bị sửa.
+- Compose dùng `NODE_ENV=development` để chạy local qua HTTP và dùng thanh toán sandbox. Cấu hình này không dành cho public production.
+- Dừng API/worker chạy bằng `npm run dev` trước khi chạy Compose để tránh trùng cổng 8000 và worker. Compose đặt `CLIENT_URL=http://localhost:8000` cho web tích hợp; nếu dùng Vite riêng, đặt `$env:DOCKER_CLIENT_URL='http://localhost:5173'` trước khi khởi động Compose.
+
+```powershell
+docker compose build
+# Chạy khi có migration mới; DB Supabase hiện đã được migrate.
+docker compose run --rm --no-deps api node scripts/migrate.cjs
+docker compose up -d
+docker compose ps
+docker compose logs --tail=100 api worker
+```
+
+Uploads local được lưu trong named volume `uploads`. `docker compose down` dừng container, không xóa DB Supabase hay dữ liệu uploads. Không dùng `down -v` nếu cần giữ uploads. Volume PostgreSQL cũ không bị xóa bởi thay đổi cấu hình này.
+
+Khi deploy image lên hosting, mount CA rồi đặt `DB_SSL_CA_FILE` theo đường dẫn trong container; giữ `NODE_ENV=production` và cấu hình domain/HTTPS phù hợp.
 
 Dockerfile/Compose/CI đã được bổ sung nhưng chưa nghiệm thu cloud deployment. Trước staging cần provider sandbox thật, xác thực callback/đối soát nhà cung cấp, SMTP/Cloudinary, HTTPS, secret management và kiểm thử camera thiết bị thật. Rate limit hiện trong memory, phù hợp một API instance; cần storage chung khi scale.
 
