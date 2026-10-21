@@ -12,6 +12,12 @@ import {
   ArrowUpRight,
   Ticket as TicketIcon,
 } from "lucide-react";
+import {
+  BookingSteps,
+  EventCard,
+  EventCover,
+  FeaturedEvent,
+} from "./event-visuals";
 import api from "../../lib/api";
 import { checkoutUrl, paymentMessage } from "./payment";
 import authService from "../auth/services/authService";
@@ -81,6 +87,7 @@ export function ActionForm({
   );
 }
 export function Explore() {
+  const user = useAuth((state) => state.user);
   const [filter, setFilter] = useState(""),
     [page, setPage] = useState(0),
     { data, error, loading } = useLoad<{ items: Event[]; total: number }>(
@@ -102,50 +109,12 @@ export function Explore() {
   }
   return (
     <>
-      <section className="hero">
-        <div className="hero-copy">
-          <span className="eyebrow">
-            <span className="live-dot" /> TRẢI NGHIỆM BẮT ĐẦU TỪ ĐÂY
-          </span>
-          <h1>
-            Ra ngoài.
-            <br />
-            Gặp điều <em>mới.</em>
-          </h1>
-          <p>
-            Âm nhạc, ý tưởng và những cuộc gặp đáng nhớ.
-            <br />
-            Tìm sự kiện tiếp theo dành cho bạn.
-          </p>
-          <a className="btn dark" href="#discover">
-            Khám phá sự kiện <ArrowUpRight size={18} />
-          </a>
-        </div>
-        <div className="hero-art" aria-hidden="true">
-          <div className="orbit orbit-one" />
-          <div className="orbit orbit-two" />
-          <div className="hero-ticket">
-            <span>YOUR NEXT MEMORY</span>
-            <strong>
-              MAKE
-              <br />
-              IT LIVE.
-            </strong>
-            <div className="ticket-bottom">
-              <span>
-                ONE MOMENT
-                <br />
-                ENDLESS POSSIBILITIES
-              </span>
-              <TicketIcon size={42} />
-            </div>
-          </div>
-          <span className="art-tag">Gặp gỡ. Khám phá. Kết nối.</span>
-        </div>
-      </section>
+      <FeaturedEvent event={!loading && !error ? data?.items[0] : undefined} />
       <section id="discover">
         <PageHead eyebrow="LỊCH HẸN CỦA BẠN" title="Đi đâu tiếp theo?">
-          Một chiếc vé, một trải nghiệm mới.
+          {data && !loading && !error
+            ? `${data.total} sự kiện đang chờ bạn khám phá.`
+            : "Một chiếc vé, một trải nghiệm mới."}
         </PageHead>
         <form className="filters" onSubmit={search}>
           <Field
@@ -198,56 +167,8 @@ export function Explore() {
           <Loading />
         ) : data?.items.length ? (
           <div className="event-grid">
-            {data.items.map((e, i) => (
-              <Link key={e.id} to={`/events/${e.slug}`} className="event-card">
-                <div
-                  className={`event-art art-${i % 3}`}
-                  style={
-                    e.cover_image_url
-                      ? {
-                          backgroundImage: `url(${e.cover_image_url})`,
-                          backgroundSize: "cover",
-                        }
-                      : undefined
-                  }
-                >
-                  {!e.cover_image_url && (
-                    <>
-                      <span className="art-circle" />
-                      <span className="art-word">
-                        {i % 3 === 0
-                          ? "LIVE."
-                          : i % 3 === 1
-                            ? "CONNECT."
-                            : "CREATE."}
-                      </span>
-                    </>
-                  )}
-                  <span className="date-chip">
-                    {new Date(e.starts_at).toLocaleDateString("vi-VN", {
-                      day: "2-digit",
-                      month: "2-digit",
-                    })}
-                  </span>
-                </div>
-                <div className="event-body">
-                  <span className="tiny">
-                    <MapPin size={13} />
-                    {e.city_code}
-                  </span>
-                  <h3>{e.title}</h3>
-                  <p>
-                    <CalendarDays size={14} />
-                    {when(e.starts_at)}
-                  </p>
-                  <div className="card-bottom">
-                    <strong>{money(e.priceFrom)}</strong>
-                    <span className="circle-arrow">
-                      <ArrowUpRight size={19} />
-                    </span>
-                  </div>
-                </div>
-              </Link>
+            {data.items.map((event) => (
+              <EventCard key={event.id} event={event} />
             ))}
           </div>
         ) : (
@@ -258,6 +179,23 @@ export function Explore() {
           setPage={setPage}
           hasNext={(page + 1) * 24 < (data?.total ?? 0)}
         />
+      </section>
+      <section className="organizer-promo">
+        <div>
+          <span className="eyebrow">DÀNH CHO BAN TỔ CHỨC</span>
+          <h2>Đưa sự kiện của bạn đến gần khán giả hơn.</h2>
+          <p>Quản lý sự kiện, phát hành vé điện tử và check-in tại một nơi.</p>
+        </div>
+        <Link
+          className="btn ghost"
+          to={
+            user?.roles.some((role) => ["ORGANIZER", "ADMIN"].includes(role))
+              ? "/organizer"
+              : "/profile"
+          }
+        >
+          Không gian tổ chức <ArrowUpRight size={17} />
+        </Link>
       </section>
     </>
   );
@@ -306,25 +244,15 @@ export function EventDetail() {
   );
   return (
     <>
+      <BookingSteps step={1} />
       <Link className="back" to="/">
         ← Tất cả sự kiện
       </Link>
       <div className="detail-grid">
         <section>
-          <div
-            className="detail-art art-0"
-            style={
-              e.cover_image_url
-                ? {
-                    backgroundImage: `url(${e.cover_image_url})`,
-                    backgroundSize: "cover",
-                  }
-                : undefined
-            }
-          >
-            <span>{e.city_code.toUpperCase()}</span>
-            <strong>{e.title}</strong>
-            <TicketIcon size={54} />
+          <div className="detail-art">
+            <EventCover src={e.cover_image_url} />
+            <span className="detail-city">{e.city_code}</span>
           </div>
           <PageHead eyebrow={e.organizer?.name} title={e.title} />
           <div className="meta">
@@ -352,7 +280,13 @@ export function EventDetail() {
                 !e.sales_paused &&
                 left > 0 &&
                 Date.now() >= Date.parse(t.sale_starts_at) &&
-                Date.now() < Date.parse(t.sale_ends_at);
+                Date.now() < Date.parse(t.sale_ends_at),
+              quantity = quantities[t.id] ?? 0,
+              limit = Math.max(0, Math.min(10, left));
+            function changeQuantity(next: number) {
+              key.current = crypto.randomUUID();
+              setQuantities((current) => ({ ...current, [t.id]: next }));
+            }
             return (
               <div className="ticket-option" key={t.id}>
                 <div>
@@ -362,26 +296,39 @@ export function EventDetail() {
                     {available ? `Còn ${left} vé` : "Chưa mở bán / hết vé"}
                   </small>
                 </div>
-                <label>
-                  <span className="sr-only">Số lượng {t.name}</span>
-                  <select
-                    disabled={!available}
-                    value={quantities[t.id] ?? 0}
-                    onChange={(v) => {
-                      key.current = crypto.randomUUID();
-                      setQuantities({
-                        ...quantities,
-                        [t.id]: Number(v.target.value),
-                      });
-                    }}
+                <div className="quantity-control">
+                  <button
+                    type="button"
+                    aria-label={`Giảm vé: ${t.name}`}
+                    disabled={!available || quantity === 0 || busy}
+                    onClick={() => changeQuantity(quantity - 1)}
                   >
-                    {Array.from({ length: Math.min(10, left) + 1 }, (_, n) => (
-                      <option key={n} value={n}>
-                        {n}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                    −
+                  </button>
+                  <label>
+                    <span className="sr-only">Số lượng {t.name}</span>
+                    <select
+                      aria-label={`Số lượng ${t.name}`}
+                      disabled={!available || busy}
+                      value={quantity}
+                      onChange={(v) => changeQuantity(Number(v.target.value))}
+                    >
+                      {Array.from({ length: limit + 1 }, (_, n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <button
+                    type="button"
+                    aria-label={`Tăng vé: ${t.name}`}
+                    disabled={!available || quantity >= limit || busy}
+                    onClick={() => changeQuantity(quantity + 1)}
+                  >
+                    +
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -589,6 +536,7 @@ export function Checkout() {
   );
   return (
     <>
+      <BookingSteps step={o.status === "PAID" ? 3 : 2} />
       <PageHead eyebrow="HOÀN TẤT ĐẶT VÉ" title={o.event_title_snapshot}>
         <span>{o.order_code}</span>
       </PageHead>
@@ -826,11 +774,14 @@ export function TicketPage() {
   const t = r.data;
   return (
     <>
+      <BookingSteps step={3} />
       <PageHead eyebrow="VÉ ĐIỆN TỬ" title={t.eventTitle} />
       <div className="panel qr-card">
         <Status value={t.status} />
         <h2>{t.typeName}</h2>
-        <img src={t.qrImage} width={320} height={320} alt="Mã QR của vé" />
+        <div className="qr-image">
+          <img src={t.qrImage} width={320} height={320} alt="Mã QR của vé" />
+        </div>
         <strong className="mono">{t.code}</strong>
         <p>Xuất trình mã này tại cửa vào. Mỗi vé chỉ check-in một lần.</p>
         <Link to="/tickets">← Ví vé của bạn</Link>

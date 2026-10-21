@@ -2,7 +2,18 @@ import { useState } from "react";
 import { Link, NavLink, useNavigate, useParams } from "react-router-dom";
 import { Scanner } from "./scanner";
 import { StaffManagement, CheckinHistory } from "./staff";
-import { Plus, ArrowUpRight } from "lucide-react";
+import {
+  Plus,
+  ArrowUpRight,
+  Ticket as TicketIcon,
+  Users,
+  CalendarDays,
+  Wallet,
+  ScanLine,
+  ClipboardList,
+  ShieldCheck,
+  CircleAlert,
+} from "lucide-react";
 import api from "../../lib/api";
 import { ActionForm } from "./customer";
 import {
@@ -53,16 +64,31 @@ function statLabel(k: string) {
   );
 }
 export function StatCards({ data }: { data: Stats }) {
+  const icons = {
+    revenue: Wallet,
+    sold: TicketIcon,
+    checkins: ScanLine,
+    orders: ClipboardList,
+    users: Users,
+    organizers: ShieldCheck,
+    events: CalendarDays,
+    provider_received: Wallet,
+    needs_review: CircleAlert,
+  };
   return (
     <div className="stats-grid">
-      {Object.entries(data).map(([k, v]) => (
-        <div className="stat-card" key={k}>
-          <span>{statLabel(k)}</span>
-          <strong>
-            {k === "revenue" || k === "provider_received" ? money(v) : v}
-          </strong>
-        </div>
-      ))}
+      {Object.entries(data).map(([k, v]) => {
+        const Icon = icons[k as keyof typeof icons] ?? ClipboardList;
+        return (
+          <div className="stat-card" key={k}>
+            <Icon size={21} aria-hidden="true" />
+            <span>{statLabel(k)}</span>
+            <strong>
+              {k === "revenue" || k === "provider_received" ? money(v) : v}
+            </strong>
+          </div>
+        );
+      })}
     </div>
   );
 }

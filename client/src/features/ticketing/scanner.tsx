@@ -68,6 +68,8 @@ export function Scanner({ eventId }: { eventId: string }) {
   return (
     <div className="scanner-grid">
       <section className="panel">
+        <span className="eyebrow">KIỂM SOÁT VÉ</span>
+        <h2 className="scanner-title">Trạm quét QR check-in</h2>
         <div className="camera-preview">
           <video ref={video} muted playsInline />
           {!scanning && (
@@ -87,7 +89,7 @@ export function Scanner({ eventId }: { eventId: string }) {
           Camera cần HTTPS hoặc localhost và quyền truy cập trình duyệt.
         </small>
       </section>
-      <section className="panel">
+      <section className="panel" aria-live="polite">
         <h2>Kiểm tra vé</h2>
         <Notice error={error}>{result || null}</Notice>
         <ActionForm
