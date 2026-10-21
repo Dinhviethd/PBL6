@@ -1,8 +1,9 @@
+import { BookingSteps } from "../../components/booking-steps";
 import { useRef, useState } from "react";
-import { Image, Text, View } from "react-native";
+import { Text, View } from "react-native";
 import { router, useLocalSearchParams, usePathname } from "expo-router";
 import * as Crypto from "expo-crypto";
-import { api, mediaUrl } from "../../lib/api";
+import { api } from "../../lib/api";
 import { useSession } from "../../lib/session";
 import {
   errorMessage,
@@ -12,6 +13,7 @@ import {
   type Event,
   type Order,
 } from "../../lib/data";
+import { EventArtwork } from "../../components/event-artwork";
 import { Button, Loading, Notice, Screen, ui } from "../../components/ui";
 export default function EventScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>(),
@@ -63,19 +65,41 @@ export default function EventScreen() {
     }
   }
   return (
-    <Screen refresh={r.reload} loading={r.loading}>
+    <Screen
+      refresh={r.reload}
+      loading={r.loading}
+      footer={
+        event ? (
+          <>
+            <Text style={ui.h2}>Tạm tính: {money(total)}</Text>
+            <Notice error text={error} />
+            <Button
+              title={
+                busy
+                  ? "Đang giữ chỗ…"
+                  : user
+                    ? `Đặt ${count} vé`
+                    : "Đăng nhập để đặt vé"
+              }
+              disabled={busy || (!!user && count === 0)}
+              onPress={() => void buy()}
+            />
+          </>
+        ) : undefined
+      }
+    >
       <Notice error text={r.error} />
       {r.loading && !event ? (
         <Loading />
       ) : (
         event && (
           <>
-            {event.cover_image_url && (
-              <Image
-                source={{ uri: mediaUrl(event.cover_image_url) }}
-                style={ui.image}
-              />
-            )}
+            <BookingSteps step={1} />
+            <EventArtwork
+              url={event.cover_image_url}
+              title={event.title}
+              hero
+            />
             <Text style={ui.eyebrow}>{event.city_code}</Text>
             <Text style={ui.title}>{event.title}</Text>
             <Text style={ui.text}>{when(event.starts_at)}</Text>
@@ -107,7 +131,8 @@ export default function EventScreen() {
                   </Text>
                   <View style={{ ...ui.row, justifyContent: "space-between" }}>
                     <Button
-                      title={`Giảm ${t.name}`}
+                      title="−"
+                      label={`Giảm ${t.name}`}
                       secondary
                       disabled={busy || qty === 0}
                       onPress={() =>
@@ -121,7 +146,8 @@ export default function EventScreen() {
                       {qty}
                     </Text>
                     <Button
-                      title={`Thêm ${t.name}`}
+                      title="+"
+                      label={`Thêm ${t.name}`}
                       secondary
                       disabled={
                         busy || !open || qty >= available || count >= 10
@@ -134,21 +160,6 @@ export default function EventScreen() {
                 </View>
               );
             })}
-            <View style={ui.card}>
-              <Text style={ui.h2}>Tạm tính: {money(total)}</Text>
-              <Notice error text={error} />
-              <Button
-                title={
-                  busy
-                    ? "Đang giữ chỗ…"
-                    : user
-                      ? `Đặt ${count} vé`
-                      : "Đăng nhập để đặt vé"
-                }
-                disabled={busy || (!!user && count === 0)}
-                onPress={() => void buy()}
-              />
-            </View>
           </>
         )
       )}

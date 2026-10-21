@@ -1,3 +1,4 @@
+import { BookingSteps } from "../../components/booking-steps";
 import { useCallback, useState } from "react";
 import { AppState, Text, View } from "react-native";
 import * as Linking from "expo-linking";
@@ -113,6 +114,7 @@ export default function OrderScreen() {
         ) : (
           order && (
             <>
+              <BookingSteps step={order.status === "PAID" ? 3 : 2} />
               <Text style={ui.badge}>{stateLabel(order.status)}</Text>
               <Text style={ui.title}>{order.event_title_snapshot}</Text>
               <Text style={ui.muted}>{order.order_code}</Text>
@@ -171,7 +173,7 @@ export default function OrderScreen() {
                         busy ||
                         Boolean(
                           payment?.provider_expires_at &&
-                          Date.parse(payment.provider_expires_at) <= now,
+                            Date.parse(payment.provider_expires_at) <= now,
                         )
                       }
                       onPress={() => void act("start")}

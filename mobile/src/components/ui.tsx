@@ -15,32 +15,41 @@ import {
 import { router, usePathname } from "expo-router";
 import { useSession } from "../lib/session";
 
-export const colors = {
-  bg: "#f5f6f0",
-  ink: "#163b30",
-  green: "#215c48",
-  lime: "#d6ed91",
-  muted: "#66756a",
-  border: "#dce3d8",
-  white: "#ffffff",
-  red: "#a3302b",
-};
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { colors, fonts } from "../theme/tokens";
+export { colors, fonts } from "../theme/tokens";
+
 export const ui = StyleSheet.create({
   title: {
     fontSize: 30,
     lineHeight: 36,
-    fontWeight: "800",
+    fontFamily: fonts.extraBold,
     color: colors.ink,
     letterSpacing: -1,
   },
-  h2: { fontSize: 20, lineHeight: 26, fontWeight: "700", color: colors.ink },
-  text: { fontSize: 15, lineHeight: 23, color: colors.ink },
-  muted: { fontSize: 13, lineHeight: 20, color: colors.muted },
+  h2: {
+    fontSize: 20,
+    lineHeight: 26,
+    fontFamily: fonts.bold,
+    color: colors.ink,
+  },
+  text: {
+    fontFamily: fonts.regular,
+    fontSize: 15,
+    lineHeight: 23,
+    color: colors.ink,
+  },
+  muted: {
+    fontFamily: fonts.regular,
+    fontSize: 13,
+    lineHeight: 20,
+    color: colors.muted,
+  },
   eyebrow: {
     fontSize: 11,
-    fontWeight: "700",
+    fontFamily: fonts.bold,
     letterSpacing: 2,
-    color: colors.green,
+    color: colors.primary,
   },
   row: {
     flexDirection: "row",
@@ -53,7 +62,7 @@ export const ui = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.white,
+    backgroundColor: colors.surface,
     gap: 12,
   },
   image: {
@@ -63,26 +72,29 @@ export const ui = StyleSheet.create({
     backgroundColor: colors.border,
   },
   badge: {
-    color: colors.green,
-    backgroundColor: "#edf4df",
+    color: colors.primary,
+    backgroundColor: colors.accentSurface,
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 8,
     overflow: "hidden",
     alignSelf: "flex-start",
     fontSize: 12,
-    fontWeight: "600",
+    fontFamily: fonts.semibold,
   },
 });
 export function Screen({
   children,
   refresh,
   loading = false,
+  footer,
 }: {
   children: ReactNode;
   refresh?: () => void;
   loading?: boolean;
+  footer?: ReactNode;
 }) {
+  const insets = useSafeAreaInsets();
   return (
     <KeyboardAvoidingView
       style={{ flex: 1, backgroundColor: colors.bg }}
@@ -90,10 +102,11 @@ export function Screen({
       keyboardVerticalOffset={90}
     >
       <ScrollView
+        style={{ flex: 1 }}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={{
           padding: 20,
-          paddingBottom: 40,
+          paddingBottom: 24 + insets.bottom,
           gap: 18,
           width: "100%",
           maxWidth: 620,
@@ -104,13 +117,36 @@ export function Screen({
             <RefreshControl
               refreshing={loading}
               onRefresh={refresh}
-              tintColor={colors.green}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
             />
           ) : undefined
         }
       >
         {children}
       </ScrollView>
+      {footer && (
+        <View
+          style={{
+            backgroundColor: colors.surface,
+            borderTopWidth: 1,
+            borderTopColor: colors.border,
+            padding: 16,
+            paddingBottom: Math.max(insets.bottom, 16),
+          }}
+        >
+          <View
+            style={{
+              width: "100%",
+              maxWidth: 580,
+              alignSelf: "center",
+              gap: 8,
+            }}
+          >
+            {footer}
+          </View>
+        </View>
+      )}
     </KeyboardAvoidingView>
   );
 }
@@ -119,33 +155,39 @@ export function Button({
   onPress,
   disabled,
   secondary = false,
+  label,
 }: {
   title: string;
   onPress: () => void;
   disabled?: boolean;
   secondary?: boolean;
+  label?: string;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={label ?? title}
+      accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => ({
-        borderRadius: 12,
+        borderRadius: 14,
+        borderWidth: 1,
+        borderColor: secondary ? colors.border : colors.primary,
         minHeight: 48,
+        minWidth: 48,
         padding: 14,
         alignItems: "center",
         justifyContent: "center",
-        backgroundColor: secondary ? "#e8eee3" : colors.green,
+        backgroundColor: secondary ? colors.elevated : colors.primary,
         opacity: disabled ? 0.45 : pressed ? 0.75 : 1,
       })}
     >
       <Text
         style={{
-          color: secondary ? colors.green : "white",
+          color: secondary ? colors.ink : colors.onPrimary,
           fontSize: 14,
-          fontWeight: "700",
+          fontFamily: fonts.bold,
           textAlign: "center",
         }}
       >
@@ -160,15 +202,18 @@ export function Field({ label, ...props }: TextInputProps & { label: string }) {
       <Text style={ui.muted}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
-        placeholderTextColor="#87968a"
+        placeholderTextColor={colors.muted}
+        selectionColor={colors.primary}
+        keyboardAppearance="dark"
         style={{
           borderWidth: 1,
           borderColor: colors.border,
           borderRadius: 12,
           padding: 14,
           fontSize: 16,
+          fontFamily: fonts.regular,
           color: colors.ink,
-          backgroundColor: colors.white,
+          backgroundColor: colors.surface,
         }}
         {...props}
       />
@@ -188,10 +233,10 @@ export function Notice({
       style={{
         padding: 14,
         borderRadius: 12,
-        backgroundColor: error ? "#fff0eb" : "#eaf2dd",
+        backgroundColor: error ? colors.errorSurface : colors.accentSurface,
       }}
     >
-      <Text style={{ ...ui.text, color: error ? colors.red : colors.green }}>
+      <Text style={{ ...ui.text, color: error ? colors.red : colors.primary }}>
         {text}
       </Text>
     </View>
@@ -201,7 +246,7 @@ export function Loading() {
   return (
     <ActivityIndicator
       accessibilityLabel="Đang tải"
-      color={colors.green}
+      color={colors.primary}
       style={{ padding: 24 }}
     />
   );

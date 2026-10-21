@@ -6,7 +6,7 @@ const config: ExpoConfig = {
   scheme: "eventhub",
   version: "1.0.0",
   orientation: "portrait",
-  userInterfaceStyle: "light",
+  userInterfaceStyle: "dark",
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.pbl6.eventhub",

@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Image, Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { router } from "expo-router";
-import { mediaUrl } from "../../lib/api";
+import { EventArtwork } from "../../components/event-artwork";
 import {
   money,
   useResource,
@@ -18,6 +18,7 @@ import {
   Screen,
   colors,
   ui,
+  fonts,
 } from "../../components/ui";
 export default function ExploreScreen() {
   const [q, setQ] = useState(""),
@@ -32,23 +33,35 @@ export default function ExploreScreen() {
     );
   return (
     <Screen refresh={events.reload} loading={events.loading}>
-      <View
-        style={{
-          ...ui.card,
-          backgroundColor: colors.green,
-          borderWidth: 0,
-          paddingVertical: 28,
-        }}
-      >
-        <Text style={{ ...ui.eyebrow, color: colors.lime }}>
-          TÌM TRẢI NGHIỆM TIẾP THEO
-        </Text>
-        <Text style={{ ...ui.title, color: colors.white }}>
-          Đi đâu{"\n"}cuối tuần này?
-        </Text>
-        <Text style={{ ...ui.text, color: "#d7e4d6" }}>
+      <View style={{ ...ui.card, backgroundColor: colors.accentSurface }}>
+        <Text style={ui.eyebrow}>TÌM TRẢI NGHIỆM TIẾP THEO</Text>
+        <Text style={ui.title}>Đi đâu{"\n"}cuối tuần này?</Text>
+        <Text style={ui.muted}>
           Âm nhạc, gặp gỡ và những khoảnh khắc đáng nhớ.
         </Text>
+        {events.data?.items[0] && !events.loading && (
+          <>
+            <EventArtwork
+              url={events.data.items[0].cover_image_url}
+              title={events.data.items[0].title}
+              hero
+            />
+            <Text style={ui.h2}>{events.data.items[0].title}</Text>
+            <Text style={ui.muted}>
+              {when(events.data.items[0].starts_at)} ·{" "}
+              {events.data.items[0].city_code}
+            </Text>
+            <Button
+              title="Khám phá sự kiện"
+              onPress={() =>
+                router.push({
+                  pathname: "/events/[slug]",
+                  params: { slug: events.data!.items[0].slug },
+                })
+              }
+            />
+          </>
+        )}
       </View>
       {config.data?.paymentMode === "demo" && (
         <Notice text="Bản trải nghiệm · Thanh toán demo, không thu tiền thật." />
@@ -87,18 +100,27 @@ export default function ExploreScreen() {
             key={c.id}
             accessibilityRole="button"
             accessibilityLabel={c.name}
+            accessibilityState={{ selected: category === c.id }}
             onPress={() => {
               setCategory(c.id);
               setPage(0);
             }}
             style={{
               paddingHorizontal: 16,
-              paddingVertical: 10,
+              paddingVertical: 12,
+              minHeight: 48,
+              justifyContent: "center",
               borderRadius: 30,
-              backgroundColor: category === c.id ? colors.ink : "#e6ecdf",
+              backgroundColor:
+                category === c.id ? colors.primary : colors.surface,
             }}
           >
-            <Text style={{ color: category === c.id ? "white" : colors.ink }}>
+            <Text
+              style={{
+                fontFamily: fonts.semibold,
+                color: category === c.id ? colors.onPrimary : colors.ink,
+              }}
+            >
               {c.name}
             </Text>
           </Pressable>
@@ -115,20 +137,22 @@ export default function ExploreScreen() {
       ) : (
         events.data.items.map((e) => (
           <View style={ui.card} key={e.id}>
-            {e.cover_image_url && (
-              <Image
-                accessibilityLabel={e.title}
-                source={{ uri: mediaUrl(e.cover_image_url) }}
-                style={ui.image}
-              />
-            )}
+            <EventArtwork url={e.cover_image_url} title={e.title} />
             <Text style={ui.badge}>{e.city_code}</Text>
             <Text style={ui.h2}>{e.title}</Text>
             <Text style={ui.muted}>
               {when(e.starts_at)} · {e.venue_name}
             </Text>
-            <Text style={{ ...ui.text, fontWeight: "700" }}>
-              Từ {money(e.priceFrom ?? 0)}
+            <Text
+              style={{
+                ...ui.text,
+                fontFamily: fonts.bold,
+                color: colors.primary,
+              }}
+            >
+              {e.priceFrom == null
+                ? "Xem chi tiết giá vé"
+                : `Từ ${money(e.priceFrom)}`}
             </Text>
             <Button
               title={`Xem sự kiện: ${e.title}`}

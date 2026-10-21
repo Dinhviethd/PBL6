@@ -11,6 +11,7 @@ import {
   RequireAuth,
   Screen,
   ui,
+  colors,
 } from "../../components/ui";
 export default function TicketsScreen() {
   const { user } = useSession(),
@@ -34,7 +35,16 @@ export default function TicketsScreen() {
               <Text style={ui.badge}>{stateLabel(t.status)}</Text>
               <Text style={ui.h2}>{t.event_title_snapshot}</Text>
               <Text style={ui.muted}>{t.ticket_type_name_snapshot}</Text>
-              <Text style={ui.text}>{t.ticket_code}</Text>
+              <View
+                style={{
+                  borderTopWidth: 1,
+                  borderStyle: "dashed",
+                  borderColor: colors.border,
+                  paddingTop: 16,
+                }}
+              >
+                <Text style={ui.text}>{t.ticket_code}</Text>
+              </View>
               <Button
                 title={`Mở vé ${t.ticket_code}`}
                 onPress={() =>

@@ -5,7 +5,7 @@ import { useSession } from "../../lib/session";
 import { useResource } from "../../lib/data";
 import Feather from "@expo/vector-icons/Feather";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { colors } from "../../components/ui";
+import { colors, fonts } from "../../components/ui";
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { user } = useSession();
@@ -26,6 +26,7 @@ export default function TabLayout() {
         headerStyle: { backgroundColor: colors.bg },
         headerTintColor: colors.ink,
         headerShadowVisible: false,
+        headerTitleStyle: { fontFamily: fonts.bold },
         headerRight: () =>
           user ? (
             <Pressable
@@ -40,15 +41,15 @@ export default function TabLayout() {
                 justifyContent: "center",
               }}
             >
-              <Feather name="bell" color={colors.green} size={22} />
+              <Feather name="bell" color={colors.primary} size={22} />
               {!!count.data?.unreadCount && (
                 <Text
                   style={{
                     position: "absolute",
                     right: 0,
                     top: 0,
-                    color: "white",
-                    backgroundColor: colors.green,
+                    color: colors.onPrimary,
+                    backgroundColor: colors.primary,
                     borderRadius: 10,
                     paddingHorizontal: 5,
                     fontSize: 11,
@@ -59,16 +60,16 @@ export default function TabLayout() {
               )}
             </Pressable>
           ) : null,
-        tabBarActiveTintColor: colors.green,
+        tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,
         tabBarStyle: {
-          backgroundColor: colors.white,
+          backgroundColor: colors.surface,
           borderTopColor: colors.border,
           height: 60 + Math.max(insets.bottom, 12),
           paddingTop: 6,
           paddingBottom: Math.max(insets.bottom, 12),
         },
-        tabBarLabelStyle: { fontSize: 10 },
+        tabBarLabelStyle: { fontSize: 10, fontFamily: fonts.medium },
       }}
     >
       <Tabs.Screen

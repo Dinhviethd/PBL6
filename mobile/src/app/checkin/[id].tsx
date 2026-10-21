@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, Linking, Text, View } from "react-native";
+import Feather from "@expo/vector-icons/Feather";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { api } from "../../lib/api";
@@ -19,6 +20,7 @@ import {
   RequireAuth,
   Screen,
   ui,
+  colors,
 } from "../../components/ui";
 export default function ScannerScreen() {
   const { id } = useLocalSearchParams<{ id: string }>(),
@@ -150,6 +152,7 @@ export default function ScannerScreen() {
                     paddingVertical: 32,
                   }}
                 >
+                  <Feather name="maximize" size={56} color={colors.primary} />
                   <Text style={ui.h2}>Sẵn sàng đón khách</Text>
                   <Text style={ui.muted}>
                     Đưa mã QR của vé vào khung camera.

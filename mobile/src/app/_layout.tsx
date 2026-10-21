@@ -1,16 +1,42 @@
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SessionProvider } from "../lib/session";
-import { colors } from "../components/ui";
+import { useFonts } from "expo-font";
+import { ActivityIndicator, View } from "react-native";
+import { colors, fonts } from "../components/ui";
 export default function RootLayout() {
+  const [loaded, error] = useFonts({
+    [fonts.regular]: require("../../assets/fonts/be-vietnam-pro-400.ttf"),
+    [fonts.medium]: require("../../assets/fonts/be-vietnam-pro-500.ttf"),
+    [fonts.semibold]: require("../../assets/fonts/be-vietnam-pro-600.ttf"),
+    [fonts.bold]: require("../../assets/fonts/be-vietnam-pro-700.ttf"),
+    [fonts.extraBold]: require("../../assets/fonts/be-vietnam-pro-800.ttf"),
+  });
+  // Allow system-font fallback if a local font cannot be loaded.
+  if (!loaded && !error)
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.bg,
+          justifyContent: "center",
+        }}
+      >
+        <ActivityIndicator
+          color={colors.primary}
+          accessibilityLabel="Đang tải giao diện"
+        />
+      </View>
+    );
   return (
     <SessionProvider>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <Stack
         screenOptions={{
           headerStyle: { backgroundColor: colors.bg },
           headerTintColor: colors.ink,
           headerShadowVisible: false,
+          headerTitleStyle: { fontFamily: fonts.bold },
           contentStyle: { backgroundColor: colors.bg },
           headerBackTitle: "Quay lại",
         }}

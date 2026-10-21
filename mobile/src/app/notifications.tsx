@@ -12,6 +12,7 @@ import {
   RequireAuth,
   Screen,
   ui,
+  colors,
 } from "../components/ui";
 import type {
   InboxNotification,
@@ -120,8 +121,8 @@ export default function NotificationsScreen() {
               style={[
                 ui.card,
                 !n.read_at && {
-                  backgroundColor: "#f0f5e9",
-                  borderColor: "#a9bf96",
+                  backgroundColor: colors.accentSurface,
+                  borderColor: colors.primary,
                 },
               ]}
             >

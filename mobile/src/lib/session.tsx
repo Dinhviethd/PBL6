@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import { ActivityIndicator, View } from "react-native";
+import { colors } from "../theme/tokens";
 import { api, onSessionLost } from "./api";
 import type { User } from "./api-client";
 
@@ -62,9 +63,17 @@ export function SessionProvider({ children }: { children: ReactNode }) {
         children
       ) : (
         <View
-          style={{ flex: 1, alignItems: "center", justifyContent: "center" }}
+          style={{
+            flex: 1,
+            backgroundColor: colors.bg,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
         >
-          <ActivityIndicator accessibilityLabel="Đang khôi phục phiên" />
+          <ActivityIndicator
+            color={colors.primary}
+            accessibilityLabel="Đang khôi phục phiên"
+          />
         </View>
       )}
     </SessionContext.Provider>

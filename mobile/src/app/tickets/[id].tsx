@@ -2,7 +2,14 @@ import { Image, Text, View } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { stateLabel, useResource, type TicketDetail } from "../../lib/data";
 import { useSession } from "../../lib/session";
-import { Loading, Notice, RequireAuth, Screen, ui } from "../../components/ui";
+import {
+  Loading,
+  Notice,
+  RequireAuth,
+  Screen,
+  ui,
+  colors,
+} from "../../components/ui";
 export default function TicketScreen() {
   const { id } = useLocalSearchParams<{ id: string }>(),
     { user } = useSession(),
@@ -19,17 +26,29 @@ export default function TicketScreen() {
               <Text style={ui.badge}>{stateLabel(r.data.status)}</Text>
               <Text style={ui.title}>{r.data.eventTitle}</Text>
               <Text style={ui.text}>{r.data.typeName}</Text>
-              <Image
-                accessibilityLabel="Mã QR của vé"
-                source={{ uri: r.data.qrImage }}
+              <View
+                testID="ticket-qr-panel"
                 style={{
+                  padding: 18,
+                  backgroundColor: colors.white,
+                  borderRadius: 18,
                   width: "100%",
-                  aspectRatio: 1,
-                  maxWidth: 320,
+                  maxWidth: 356,
                   alignSelf: "center",
                 }}
-                resizeMode="contain"
-              />
+              >
+                <Image
+                  accessibilityLabel="Mã QR của vé"
+                  source={{ uri: r.data.qrImage }}
+                  style={{
+                    width: "100%",
+                    aspectRatio: 1,
+                    maxWidth: 320,
+                    alignSelf: "center",
+                  }}
+                  resizeMode="contain"
+                />
+              </View>
               <Text
                 selectable
                 accessibilityLabel="Mã vé"
