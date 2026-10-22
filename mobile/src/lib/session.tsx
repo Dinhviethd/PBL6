@@ -1,5 +1,6 @@
 import {
   createContext,
+  Fragment,
   useContext,
   useEffect,
   useState,
@@ -60,7 +61,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       }}
     >
       {ready ? (
-        children
+        <Fragment key={`${user?.idUser ?? "guest"}:${api.sessionVersion()}`}>
+          {children}
+        </Fragment>
       ) : (
         <View
           style={{

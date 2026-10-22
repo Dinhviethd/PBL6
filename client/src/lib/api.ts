@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { AxiosError, InternalAxiosRequestConfig } from "axios";
+import { withBrowserRefreshLock } from "./browser-session";
 import {
   sessionChangedMessage,
   useAuth,
@@ -23,7 +24,8 @@ let refresh: { revision: number; task: Promise<string> } | null = null;
 async function refreshFor(request: BoundRequest) {
   const { revision, userId } = request._session!;
   if (!refresh || refresh.revision !== revision) {
-    const task = (async () => {
+    const task = withBrowserRefreshLock(async () => {
+      assertCurrent(request);
       const response = await axios.post(
         `${baseURL}/auth/refresh-token`,
         {},
@@ -47,7 +49,7 @@ async function refreshFor(request: BoundRequest) {
       }
       useAuth.getState().setAccessToken(token);
       return token;
-    })();
+    });
     refresh = { revision, task };
     void task
       .finally(() => {

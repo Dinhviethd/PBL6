@@ -2,6 +2,11 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 import * as SecureStore from "expo-secure-store";
 import { createApiClient } from "./api-client";
+import {
+  publishSessionChange,
+  sessionChangeKey,
+  withBrowserRefreshLock,
+} from "./browser-session";
 
 // Expo Go's host is the development computer, unlike localhost on a phone.
 const devHost = Constants.expoConfig?.hostUri?.split(":")[0];
@@ -25,6 +30,8 @@ export const api = createApiClient({
   baseUrl: apiUrl,
   native: Platform.OS !== "web",
   onSessionLost: () => lost(),
+  onSessionChanged: Platform.OS === "web" ? publishSessionChange : undefined,
+  withRefreshLock: Platform.OS === "web" ? withBrowserRefreshLock : undefined,
   storage: {
     read: () => SecureStore.getItemAsync("eventhub.refresh"),
     write: (value) =>
@@ -37,5 +44,10 @@ export const api = createApiClient({
     },
   },
 });
+if (Platform.OS === "web" && typeof window !== "undefined") {
+  window.addEventListener("storage", (event) => {
+    if (event.key === sessionChangeKey && event.newValue) void api.invalidate();
+  });
+}
 export const mediaUrl = (url?: string) =>
   url?.startsWith("/") ? `${apiUrl.replace(/\/api$/, "")}${url}` : url;

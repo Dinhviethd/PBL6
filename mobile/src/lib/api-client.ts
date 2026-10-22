@@ -25,11 +25,14 @@ export function createApiClient(options: {
   storage: TokenStorage;
   fetcher?: typeof fetch;
   onSessionLost?: () => void;
+  onSessionChanged?: () => void;
+  withRefreshLock?: <T>(work: () => Promise<T>) => Promise<T>;
 }) {
   const fetcher = options.fetcher ?? fetch;
   let accessToken: string | null = null;
+  let userId: string | null = null;
   let epoch = 0;
-  let refreshTask: Promise<void> | null = null;
+  let refreshTask: { generation: number; task: Promise<void> } | null = null;
   let storageTask: Promise<void> = Promise.resolve();
   const store = (fn: () => Promise<void>) => {
     storageTask = storageTask.catch(() => {}).then(fn);
@@ -71,15 +74,32 @@ export function createApiClient(options: {
   async function clear() {
     epoch++;
     accessToken = null;
-    await store(() => options.storage.clear());
+    userId = null;
     options.onSessionLost?.();
+    await store(() => options.storage.clear());
   }
+  const changed = () =>
+    new ApiError(
+      "Phiên đăng nhập đã thay đổi. Vui lòng đăng nhập lại.",
+      401,
+      "SESSION_CHANGED",
+    );
+  const assertCurrent = (generation: number) => {
+    if (generation !== epoch) throw changed();
+  };
   async function refresh() {
-    if (!refreshTask) {
-      const generation = epoch;
-      refreshTask = (async () => {
+    const generation = epoch;
+    const expectedUser = userId;
+    if (!refreshTask || refreshTask.generation !== generation) {
+      const run =
+        options.withRefreshLock ??
+        (async <T>(work: () => Promise<T>) => work());
+      const task = run(async () => {
+        assertCurrent(generation);
         await storageTask;
+        assertCurrent(generation);
         const token = options.native ? await options.storage.read() : null;
+        assertCurrent(generation);
         if (options.native && !token)
           throw new ApiError("Vui lòng đăng nhập.", 401, "INVALID_SESSION");
         const result = await raw<{
@@ -90,12 +110,21 @@ export function createApiClient(options: {
           "POST",
           options.native ? { refreshToken: token } : {},
         );
-        if (generation !== epoch)
-          throw new ApiError(
-            "Phiên đăng nhập đã thay đổi.",
-            401,
-            "SESSION_CHANGED",
-          );
+        assertCurrent(generation);
+        if (!options.native) {
+          const profile = await raw<User>("/auth/me", "GET", undefined, {
+            Authorization: `Bearer ${result.accessToken}`,
+          });
+          assertCurrent(generation);
+          if (
+            !profile.idUser ||
+            (expectedUser !== null && profile.idUser !== expectedUser)
+          ) {
+            await clear();
+            throw changed();
+          }
+          userId = profile.idUser;
+        }
         if (options.native) {
           if (!result.refreshToken)
             throw new ApiError("Phiên đăng nhập không hợp lệ.", 401);
@@ -104,12 +133,17 @@ export function createApiClient(options: {
               await options.storage.write(result.refreshToken!);
           });
         }
-        if (generation === epoch) accessToken = result.accessToken;
-      })().finally(() => {
-        refreshTask = null;
+        assertCurrent(generation);
+        accessToken = result.accessToken;
       });
+      refreshTask = { generation, task };
+      void task
+        .finally(() => {
+          if (refreshTask?.task === task) refreshTask = null;
+        })
+        .catch(() => {});
     }
-    return refreshTask;
+    return refreshTask.task;
   }
   async function request<T>(
     path: string,
@@ -119,19 +153,26 @@ export function createApiClient(options: {
   ): Promise<T> {
     const generation = epoch;
     const usedToken = accessToken;
-    const perform = () =>
-      raw<T>(path, method, body, {
+    const perform = async () => {
+      assertCurrent(generation);
+      const data = await raw<T>(path, method, body, {
         ...headers,
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       });
+      assertCurrent(generation);
+      return data;
+    };
     try {
       return await perform();
     } catch (error) {
+      assertCurrent(generation);
       if (
         error instanceof ApiError &&
         error.status === 401 &&
         !path.startsWith("/auth/")
       ) {
+        // Anonymous requests must never silently acquire a cookie account.
+        if (userId === null) throw error;
         try {
           if (generation !== epoch)
             throw new ApiError("Phiên đã thay đổi.", 401, "SESSION_CHANGED");
@@ -169,11 +210,15 @@ export function createApiClient(options: {
   }
   return {
     request,
+    invalidate: clear,
+    sessionVersion: () => epoch,
     async authenticate(
       mode: "login" | "register",
       payload: Record<string, string>,
     ) {
       const generation = ++epoch;
+      accessToken = null;
+      userId = null;
       const result = await raw<Session>(
         `/auth/${options.native ? "mobile/" : ""}${mode}`,
         "POST",
@@ -189,13 +234,21 @@ export function createApiClient(options: {
       }
       if (generation !== epoch) throw new ApiError("Phiên đã thay đổi.", 401);
       accessToken = result.accessToken;
+      userId = result.user.idUser;
+      options.onSessionChanged?.();
       return result.user;
     },
     async restore() {
+      const generation = epoch;
       try {
         await refresh();
-        return await request<User>("/auth/me");
+        assertCurrent(generation);
+        const profile = await request<User>("/auth/me");
+        assertCurrent(generation);
+        userId = profile.idUser;
+        return profile;
       } catch (error) {
+        assertCurrent(generation);
         if (error instanceof ApiError && [401, 403].includes(error.status)) {
           await clear();
           return null;
@@ -204,6 +257,7 @@ export function createApiClient(options: {
       }
     },
     async logout() {
+      const generation = epoch;
       try {
         if (accessToken) {
           try {
@@ -216,7 +270,9 @@ export function createApiClient(options: {
           } catch (error) {
             if (!(error instanceof ApiError) || error.status !== 401)
               throw error;
+            assertCurrent(generation);
             await refresh();
+            assertCurrent(generation);
             await raw(
               "/auth/logout",
               "POST",
@@ -226,7 +282,12 @@ export function createApiClient(options: {
           }
         }
       } finally {
-        await clear();
+        assertCurrent(generation);
+        const clearing = clear();
+        const clearedGeneration = epoch;
+        options.onSessionChanged?.();
+        await clearing;
+        assertCurrent(clearedGeneration);
       }
     },
   };

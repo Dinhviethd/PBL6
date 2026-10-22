@@ -1,4 +1,8 @@
 import { create } from "zustand";
+import {
+  publishSessionChange,
+  sessionChangeKey,
+} from "../../../lib/browser-session";
 export interface User {
   idUser: string;
   name: string;
@@ -54,17 +58,10 @@ export const useAuth = create<AuthState>((set) => ({
 }));
 
 // Only an invalidation signal is shared. Credentials and profiles stay in memory.
-const sessionKey = "eventhub:session-change";
 export const sessionChangedMessage =
   "Phiên đăng nhập đã thay đổi. Vui lòng đăng nhập lại và thực hiện lại thao tác.";
-export function notifySessionChange() {
-  try {
-    localStorage.setItem(sessionKey, crypto.randomUUID());
-  } catch {
-    // Refresh still verifies identity when browser storage is unavailable.
-  }
-}
+export const notifySessionChange = publishSessionChange;
 window.addEventListener("storage", (event) => {
-  if (event.key === sessionKey && event.newValue)
+  if (event.key === sessionChangeKey && event.newValue)
     useAuth.getState().clearAuth(sessionChangedMessage);
 });

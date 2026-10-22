@@ -6,19 +6,18 @@ import { useSession } from "../../lib/session";
 import { errorMessage } from "../../lib/data";
 import { Button, Notice, RequireAuth, Screen, ui } from "../../components/ui";
 export default function AccountScreen() {
-  const { user, setUser } = useSession(),
+  const { user } = useSession(),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   async function logout() {
     setBusy(true);
     try {
       await api.logout();
+      router.replace("/");
     } catch (e) {
       setError(errorMessage(e));
     } finally {
-      setUser(null);
       setBusy(false);
-      router.replace("/");
     }
   }
   return (

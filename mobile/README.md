@@ -35,6 +35,8 @@ Với Android emulator, đặt API `http://10.0.2.2:8000/api`. Khi API đã ch�
 
 ## Xem thử trên máy tính
 
+Bản web cần trình duyệt hỗ trợ Web Locks, chạy qua HTTPS hoặc localhost để refresh cookie an toàn giữa các tab. Nếu thiếu Web Locks, ứng dụng không tự refresh phiên. Các tab phải cùng origin để phối hợp; sau khi cập nhật bản sửa phiên, tải lại các tab cũ. Xem [báo cáo sửa audit](../docs/AUDIT-FIXES-2026-10-22.md).
+
 ```powershell
 npm run build --prefix server
 npm run export --prefix mobile
