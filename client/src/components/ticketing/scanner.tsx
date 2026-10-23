@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserQRCodeReader, type IScannerControls } from "@zxing/browser";
 import { Camera } from "lucide-react";
-import api from "../../lib/api";
-import { ActionForm } from "./customer";
+import api from "@/lib/api";
+import { ActionForm } from "./action-form";
 import { Notice, Field } from "./shared";
-import { message, when } from "./data";
+import { message, when } from "@/features/ticketing/data";
 export function Scanner({ eventId }: { eventId: string }) {
   const video = useRef<HTMLVideoElement>(null),
     controls = useRef<IScannerControls | null>(null),

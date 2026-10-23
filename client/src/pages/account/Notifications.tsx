@@ -1,55 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Bell, CheckCheck } from "lucide-react";
-import api from "../../lib/api";
-import { get, message, useLoad, when } from "./data";
-import { Empty, Loading, Notice, PageHead, Pager } from "./shared";
-import {
-  notificationLabels,
-  type InboxNotification,
-  type NotificationInbox,
-} from "./notifications-data";
-
-export function NotificationLink() {
-  const [count, setCount] = useState<number | null>(null);
-  const location = useLocation();
-  useEffect(() => {
-    let active = true;
-    const refresh = () => {
-      if (document.visibilityState === "hidden") return;
-      void get<{ unreadCount: number }>("/me/notifications/count")
-        .then((r) => {
-          if (active) setCount(r.unreadCount);
-        })
-        .catch(() => {
-          if (active) setCount(null);
-        });
-    };
-    refresh();
-    const timer = window.setInterval(refresh, 30000);
-    window.addEventListener("notifications:changed", refresh);
-    window.addEventListener("focus", refresh);
-    return () => {
-      active = false;
-      window.clearInterval(timer);
-      window.removeEventListener("notifications:changed", refresh);
-      window.removeEventListener("focus", refresh);
-    };
-  }, [location.pathname]);
-  return (
-    <Link
-      to="/notifications"
-      className="notification-bell"
-      aria-label={`Thông báo${count ? `, ${count} chưa đọc` : ""}`}
-      title="Thông báo"
-    >
-      <Bell size={21} />
-      {!!count && (
-        <span className="notification-count">{count > 99 ? "99+" : count}</span>
-      )}
-    </Link>
-  );
-}
+import api from "@/lib/api";
+import { Empty, Loading, Notice, PageHead, Pager } from "@/components/ticketing/shared";
+import { message, useLoad, when } from "@/features/ticketing/data";
+import { notificationLabels, type InboxNotification, type NotificationInbox } from "@/features/ticketing/notifications-data";
 
 export function Notifications() {
   const [page, setPage] = useState(0),

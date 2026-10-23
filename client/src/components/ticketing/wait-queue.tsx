@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../../lib/api";
-import { useAuth } from "../auth/stores/authStore";
-import { message, useLoad, when } from "./data";
+import api from "@/lib/api";
+import { useAuth } from "@/features/auth/stores/authStore";
+import { message, useLoad, when } from "@/features/ticketing/data";
 import { Notice, Pager } from "./shared";
-import { waitLabels, type WaitEntry } from "./wait-queue-data";
+import { waitLabels, type WaitEntry } from "@/features/ticketing/wait-queue-data";
 
 export function JoinWaitQueue({
   eventId,

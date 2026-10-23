@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { ArrowUpRight, CalendarDays, MapPin, Ticket } from "lucide-react";
 import { Link } from "react-router-dom";
-import { money, when } from "./data";
-import type { Event } from "./types";
+import { money, when } from "@/features/ticketing/data";
+import type { Event } from "@/features/ticketing/types";
 
 /** Decorative cover: the event title is rendered separately as accessible text. */
 export function EventCover({ src }: { src?: string }) {

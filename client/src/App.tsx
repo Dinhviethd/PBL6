@@ -10,29 +10,24 @@ import {
 import { Ticket, ArrowUpRight } from "lucide-react";
 import authService from "./features/auth/services/authService";
 import { useAuth } from "./features/auth/stores/authStore";
-import {
-  Explore,
-  EventDetail,
-  AuthPage,
-  Checkout,
-  MyOrders,
-  MyTickets,
-  TicketPage,
-  Profile,
-} from "./features/ticketing/customer";
-import {
-  Organizer,
-  EditorPage,
-  Operations,
-  Admin,
-} from "./features/ticketing/management";
-import { Loading, Notice } from "./features/ticketing/shared";
+import { Explore } from "./pages/public/Explore";
+import { EventDetail } from "./pages/public/EventDetail";
+import { AuthPage } from "./pages/auth/AuthPage";
+import { Checkout } from "./pages/booking/Checkout";
+import { MyOrders } from "./pages/account/MyOrders";
+import { MyTickets } from "./pages/account/MyTickets";
+import { TicketPage } from "./pages/account/TicketPage";
+import { Profile } from "./pages/account/Profile";
+import { Notifications } from "./pages/account/Notifications";
+import { Organizer } from "./pages/organizer/Organizer";
+import { EditorPage } from "./pages/organizer/EditorPage";
+import { Operations } from "./pages/organizer/Operations";
+import { Admin } from "./pages/admin/Admin";
+import { StaffAssignments } from "./pages/staff/StaffAssignments";
+import { StaffCheckin } from "./pages/staff/StaffCheckin";
+import { Loading, Notice } from "./components/ticketing/shared";
 import { useLoad } from "./features/ticketing/data";
-import { StaffAssignments, StaffCheckin } from "./features/ticketing/staff";
-import {
-  NotificationLink,
-  Notifications,
-} from "./features/ticketing/notifications";
+import { NotificationLink } from "./components/ticketing/notification-link";
 import type { ReactNode } from "react";
 import "./features/ticketing/ticketing.css";
 function Guard({
@@ -73,9 +68,10 @@ export function App() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
+  const isAuthPage = location.pathname.startsWith("/auth/");
   return (
     <div className="eventhub">
-      <header className="site-header">
+      {!isAuthPage && <header className="site-header">
         <Link className="brand" to="/">
           <span className="brand-mark">
             <Ticket size={23} />
@@ -125,14 +121,14 @@ export function App() {
             </>
           )}
         </div>
-      </header>
-      {config.data?.paymentMode === "demo" && (
+      </header>}
+      {!isAuthPage && config.data?.paymentMode === "demo" && (
         <div className="demo-banner">
           Bản trải nghiệm MVP · Thanh toán demo, không thu tiền thật
         </div>
       )}
       <main className="site-main" key={revision}>
-        {sessionNotice && <Notice error={sessionNotice} />}
+        {!isAuthPage && sessionNotice && <Notice error={sessionNotice} />}
         <Routes>
           <Route
             path="/notifications"
@@ -256,13 +252,13 @@ export function App() {
           />
         </Routes>
       </main>
-      <footer className="site-footer">
+      {!isAuthPage && <footer className="site-footer">
         <Link className="brand" to="/">
           eventhub.
         </Link>
         <span>Những trải nghiệm đáng nhớ, bắt đầu từ một chiếc vé.</span>
         <span>© 2026 EventHub</span>
-      </footer>
+      </footer>}
     </div>
   );
 }

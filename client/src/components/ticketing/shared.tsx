@@ -1,7 +1,7 @@
 import { useId, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
-import api from "../../lib/api";
-import { message } from "./data";
+import api from "@/lib/api";
+import { message } from "@/features/ticketing/data";
 export function Notice({
   error,
   children,
