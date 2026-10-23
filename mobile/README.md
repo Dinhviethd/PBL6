@@ -8,6 +8,7 @@ Expo SDK 57 + React Native + Expo Router, dùng chung API Express và tài kho�
 - Khám phá, tìm theo từ khóa/thành phố/danh mục, chi tiết sự kiện, chọn nhiều loại vé (tối đa 10 vé/đơn).
 - Đặt đơn với idempotency key giữ nguyên khi retry, theo dõi thời hạn giữ chỗ, hủy đơn chưa thanh toán, thanh toán demo thành công/thất bại theo cấu hình server.
 - Lịch sử đơn, ví vé, QR do server cấp; không tự tạo vé khi mất mạng hoặc thanh toán chưa xác nhận.
+- Chờ 1 vé khi loại vé hết chỗ; theo dõi vị trí/rời hàng tại Đơn hàng, mở đơn giữ vé từ lời mời trong ứng dụng. Xem [danh sách chờ](../docs/WAIT-QUEUE.md).
 - Nhận/từ chối lời mời nhân viên, xem phân công, quét QR bằng camera hoặc nhập mã. Chống gửi lặp từ camera, dừng camera khi rời màn hình/đưa app xuống nền; quyền thu hồi được server kiểm tra mỗi lần quét.
 - Các danh sách có phân trang, tải lại khi vào màn hình và kéo để làm mới; có trạng thái tải/lỗi/rỗng.
 

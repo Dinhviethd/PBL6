@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { MyWaitQueue } from "../../components/wait-queue";
 import { Text, View } from "react-native";
 import { router } from "expo-router";
 import {
@@ -26,6 +27,7 @@ export default function OrdersScreen() {
     <RequireAuth>
       <Screen refresh={r.reload} loading={r.loading}>
         <Text style={ui.title}>Lịch sử đặt vé.</Text>
+        <MyWaitQueue />
         <Notice error text={r.error} />
         {r.loading ? (
           <Loading />

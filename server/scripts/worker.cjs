@@ -30,6 +30,12 @@ for (const signal of ["SIGINT", "SIGTERM"])
         console.error("VNPay reconciliation job failed; will retry.");
       }
       try {
+        const n = await a.waitQueue.process();
+        if (n) console.log(`Created ${n} wait queue offers`);
+      } catch (e) {
+        console.error("Wait queue job failed:", e.message);
+      }
+      try {
         const n = await a.booking.remind();
         if (n) console.log(`Created ${n} event reminders`);
       } catch (e) {

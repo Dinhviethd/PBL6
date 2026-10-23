@@ -15,6 +15,8 @@ test(
       type: "postgres",
       url,
       migrations: [
+        require("../dist/migrations/WaitQueue1792627200000")
+          .WaitQueue1792627200000,
         require("../dist/migrations/InitialMvp1790812800000")
           .InitialMvp1790812800000,
         require("../dist/migrations/EventCheckinStaff1791072000000")

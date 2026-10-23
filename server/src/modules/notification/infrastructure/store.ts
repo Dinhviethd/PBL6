@@ -3,7 +3,12 @@ import type { Store } from "../../../contracts/core";
 
 export type NotificationInput = {
   userId: string;
-  kind: "ORDER_PAID" | "STAFF_INVITED" | "EVENT_UPDATED" | "EVENT_REMINDER";
+  kind:
+    | "ORDER_PAID"
+    | "STAFF_INVITED"
+    | "EVENT_UPDATED"
+    | "EVENT_REMINDER"
+    | "WAIT_QUEUE_OFFER";
   title: string;
   message: string;
   target: "ORDER" | "TICKETS" | "STAFF";

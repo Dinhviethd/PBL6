@@ -20,6 +20,7 @@ import type {
 } from "../../../client/src/features/ticketing/notifications-data";
 
 const notificationLabels = {
+  WAIT_QUEUE_OFFER: "Đến lượt mua vé",
   ORDER_PAID: "Vé của bạn",
   STAFF_INVITED: "Lời mời",
   EVENT_UPDATED: "Cập nhật sự kiện",

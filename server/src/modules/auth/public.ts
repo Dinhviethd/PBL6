@@ -65,6 +65,12 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
   }
   return {
     profile,
+    async waitQueueBuyer(id: string) {
+      const user = await repo.user(id);
+      return user?.status === "ACTIVE" && !user.locked_at
+        ? { name: user.name, email: user.email }
+        : null;
+    },
     checkinActorNames: repo.checkinActorNames,
     async checkinInvitee(email: string) {
       const user = await repo.byEmail(email);

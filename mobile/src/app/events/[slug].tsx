@@ -1,4 +1,5 @@
 import { BookingSteps } from "../../components/booking-steps";
+import { JoinWaitQueue } from "../../components/wait-queue";
 import { useRef, useState } from "react";
 import { Text, View } from "react-native";
 import { router, useLocalSearchParams, usePathname } from "expo-router";
@@ -129,6 +130,13 @@ export default function EventScreen() {
                   <Text style={ui.muted}>
                     {open ? `Còn ${available} vé` : "Chưa mở hoặc đã ngừng bán"}
                   </Text>
+                  {open && (available === 0 || Number(t.waiting_count) > 0) && (
+                    <JoinWaitQueue
+                      eventId={event.id}
+                      typeId={t.id}
+                      name={t.name}
+                    />
+                  )}
                   <View style={{ ...ui.row, justifyContent: "space-between" }}>
                     <Button
                       title="−"

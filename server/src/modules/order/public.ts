@@ -49,6 +49,7 @@ export function createOrders(db: Store, qrSecret: string) {
       status,
       status === "EXPIRED" ? "Hết hạn giữ chỗ" : "Khách hủy đơn",
     );
+    await r.waitFinish(order.id, status);
   }
   return {
     ...r,
@@ -60,6 +61,7 @@ export function createOrders(db: Store, qrSecret: string) {
       buyer: Row,
       items: Row[],
       idempotency: string,
+      fromQueue = false,
     ) {
       const canonical = [...items].sort((a, b) =>
         a.ticketTypeId.localeCompare(b.ticketTypeId),
@@ -122,6 +124,11 @@ export function createOrders(db: Store, qrSecret: string) {
           "Không còn đủ vé.",
         );
         total += money(t.price_amount) * BigInt(t.quantity);
+        ensure(
+          fromQueue || !(await r.waitHead(t.id)),
+          "WAIT_QUEUE_PRIORITY",
+          "Vé đang được dành cho danh sách chờ. Vui lòng chờ lượt.",
+        );
         quantity += t.quantity;
       }
       ensure(
@@ -131,7 +138,17 @@ export function createOrders(db: Store, qrSecret: string) {
         400,
       );
       const id = randomUUID(),
-        expires = new Date(Date.now() + 15 * 60 * 1000);
+        expires = new Date(
+          Math.min(
+            Date.now() + 15 * 60 * 1000,
+            ...(fromQueue
+              ? [
+                  new Date(event.ends_at).getTime(),
+                  ...selected.map((t) => new Date(t.sale_ends_at).getTime()),
+                ]
+              : []),
+          ),
+        );
       const order = await r.create({
         id,
         code: `EH-${randomBytes(8).toString("hex").toUpperCase()}`,
@@ -205,6 +222,7 @@ export function createOrders(db: Store, qrSecret: string) {
         return "LATE_PAYMENT";
       }
       await r.paid(order.id, payment.id);
+      await r.waitFinish(order.id, "COMPLETED");
       for (const v of rs) {
         await r.inventory(v.ticket_type_id, -v.quantity, v.quantity);
         await r.reserveState(v.order_item_id, "CONSUMED");

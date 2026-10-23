@@ -22,6 +22,7 @@ import {
 import { createAudit } from "./modules/audit/public";
 import { createNotifications } from "./modules/notification/public";
 import { createBooking } from "./workflows/booking";
+import { createWaitQueue } from "./workflows/wait-queue";
 import { ensure, role, type Row, type Principal } from "./contracts/core";
 const uuid = z.string().uuid(),
   text = z.string().trim().min(1),
@@ -147,6 +148,14 @@ export function createApplication(config: {
     app = express(),
     api = express.Router();
   app.disable("x-powered-by");
+  const waitQueue = createWaitQueue(
+    auth,
+    events,
+    orders,
+    notifications,
+    uow,
+    booking,
+  );
   // Local ngrok agent is the only trusted forwarding hop.
   app.set("trust proxy", "loopback");
   ensure(
@@ -610,6 +619,24 @@ export function createApplication(config: {
       booking.archiveType(who(res), id(req), id(req, "typeId")),
     ),
   );
+  api.get(
+    "/me/wait-queue",
+    protect,
+    route((req, res) => orders.waitList(who(res).userId, page(req) * 50)),
+  );
+  api.post(
+    "/events/:id/wait-queue",
+    protect,
+    route((req, res) => {
+      const d = z.object({ ticketTypeId: uuid }).parse(req.body);
+      return waitQueue.join(who(res), id(req), d.ticketTypeId);
+    }),
+  );
+  api.delete(
+    "/me/wait-queue/:id",
+    protect,
+    route((req, res) => waitQueue.leave(who(res), id(req))),
+  );
   api.post(
     "/orders",
     protect,
@@ -977,6 +1004,7 @@ export function createApplication(config: {
     auth,
     events,
     orders,
+    waitQueue,
     payments,
     notifications,
     uow,

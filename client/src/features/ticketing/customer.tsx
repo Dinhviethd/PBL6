@@ -19,6 +19,7 @@ import {
   FeaturedEvent,
 } from "./event-visuals";
 import api from "../../lib/api";
+import { JoinWaitQueue, MyWaitQueue } from "./wait-queue";
 import { checkoutUrl, paymentMessage } from "./payment";
 import authService from "../auth/services/authService";
 import { useAuth } from "../auth/stores/authStore";
@@ -295,6 +296,17 @@ export function EventDetail() {
                   <small>
                     {available ? `Còn ${left} vé` : "Chưa mở bán / hết vé"}
                   </small>
+                  {!e.sales_paused &&
+                    (left === 0 || Number(t.waiting_count) > 0) &&
+                    Date.now() >= Date.parse(t.sale_starts_at) &&
+                    Date.now() < Date.parse(t.sale_ends_at) &&
+                    Date.now() < Date.parse(e.ends_at) && (
+                      <JoinWaitQueue
+                        eventId={e.id}
+                        typeId={t.id}
+                        name={t.name}
+                      />
+                    )}
                 </div>
                 <div className="quantity-control">
                   <button
@@ -673,6 +685,7 @@ export function MyOrders() {
   return (
     <>
       <PageHead eyebrow="TÀI KHOẢN" title="Lịch sử đặt vé" />
+      <MyWaitQueue />
       <form
         className="filters"
         onSubmit={(e) => {

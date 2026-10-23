@@ -57,6 +57,8 @@ if (!url) {
       type: "postgres",
       url,
       migrations: [
+        require("../dist/migrations/WaitQueue1792627200000")
+          .WaitQueue1792627200000,
         InitialMvp1790812800000,
         EventCheckinStaff1791072000000,
         require("../dist/migrations/Notifications1791331200000")
@@ -1335,7 +1337,10 @@ if (!url) {
     const oldHost = process.env.SMTP_HOST;
     const oldFrom = process.env.SMTP_FROM;
     process.env.SMTP_FROM = "test@example.test";
-    t.after(() => { if (oldFrom === undefined) delete process.env.SMTP_FROM; else process.env.SMTP_FROM = oldFrom; });
+    t.after(() => {
+      if (oldFrom === undefined) delete process.env.SMTP_FROM;
+      else process.env.SMTP_FROM = oldFrom;
+    });
     process.env.SMTP_HOST = "test.invalid";
     t.after(() => {
       if (oldHost === undefined) delete process.env.SMTP_HOST;
@@ -1413,9 +1418,12 @@ if (!url) {
       const original = bcrypt.compare,
         oldHost = process.env.SMTP_HOST;
       const oldFrom = process.env.SMTP_FROM;
-    process.env.SMTP_FROM = "test@example.test";
-    t.after(() => { if (oldFrom === undefined) delete process.env.SMTP_FROM; else process.env.SMTP_FROM = oldFrom; });
-    process.env.SMTP_HOST = "test.invalid";
+      process.env.SMTP_FROM = "test@example.test";
+      t.after(() => {
+        if (oldFrom === undefined) delete process.env.SMTP_FROM;
+        else process.env.SMTP_FROM = oldFrom;
+      });
+      process.env.SMTP_HOST = "test.invalid";
       t.after(() => {
         if (oldHost === undefined) delete process.env.SMTP_HOST;
         else process.env.SMTP_HOST = oldHost;
@@ -1646,12 +1654,20 @@ if (!url) {
     assert.match(payload.data.url, /^\/uploads\/[0-9a-f-]+\.webp$/);
     await unlink(path.join(uploadDirectory, path.basename(payload.data.url)));
     const tooLarge = new FormData();
-    tooLarge.set("image", new Blob([Buffer.alloc(5 * 1024 * 1024 + 1)], {type: "image/png"}), "large.png");
+    tooLarge.set(
+      "image",
+      new Blob([Buffer.alloc(5 * 1024 * 1024 + 1)], { type: "image/png" }),
+      "large.png",
+    );
     const limited = await send(tooLarge);
     assert.equal(limited.status, 413);
     assert.equal((await limited.json()).code, "LIMIT_FILE_SIZE");
     const malformed = new FormData();
-    malformed.set("image", new Blob(["invalid image"], {type: "image/png"}), "invalid.png");
+    malformed.set(
+      "image",
+      new Blob(["invalid image"], { type: "image/png" }),
+      "invalid.png",
+    );
     const rejected = await send(malformed);
     assert.equal(rejected.status, 400);
     assert.equal((await rejected.json()).code, "INVALID_IMAGE");

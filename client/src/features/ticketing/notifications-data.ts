@@ -1,6 +1,11 @@
 export type InboxNotification = {
   id: string;
-  kind: "ORDER_PAID" | "STAFF_INVITED" | "EVENT_UPDATED" | "EVENT_REMINDER";
+  kind:
+    | "ORDER_PAID"
+    | "STAFF_INVITED"
+    | "EVENT_UPDATED"
+    | "EVENT_REMINDER"
+    | "WAIT_QUEUE_OFFER";
   title: string;
   message: string;
   target: "ORDER" | "TICKETS" | "STAFF";
@@ -14,6 +19,7 @@ export type NotificationInbox = {
   hasNext: boolean;
 };
 export const notificationLabels = {
+  WAIT_QUEUE_OFFER: "Đến lượt mua vé",
   ORDER_PAID: "Vé của bạn",
   STAFF_INVITED: "Lời mời",
   EVENT_UPDATED: "Cập nhật sự kiện",

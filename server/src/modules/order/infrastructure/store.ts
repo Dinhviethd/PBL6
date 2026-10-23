@@ -1,7 +1,9 @@
 import { randomUUID } from "node:crypto";
 import type { Store, Row } from "../../../contracts/core";
+import { waitQueueStore } from "./wait-queue";
 export function orderStore(db: Store) {
   return {
+    ...waitQueueStore(db),
     reminderBuyers: (eventId: string) =>
       db.query(
         `SELECT DISTINCT o.buyer_id AS user_id FROM orders o
@@ -18,7 +20,7 @@ export function orderStore(db: Store) {
       ),
     types: (event: string) =>
       db.query(
-        "SELECT * FROM ticket_types WHERE event_id=$1 ORDER BY price_amount,id",
+        "SELECT t.*,(SELECT count(*) FROM wait_queue w WHERE w.ticket_type_id=t.id AND w.status='WAITING') AS waiting_count FROM ticket_types t WHERE t.event_id=$1 ORDER BY t.price_amount,t.id",
         [event],
       ),
     offerings: (ids: string[]) =>

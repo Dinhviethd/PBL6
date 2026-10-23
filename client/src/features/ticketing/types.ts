@@ -4,6 +4,7 @@ export interface Category {
   slug: string;
 }
 export interface TicketType {
+  waiting_count?: string;
   id: string;
   name: string;
   description?: string;
