@@ -9,6 +9,7 @@ import {
   Search,
   ShieldCheck,
   Ticket,
+  UserRound,
   X,
 } from "lucide-react";
 import type { User } from "@/features/auth/stores/authStore";
@@ -53,16 +54,19 @@ export function AuthHeader({
   return (
     <header className="auth-header">
       <div className="auth-header-inner">
-        <Link className="auth-logo" to="/" aria-label="EVENTHUB — Trang chủ">
+        <Link className="auth-logo" to="/" aria-label={mode === "reset" ? "ENVENT HUB — Trang chủ" : "EVENTHUB — Trang chủ"}>
           <span className="auth-logo-mark">
             <Ticket size={18} />
           </span>
           <span>
-            EVENT<span>HUB</span>
+            {mode === "reset" ? "ENVENT" : "EVENT"}<span>HUB</span>
           </span>
         </Link>
 
-        <nav className="auth-nav" aria-label="Điều hướng chính">
+        <nav
+          className={`auth-nav${mode === "reset" ? " auth-nav-recovery" : ""}`}
+          aria-label="Điều hướng chính"
+        >
           <Link to="/">Khám phá sự kiện</Link>
           <a href="/#discover">
             Danh mục <ChevronDown size={12} />
@@ -73,6 +77,14 @@ export function AuthHeader({
           >
             Vé của tôi
           </Link>
+          {mode === "reset" && (
+            <Link
+              to={user ? "/orders" : "/auth/login"}
+              state={user ? undefined : { from: "/orders" }}
+            >
+              Lịch sử đơn hàng
+            </Link>
+          )}
         </nav>
 
         <form className="auth-search" role="search" onSubmit={onSearch}>
@@ -86,7 +98,29 @@ export function AuthHeader({
         </form>
 
         <div className="auth-header-actions">
-          {user ? (
+          {mode === "reset" ? (
+            <>
+              <Link className="auth-header-link" to="/auth/login">
+                Đăng nhập
+              </Link>
+              <Link className="auth-header-cta" to="/auth/register">
+                Đăng ký
+              </Link>
+              <Link
+                className="auth-avatar auth-avatar-recovery"
+                to={user ? "/profile" : "/auth/login"}
+                state={user ? undefined : { from: "/profile" }}
+                aria-label={user ? `Tài khoản ${user.name}` : "Tài khoản"}
+              >
+                {user ? (
+                  <span>{user.name.slice(0, 1).toUpperCase()}</span>
+                ) : (
+                  <UserRound className="auth-user-icon" size={17} aria-hidden="true" />
+                )}
+                <ChevronDown className="auth-avatar-chevron" size={12} aria-hidden="true" />
+              </Link>
+            </>
+          ) : user ? (
             <Link className="auth-avatar" to="/profile" title="Trang cá nhân">
               <span>{user.name.slice(0, 1).toUpperCase()}</span>
               <b>{user.name}</b>
@@ -116,8 +150,10 @@ export function AuthHeader({
 
 export function AuthFooter({
   onNotice,
+  a11Reference = false,
 }: {
   onNotice: (message: string) => void;
+  a11Reference?: boolean;
 }) {
   const policy = (label: string) =>
     onNotice(
@@ -125,21 +161,21 @@ export function AuthFooter({
     );
 
   return (
-    <footer className="auth-footer">
+      <footer className="auth-footer">
       <div className="auth-footer-grid">
         <div className="auth-footer-brand">
-          <Link className="auth-logo" to="/" aria-label="EVENTHUB — Trang chủ">
+          <Link className="auth-logo" to="/" aria-label={a11Reference ? "ENVENT HUB — Trang chủ" : "EVENTHUB — Trang chủ"}>
             <span className="auth-logo-mark">
               <Ticket size={20} />
             </span>
             <span>
-              EVENT<span>HUB</span>
+              {a11Reference ? "ENVENT" : "EVENT"}<span>HUB</span>
             </span>
           </Link>
           <p>
-            Nền tảng phát hành vé số hóa, phân phối sự kiện âm nhạc và kiểm soát
-            check-in theo phong cách Cyber Cosmic đỉnh cao. Trải nghiệm giải trí
-            chuẩn xác, bảo mật và bùng nổ năng lượng.
+            {a11Reference
+              ? "Nền tảng phát hành vé số hóa, phân phối sự kiện âm nhạc và kiểm soát check-in theo phong cách Cyber Nebula đỉnh cao. Trải nghiệm giải trí chuẩn xác, bảo mật và bùng nổ năng lượng."
+              : "Nền tảng phát hành vé số hóa, phân phối sự kiện âm nhạc và kiểm soát check-in theo phong cách Cyber Cosmic đỉnh cao. Trải nghiệm giải trí chuẩn xác, bảo mật và bùng nổ năng lượng."}
           </p>
           <span className="auth-footer-tech">
             <ShieldCheck size={14} /> Công nghệ vé QR Độc Bản Thời Gian Thực
@@ -147,11 +183,22 @@ export function AuthFooter({
         </div>
 
         <div className="auth-footer-col">
-          <h2>Liên kết nhanh</h2>
-          <Link to="/?q=l%E1%BB%85%20h%E1%BB%99i">Lễ hội Âm nhạc Hot</Link>
-          <Link to="/?q=underground">Sự kiện Underground</Link>
-          <Link to="/organizer">Dành cho Ban tổ chức</Link>
-          <Link to="/tickets">Hướng dẫn mua vé QR</Link>
+          <h2>{a11Reference ? "Tài khoản & khách hàng" : "Liên kết nhanh"}</h2>
+          {a11Reference ? (
+            <>
+              <Link to="/profile">Hồ sơ cá nhân</Link>
+              <Link to="/orders">Lịch sử đơn hàng</Link>
+              <Link to="/tickets">Vé của tôi</Link>
+              <Link to="/auth/reset-password">Khôi phục mật khẩu</Link>
+            </>
+          ) : (
+            <>
+              <Link to="/?q=l%E1%BB%85%20h%E1%BB%99i">Lễ hội Âm nhạc Hot</Link>
+              <Link to="/?q=underground">Sự kiện Underground</Link>
+              <Link to="/organizer">Dành cho Ban tổ chức</Link>
+              <Link to="/tickets">Hướng dẫn mua vé QR</Link>
+            </>
+          )}
         </div>
 
         <div className="auth-footer-col">
@@ -164,9 +211,9 @@ export function AuthFooter({
           </button>
           <button
             type="button"
-            onClick={() => policy("Chính sách hoàn/đổi vé")}
+            onClick={() => policy(a11Reference ? "Chính sách hủy/đổi vé" : "Chính sách hoàn/đổi vé")}
           >
-            Chính sách hoàn/đổi vé
+            {a11Reference ? "Chính sách hủy/đổi vé" : "Chính sách hoàn/đổi vé"}
           </button>
           <button
             type="button"
@@ -185,14 +232,16 @@ export function AuthFooter({
             <Mail size={14} /> <span>{SUPPORT_EMAIL}</span>
           </a>
           <span>
-            <MapPin size={14} /> Trung tâm điều phối EventHub
+            <MapPin size={14} /> Trung tâm điều phối {a11Reference ? "TicketHub" : "EventHub"}
           </span>
         </div>
       </div>
 
       <div className="auth-footer-bottom">
         <span>
-          © 2026 EVENTHUB. Bản quyền thuộc về nền tảng sự kiện EVENTHUB.
+          {a11Reference
+            ? "© 2025 ENVENT HUB. Bản quyền thuộc về nền tảng sự kiện ENVENT HUB."
+            : "© 2026 EVENTHUB. Bản quyền thuộc về nền tảng sự kiện EVENTHUB."}
         </span>
         <div>
           <span>VN | VI</span>

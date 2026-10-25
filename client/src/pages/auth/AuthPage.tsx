@@ -9,6 +9,7 @@ import {
   Eye,
   EyeOff,
   Fingerprint,
+  Hourglass,
   KeyRound,
   Loader2,
   LockKeyhole,
@@ -37,6 +38,8 @@ import {
 import "./auth.css";
 
 const STORAGE_KEY = "eventhub.auth.email";
+const A11_REFERENCE_EMAIL = "";
+const RESET_CODE_TTL_SECONDS = 5 * 60;
 
 type FormState = {
   name: string;
@@ -48,6 +51,7 @@ type FormState = {
 };
 
 type FieldErrors = Partial<Record<keyof FormState | "terms", string>>;
+type ResetStep = "request" | "verify-otp" | "reset-password";
 
 const emptyForm: FormState = {
   name: "",
@@ -68,6 +72,7 @@ function AuthField({
   hint,
   icon,
   autoComplete,
+  inputMode,
   placeholder,
   topRight,
   rightAction,
@@ -82,6 +87,7 @@ function AuthField({
   hint?: string;
   icon: ReactNode;
   autoComplete?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
   placeholder?: string;
   topRight?: ReactNode;
   rightAction?: ReactNode;
@@ -110,6 +116,7 @@ function AuthField({
           onChange={onChange}
           placeholder={placeholder}
           autoComplete={autoComplete}
+          inputMode={inputMode}
           disabled={disabled}
           aria-invalid={error ? true : undefined}
           aria-describedby={
@@ -328,34 +335,41 @@ export function AuthPage({
   const mode: AuthMode = reset ? "reset" : register ? "register" : "login";
 
   const [role, setRole] = useState<AuthRole>("attendee");
-  const [form, setForm] = useState<FormState>(emptyForm);
+  const [form, setForm] = useState<FormState>(() => ({
+    ...emptyForm,
+    email: reset ? A11_REFERENCE_EMAIL : "",
+  }));
   const [errors, setErrors] = useState<FieldErrors>({});
   const [remember, setRemember] = useState(true);
   const [terms, setTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [resetStep, setResetStep] = useState<ResetStep>("request");
+  const [resetSeconds, setResetSeconds] = useState(0);
   const [serverError, setServerError] = useState("");
   const [notice, setNotice] = useState("");
   const [search, setSearch] = useState("");
 
   useEffect(() => {
+    if (mode === "reset") return;
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved)
       setForm((current) =>
         current.email ? current : { ...current, email: saved },
       );
-  }, []);
+  }, [mode]);
 
   useEffect(() => {
     setErrors({});
     setServerError("");
-    setSent(false);
+    setResetStep("request");
+    setResetSeconds(0);
     setShowPassword(false);
     setShowConfirmPassword(false);
     setForm((current) => ({
       ...current,
+      email: mode === "reset" ? A11_REFERENCE_EMAIL : current.email,
       password: "",
       confirmPassword: "",
       otp: "",
@@ -372,6 +386,14 @@ export function AuthPage({
     const timer = window.setTimeout(() => setNotice(""), 7000);
     return () => window.clearTimeout(timer);
   }, [notice]);
+
+  useEffect(() => {
+    if (mode !== "reset" || resetSeconds <= 0) return;
+    const timer = window.setInterval(() => {
+      setResetSeconds((current) => Math.max(0, current - 1));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [mode, resetSeconds]);
 
   function updateField(key: keyof FormState) {
     return (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -413,9 +435,14 @@ export function AuthPage({
       return next;
     }
 
-    if (sent) {
-      if (!/^\d{6}$/.test(form.otp.trim()))
-        next.otp = "Mã xác nhận gồm 6 chữ số.";
+    if (resetStep === "verify-otp") {
+      if (!form.otp.trim()) next.otp = "Vui lòng nhập mã xác nhận.";
+      else if (!/^\d{6}$/.test(form.otp.trim()))
+        next.otp = "Mã xác nhận phải gồm đúng 6 chữ số.";
+      return next;
+    }
+
+    if (resetStep === "reset-password") {
       if (!form.password) next.password = "Vui lòng nhập mật khẩu mới.";
       else if (form.password.length < 8)
         next.password = "Mật khẩu phải có ít nhất 8 ký tự.";
@@ -441,6 +468,39 @@ export function AuthPage({
       !from.startsWith("//")
       ? from
       : "/";
+  }
+
+  async function resendResetCode() {
+    if (busy || resetSeconds > 0) return;
+    setBusy(true);
+    setServerError("");
+    try {
+      await authService.forgotPassword({
+        email: form.email.trim().toLowerCase(),
+      });
+      setResetSeconds(RESET_CODE_TTL_SECONDS);
+      setForm((current) => ({ ...current, otp: "" }));
+      setErrors((current) => ({ ...current, otp: undefined }));
+      setNotice("Mã xác nhận mới đã được gửi đến email của bạn.");
+    } catch (error) {
+      setServerError(
+        message(error) || "Không thể gửi lại mã xác nhận. Vui lòng thử lại.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function openEmailApp() {
+    window.location.href = `mailto:${encodeURIComponent(form.email.trim())}`;
+  }
+
+  function formatResetCountdown(seconds: number) {
+    const minutes = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const remaining = (seconds % 60).toString().padStart(2, "0");
+    return `${minutes}:${remaining}`;
   }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
@@ -495,15 +555,31 @@ export function AuthPage({
         return;
       }
 
-      if (!sent) {
+      const email = form.email.trim().toLowerCase();
+      if (resetStep === "request") {
         await authService.forgotPassword({
-          email: form.email.trim().toLowerCase(),
+          email,
         });
-        setSent(true);
-        setNotice("Mã xác nhận đã được gửi đến email của bạn.");
-      } else {
+        setResetStep("verify-otp");
+        setResetSeconds(RESET_CODE_TTL_SECONDS);
+        setNotice("");
+        return;
+      }
+
+      if (resetStep === "verify-otp") {
+        await authService.verifyOTP({
+          email,
+          otp: form.otp.trim(),
+        });
+        setResetStep("reset-password");
+        setErrors({});
+        setServerError("");
+        return;
+      }
+
+      if (resetStep === "reset-password") {
         await authService.resetPassword({
-          email: form.email.trim().toLowerCase(),
+          email,
           otp: form.otp.trim(),
           newPassword: form.password,
           confirmPassword: form.confirmPassword,
@@ -514,7 +590,15 @@ export function AuthPage({
         });
       }
     } catch (error) {
-      setServerError(message(error));
+      const fallback =
+        mode === "reset" && resetStep === "verify-otp"
+          ? "Mã xác nhận không hợp lệ hoặc đã hết hạn. Vui lòng kiểm tra lại email."
+          : mode === "reset" && resetStep === "reset-password"
+            ? "Không thể cập nhật mật khẩu. Vui lòng thử lại."
+            : mode === "reset"
+              ? "Không thể gửi mã xác nhận. Vui lòng thử lại."
+              : "Đã xảy ra lỗi. Vui lòng thử lại.";
+      setServerError(message(error) || fallback);
     } finally {
       setBusy(false);
     }
@@ -525,34 +609,40 @@ export function AuthPage({
       ? "CHÀO MỪNG TRỞ LẠI VŨ TRỤ EVENTHUB"
       : mode === "register"
         ? "KHỞI TẠO TÀI KHOẢN EVENTHUB"
-        : "ĐẶT LẠI MẬT KHẨU";
+        : "QUÊN MẬT KHẨU ?";
 
   const subtitle =
     mode === "login"
       ? "Truy cập ví vé điện tử chuẩn QR và không gian lễ hội âm nhạc số."
       : mode === "register"
         ? "Nhận mã định danh nghệ thuật số & kích hoạt quyền đặt chỗ trước các đại nhạc hội."
-        : sent
-          ? "Nhập mã xác nhận đã gửi đến email và đặt mật khẩu mới."
-          : "Mã xác nhận sẽ được gửi đến email của bạn.";
+        : resetStep === "verify-otp"
+          ? "Nhập mã xác nhận 6 chữ số trong email để tiếp tục."
+          : resetStep === "reset-password"
+            ? "Tạo mật khẩu mới sau khi mã xác nhận đã được xác minh."
+            : "Đừng lo lắng! Nhập địa chỉ email liên kết với tài khoản EVENT HUB của bạn. Chúng tôi sẽ gửi một liên kết bảo mật kèm mã OTP để đặt lại mật khẩu trong tích tắc.";
 
   const cta =
     mode === "login"
       ? "ĐĂNG NHẬP NGAY"
       : mode === "register"
         ? "TẠO TÀI KHOẢN MỚI"
-        : sent
-          ? "ĐỔI MẬT KHẨU"
-          : "GỬI MÃ XÁC NHẬN";
+        : resetStep === "verify-otp"
+          ? "XÁC NHẬN MÃ"
+          : resetStep === "reset-password"
+            ? "CẬP NHẬT MẬT KHẨU & ĐĂNG NHẬP"
+            : "GỬI OTP ĐẶT LẠI MẬT KHẨU";
 
   const busyLabel =
     mode === "login"
       ? "ĐANG XÁC THỰC..."
       : mode === "register"
         ? "ĐANG TẠO TÀI KHOẢN..."
-        : sent
-          ? "ĐANG CẬP NHẬT..."
-          : "ĐANG GỬI...";
+        : resetStep === "verify-otp"
+          ? "ĐANG XÁC NHẬN..."
+          : resetStep === "reset-password"
+            ? "ĐANG CẬP NHẬT..."
+            : "ĐANG GỬI...";
 
   return (
     <div className={`auth-shell auth-shell-${mode}`}>
@@ -569,8 +659,16 @@ export function AuthPage({
         }}
       />
 
-      <div className="auth-main">
-        <section className="auth-card" aria-labelledby="auth-title">
+      <div className={`auth-main${mode === "reset" ? " auth-main-reset" : ""}`}>
+        <div
+          className={
+            mode === "reset" ? "auth-recovery-layout" : "auth-main-layout"
+          }
+        >
+          <section
+            className={`auth-card${mode === "reset" ? " auth-recovery-card" : ""}`}
+            aria-labelledby="auth-title"
+          >
           {mode !== "reset" ? (
             <div className="auth-card-head">
               <div className="auth-card-kicker">
@@ -583,12 +681,23 @@ export function AuthPage({
               <AuthTabs mode={mode} />
             </div>
           ) : (
-            <Link className="auth-back" to="/auth/login">
-              <ArrowLeft size={16} /> Quay lại đăng nhập
-            </Link>
+            <div className="auth-recovery-topline">
+              <span className="auth-recovery-kicker">
+                <LockKeyhole size={15} aria-hidden="true" />
+                GIAO THỨC BẢO MẬT LUỒNG TỪ EVENTHUB
+              </span>
+              <span className="auth-recovery-progress">
+                GIAI ĐOẠN {resetStep === "reset-password" ? "02" : "01"} / 02
+              </span>
+            </div>
           )}
 
           <div className="auth-card-intro">
+            {mode === "reset" && (
+              <div className="auth-recovery-title-mark" aria-hidden="true">
+                <Ticket size={24} />
+              </div>
+            )}
             <h1 className="auth-title" id="auth-title">
               {title}
               {mode !== "reset" && (
@@ -601,9 +710,9 @@ export function AuthPage({
             <p className="auth-subtitle">{subtitle}</p>
           </div>
 
-          <form className="auth-form" onSubmit={submit} noValidate>
+          <form id="auth-form" className="auth-form" onSubmit={submit} noValidate>
             {serverError && (
-              <div className="auth-alert" role="alert">
+              <div className="auth-alert" role="alert" aria-live="assertive">
                 <AlertCircle size={15} aria-hidden="true" />
                 <span>{serverError}</span>
               </div>
@@ -796,7 +905,7 @@ export function AuthPage({
             {mode === "reset" && (
               <>
                 <AuthField
-                  label="Hộp thư điện tử"
+                  label="ĐỊA CHỈ EMAIL TÀI KHOẢN *"
                   name="reset-email"
                   type="email"
                   value={form.email}
@@ -804,104 +913,69 @@ export function AuthPage({
                   error={errors.email}
                   icon={<Mail size={18} />}
                   autoComplete="email"
-                  placeholder="user@cosmicticket.vn"
-                  disabled={busy || sent}
-                  topRight={
-                    sent ? (
-                      <button
-                        type="button"
-                        className="auth-field-link"
-                        onClick={() => {
-                          setSent(false);
-                          setForm((current) => ({
-                            ...current,
-                            password: "",
-                            confirmPassword: "",
-                            otp: "",
-                          }));
-                        }}
-                      >
-                        Đổi email
-                      </button>
-                    ) : undefined
+                  placeholder="user@eventhub.vn"
+                  hint={
+                    resetStep === "request"
+                      ? "Hệ thống sẽ gửi mã xác nhận có hiệu lực trong vòng 5 phút."
+                      : undefined
                   }
+                  disabled={busy || resetStep !== "request"}
+                  topRight={<span className="auth-recovery-verified"><ShieldCheck size={12} aria-hidden="true" /> Đã xác minh KYC</span>}
                 />
-                {sent && (
-                  <>
-                    <AuthField
-                      label="Mã xác nhận 6 số"
-                      name="otp"
-                      value={form.otp}
-                      onChange={updateField("otp")}
-                      error={errors.otp}
-                      icon={<ShieldCheck size={18} />}
-                      autoComplete="one-time-code"
-                      placeholder="000000"
-                      disabled={busy}
-                    />
-                    <AuthField
-                      label="Mật khẩu mới"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      value={form.password}
-                      onChange={updateField("password")}
-                      error={errors.password}
-                      icon={<KeyRound size={18} />}
-                      autoComplete="new-password"
-                      placeholder="••••••••••••"
-                      disabled={busy}
-                      rightAction={
-                        <PasswordToggle
-                          shown={showPassword}
-                          onToggle={() => setShowPassword((value) => !value)}
-                          disabled={busy}
-                        />
-                      }
-                    />
-                    <AuthField
-                      label="Xác nhận lại mật khẩu"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? "text" : "password"}
-                      value={form.confirmPassword}
-                      onChange={updateField("confirmPassword")}
-                      error={errors.confirmPassword}
-                      icon={<LockKeyhole size={18} />}
-                      autoComplete="new-password"
-                      placeholder="Nhập lại chính xác mật khẩu"
-                      disabled={busy}
-                      rightAction={
-                        <PasswordToggle
-                          shown={showConfirmPassword}
-                          onToggle={() => setShowConfirmPassword((value) => !value)}
-                          disabled={busy}
-                        />
-                      }
-                    />
-                  </>
+                {resetStep !== "request" && (
+                  <AuthField
+                    label="Mã xác nhận 6 số"
+                    name="otp"
+                    value={form.otp}
+                    onChange={updateField("otp")}
+                    error={errors.otp}
+                    hint="Nhập đúng 6 chữ số trong email để tiếp tục."
+                    icon={<ShieldCheck size={18} />}
+                    autoComplete="one-time-code"
+                    inputMode="numeric"
+                    placeholder="000000"
+                    disabled={busy}
+                  />
                 )}
               </>
             )}
 
-            <button
-              className={`auth-submit auth-submit-${mode}`}
-              type="submit"
-              disabled={busy}
-            >
-              {busy && (
-                <Loader2 className="auth-spin" size={16} aria-hidden="true" />
-              )}
-              {busy ? busyLabel : cta}
-              {!busy && mode === "login" && (
-                <Zap size={18} aria-hidden="true" />
-              )}
-              {!busy && mode === "register" && (
-                <ArrowRight size={18} aria-hidden="true" />
-              )}
-              {!busy && mode === "reset" && (
-                <ShieldCheck size={16} aria-hidden="true" />
-              )}
-            </button>
+            {(mode !== "reset" || resetStep !== "reset-password") && (
+              <button
+                className={`auth-submit auth-submit-${mode}`}
+                type="submit"
+                disabled={busy}
+              >
+                {busy && (
+                  <Loader2 className="auth-spin" size={16} aria-hidden="true" />
+                )}
+                {busy ? busyLabel : cta}
+                {!busy && mode === "login" && (
+                  <Zap size={18} aria-hidden="true" />
+                )}
+                {!busy && mode === "register" && (
+                  <ArrowRight size={18} aria-hidden="true" />
+                )}
+                {!busy && mode === "reset" && (
+                  <ShieldCheck size={16} aria-hidden="true" />
+                )}
+              </button>
+            )}
           </form>
+
+          {mode === "reset" && (
+            <>
+              <div className="auth-recovery-feature-row" aria-label="Thông tin bảo vệ tài khoản">
+                <span><LockKeyhole size={15} aria-hidden="true" /> Khóa Token 15p</span>
+                <span><ShieldCheck size={15} aria-hidden="true" /> Xác thực 2 lớp</span>
+                <span><ShieldCheck size={15} aria-hidden="true" /> Chống Brute-force</span>
+              </div>
+              <div className="auth-recovery-card-footer">
+                <Link to="/auth/login"><ArrowLeft size={14} aria-hidden="true" /> Quay lại đăng nhập</Link>
+                <span>Cần hỗ trợ khẩn cấp?</span>
+              </div>
+            </>
+          )}
 
           {mode === "login" && (
             <div className="auth-extra">
@@ -912,11 +986,159 @@ export function AuthPage({
             </div>
           )}
 
-          <AuthSupport />
+          {mode !== "reset" && <AuthSupport />}
         </section>
+        {mode === "reset" && resetStep !== "request" && (
+          <aside
+            className="auth-recovery-aside"
+            aria-label="Các bước khôi phục mật khẩu"
+          >
+            <section
+              className={`auth-recovery-panel ${
+                resetStep === "verify-otp" ? "is-active" : "is-complete"
+              }`}
+            >
+              <div className="auth-recovery-panel-heading">
+                <span className="auth-recovery-panel-icon">
+                  <Mail size={21} />
+                </span>
+                <div>
+                  <span className="auth-recovery-overline">LUỒNG 01 · TRẠNG THÁI HOÀN TẤT GỬI</span>
+                  <h2>ĐÃ GỬI LIÊN KẾT THÀNH CÔNG</h2>
+                </div>
+              </div>
+              <div className="auth-recovery-status is-sent" aria-label="Bản xem trước trạng thái đã gửi">
+                <span className="auth-recovery-status-icon"><Mail size={17} aria-hidden="true" /></span>
+                <div>
+                  <strong>EVENT HUB đã phát hành mã Token an toàn tới hộp thư của bạn.</strong>
+
+                </div>
+              </div>
+              <div className="auth-recovery-resend">
+                <span>
+                  <Hourglass
+                    className={`auth-countdown-icon${resetSeconds > 0 ? " is-counting" : ""}`}
+                    size={13}
+                    aria-hidden="true"
+                  />
+                  {resetSeconds > 0 ? "GỬI LẠI MÃ SAU" : "CÓ THỂ GỬI LẠI MÃ"}{" "}
+                  <b>{formatResetCountdown(resetSeconds)}</b>
+                </span>
+                <button
+                  type="button"
+                  onClick={resendResetCode}
+                  disabled={busy || resetSeconds > 0}
+                >
+                  GỬI LẠI NGAY
+                </button>
+              </div>
+              <div className="auth-recovery-email-actions">
+                <button type="button" onClick={openEmailApp} disabled={busy}>
+                  <Mail size={14} aria-hidden="true" /> Mở ứng dụng Email
+                </button>
+                <button type="button" onClick={() => {
+                  setResetStep("request");
+                  setErrors({});
+                  setServerError("");
+                  setForm((current) => ({ ...current, password: "", confirmPassword: "", otp: "" }));
+                }}>Đổi Email</button>
+              </div>
+            </section>
+
+            <section
+              className={`auth-recovery-panel auth-recovery-reset-preview ${
+                resetStep === "reset-password" ? "is-active" : "is-locked"
+              }`}
+            >
+              <div className="auth-recovery-panel-heading">
+                <span className="auth-recovery-panel-icon auth-recovery-panel-icon-purple">
+                  <LockKeyhole size={20} aria-hidden="true" />
+                </span>
+                <div>
+                  <span className="auth-recovery-overline auth-recovery-overline-purple">LUỒNG 02 · ĐẶT LẠI MẬT KHẨU MỚI (STEP 2)</span>
+                  <h2>TẠO MẬT KHẨU MỚI</h2>
+                </div>
+              </div>
+            {resetStep === "reset-password" ? (
+              <div className="auth-recovery-password-form">
+                <AuthField
+                  label="Mật khẩu mới"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={updateField("password")}
+                  error={errors.password}
+                  icon={<KeyRound size={18} />}
+                  autoComplete="new-password"
+                  placeholder="••••••••••••"
+                  hint="Mật khẩu cần có ít nhất 8 ký tự."
+                  disabled={busy}
+                  rightAction={
+                    <PasswordToggle
+                      shown={showPassword}
+                      onToggle={() => setShowPassword((value) => !value)}
+                      disabled={busy}
+                    />
+                  }
+                />
+                <AuthField
+                  label="Xác nhận lại mật khẩu"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={form.confirmPassword}
+                  onChange={updateField("confirmPassword")}
+                  error={errors.confirmPassword}
+                  icon={<LockKeyhole size={18} />}
+                  autoComplete="new-password"
+                  placeholder="Nhập lại chính xác mật khẩu"
+                  disabled={busy}
+                  rightAction={
+                    <PasswordToggle
+                      shown={showConfirmPassword}
+                      onToggle={() => setShowConfirmPassword((value) => !value)}
+                      disabled={busy}
+                    />
+                  }
+                />
+                <PasswordStrength value={form.password} />
+                <button
+                  className="auth-submit auth-submit-reset auth-recovery-password-submit"
+                  type="submit"
+                  form="auth-form"
+                  disabled={busy}
+                >
+                  {busy && (
+                    <Loader2 className="auth-spin" size={16} aria-hidden="true" />
+                  )}
+                  {busy ? busyLabel : "CẬP NHẬT MẬT KHẨU & ĐĂNG NHẬP"}
+                  {!busy && <ShieldCheck size={16} aria-hidden="true" />}
+                </button>
+              </div>
+            ) : (
+              <p className="auth-recovery-locked-note">
+                Xác nhận mã OTP ở biểu mẫu bên trái để mở khóa bước này.
+              </p>
+            )}
+          </section>
+          </aside>
+        )}
+
+        {mode === "reset" && (
+          <section className="auth-recovery-safety" aria-label="Thông tin an toàn">
+            <span className="auth-recovery-safety-icon">
+              <ShieldCheck size={20} aria-hidden="true" />
+            </span>
+            <div>
+              <h2>HỆ THỐNG KIỂM SOÁT TRUY CẬP CYBER NEBULA POS</h2>
+              <p>Nếu bạn không yêu cầu đổi lại mật khẩu này, hãy bỏ qua email hoặc liên hệ với Trung tâm điều phối để đảm bảo an toàn về sự kiện của bạn.</p>
+            </div>
+            <a className="auth-recovery-safety-label" href="tel:0378531013"><Phone size={14} aria-hidden="true" /> 0378531013</a>
+          </section>
+        )}
+        </div>
       </div>
 
-      <AuthFooter onNotice={setNotice} />
+      <AuthFooter onNotice={setNotice} a11Reference={mode === "reset"} />
       {notice && (
         <AuthToast message={notice} onClose={() => setNotice("")} />
       )}

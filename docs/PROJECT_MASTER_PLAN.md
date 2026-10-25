@@ -8,7 +8,7 @@
 | Mục đích | Tài liệu bộ nhớ tổng của dự án: giúp AI hiểu trạng thái hiện tại, quản lý tiến độ, xác định công việc tiếp theo và điều hướng đến các tài liệu chi tiết trong các phiên làm việc sau. |
 | Phạm vi | Tổng quan, trạng thái đã kiểm chứng, phạm vi chức năng, danh mục màn hình Stitch, kế hoạch chuyển thiết kế thành frontend, tích hợp API, luồng nghiệp vụ, rủi ro/phụ thuộc, tiến độ, điều hướng tài liệu. Không bao gồm triển khai chi tiết từng hàm/endpoint. |
 | Ngày lập | 2026-10-24 |
-| Ngày cập nhật gần nhất | 2026-10-25 (refactor: gộp trùng lặp, thống nhất tên dự án EventHub; review A4 — correction vẫn bị chặn sau khi thử lại) |
+| Ngày cập nhật gần nhất | 2026-10-25 (A11 React recreation built and browser-reviewed at desktop/mobile; Stitch artifact unchanged; report `A11_20261025_165155_implementation.md`) |
 | Trạng thái tài liệu | Đang hoạt động |
 | Quy tắc cập nhật | Sau mỗi nhiệm vụ liên quan, cập nhật tiến độ / ma trận tích hợp / rủi ro bằng bằng chứng từ repo hoặc kết quả kiểm thử. Chỉ đánh dấu `COMPLETED` khi có bằng chứng. Nếu thông tin lỗi thời, đối chiếu repo trước khi dùng. |
 | Thứ tự ưu tiên nguồn khi mâu thuẫn | 1) Code đang chạy (route/API/module thực tế) → 2) Migration/schema/contract → 3) Tài liệu đã xác minh (README, IMPLEMENTATION-STATUS, audit) → 4) Tài liệu kế hoạch/Stitch → 5) Giả định (phải ghi rõ). |
@@ -82,7 +82,7 @@ Chỉ liệt kê endpoint đã thấy trong `server/src/app.ts`/code; chưa xác
 
 ## 5. Danh mục màn hình Stitch (35) và theo dõi triển khai
 
-Tiền tố Stitch ID: `projects/10374042969343935993/screens/<ID>`. Ba lớp trạng thái được tách riêng: **Thiết kế** (Stitch) / **Review** / **Triển khai** (frontend–API–test). Thiết kế: cả 35 màn `ĐÃ TẠO` (đã xác minh qua Stitch MCP). Review: **A4 `KHÔNG ĐẠT`** (correction `BLOCKED` — đã thử lại 2 lần ngày 2026-10-25 09:30/09:35; `edit_screens` trả `dom_operations` nhưng artifact không đổi), 34 màn còn lại `CHƯA REVIEW`. Báo cáo: A4 đã có tại `reports/stitch/A4_20261025_094146_correction.md`; các màn khác chưa có. Cột "Triển khai" ghi trạng thái code hiện tại, chưa đối chiếu pixel với thiết kế.
+Tiền tố Stitch ID: `projects/10374042969343935993/screens/<ID>`. Ba lớp trạng thái được tách riêng: **Thiết kế** (Stitch) / **Review** / **Triển khai** (frontend–API–test). Thiết kế: cả 35 màn `ĐÃ TẠO` (đã xác minh qua Stitch MCP). Review: **A4 `KHÔNG ĐẠT`** (correction `BLOCKED` — `edit_screens` không làm thay đổi artifact khi xác minh lại), **A11 Stitch review `BLOCKED`** (artifact vẫn `KHÔNG ĐẠT`; lượt sửa in-place 16:38 không đổi HTML/screenshot readback); frontend A11 đã được tái tạo theo ảnh, build thành công và browser-review ở desktop/mobile; runtime API/accessibility chưa xác minh. 33 màn còn lại `CHƯA REVIEW`. Báo cáo A4: `reports/stitch/A4_20261025_094146_correction.md`; báo cáo A11 mới nhất: `reports/stitch/A11_20261025_165155_implementation.md`. Cột "Triển khai" ghi trạng thái code hiện tại, chưa đối chiếu pixel với thiết kế Stitch.
 
 ### 5.1. Khu vực khách hàng (A1–A11)
 | ID | Màn hình | Stitch ID | Route/Page hiện tại | Triển khai |
@@ -97,7 +97,7 @@ Tiền tố Stitch ID: `projects/10374042969343935993/screens/<ID>`. Ba lớp tr
 | A8 | Vé của tôi & thẻ QR check-in | `4ff75d38004140409e70cd99de7e1432` | `/tickets`, `/tickets/:id` | Có code, cần đồng bộ |
 | A9 | Lịch sử đơn hàng | `4c62fed99aea4822ab345033e5d95dba` | `/orders` | Có code, cần đồng bộ |
 | A10 | Hồ sơ cá nhân | `2ffc6d2afffe4e98928685030e86b1c8` | `/profile` | Có code, cần đồng bộ |
-| A11 | Quên mật khẩu & đặt lại mật khẩu | `5d922b967e394167982a27a2dc35f31c` | `/auth/reset-password` | Có code; luồng đặt lại/khôi phục là biến thể phụ, chưa xác minh tách riêng |
+| A11 | Quên mật khẩu & đặt lại mật khẩu | `5d922b967e394167982a27a2dc35f31c` | `/auth/reset-password` | Đã tái tạo header, nội dung hai cột, panel preview, dải an toàn, footer theo ảnh; build và browser-review desktop 1440px/mobile 390px đạt, không tràn ngang |
 
 ### 5.2. Khu vực ban tổ chức (B1–B12)
 | ID | Màn hình | Stitch ID | Route/Page hiện tại | Triển khai |
@@ -140,6 +140,7 @@ Ghi chú: quản lý nhân viên check-in (`/organizer/events/:id/staff`) đã c
 | ID | Thiết kế | Review | Vấn đề tồn tại | Báo cáo | Cập nhật |
 |---|---|---|---|---|---|
 | A4 | `ĐÃ TẠO` — HTML `6748196296944310261`, ảnh `6313009675931005984` | `KHÔNG ĐẠT` | Brand `ENVENT` (0 `EVENTHUB`); bộ chọn vai trò ở màn đăng nhập; 0 `<h1>`, 0 `<label for>`, 0 `aria-label`; social login không có backend; dữ liệu cá nhân; `© 2025`; thiếu trạng thái lỗi/loading; palette lệch token Cosmic Graffiti; correction `BLOCKED` — đã thử lại 09:30 (brand) và 09:35 (đầy đủ), `edit_screens` trả `dom_operations` (`43028f4f`, `08805e32`) nhưng artifact không đổi | [`reports/stitch/A4_20261025_094146_correction.md`](reports/stitch/A4_20261025_094146_correction.md) | 2026-10-25 09:41 |
+| A11 | `ĐÃ TẠO` — Stitch screen `5d922b967e394167982a27a2dc35f31c` giữ nguyên; logic reset 3 bước, password/nút cập nhật ở LUỒNG 02, countdown/resend, logo, hourglass và màu nút active đã triển khai; build/lint đạt | Stitch review `BLOCKED` / artifact gốc `KHÔNG ĐẠT`; triển khai correction `ĐẠT CÓ ĐIỀU KIỆN` ở source/build/lint | Đã thêm logo phía trên tiêu đề, hourglass xoay trước countdown, min-height tận dụng viewport và màu active cho các nút LUỒNG 01. Form chính giữ OTP; password/nút cập nhật nằm ở LUỒNG 02. Browser visual review sau correction, runtime API và accessibility runtime chưa kiểm tra. | [`reports/stitch/A11_20261025_174555_visual_fullscreen_correction.md`](reports/stitch/A11_20261025_174555_visual_fullscreen_correction.md); correction trước: [`reports/stitch/A11_20261025_173921_flow2_submit_button_correction.md`](reports/stitch/A11_20261025_173921_flow2_submit_button_correction.md); implementation: [`reports/stitch/A11_20261025_172753_reset_flow_implementation.md`](reports/stitch/A11_20261025_172753_reset_flow_implementation.md) | 2026-10-25 17:45 |
 
 ## 6. Kế hoạch chuyển Stitch thành frontend code
 
@@ -229,7 +230,8 @@ Master Plan chỉ điều hướng, không thay thế tài liệu chi tiết.
 | `docs/STITCH-WEB-INTEGRATION-PLAN.md` | Đã tồn tại | Kế hoạch tích hợp Stitch web (khảo sát). |
 | `docs/STITCH-WEB-IMPLEMENTATION.md` | Đã tồn tại | Báo cáo triển khai Stitch web. |
 | `docs/ui/Report1.md` | Đã tồn tại | Báo cáo triển khai Login theo Stitch. |
-| `docs/reports/stitch/` | Đã tạo (02 báo cáo A4) | Báo cáo review từng màn hình Stitch (xem mục 12). |
+| `docs/ui/Feature_A11_ResetPassword_Screen.md` | Đã tạo | Kế hoạch hiệu chỉnh A11 trên Stitch; không bao gồm sửa source code. |
+| `docs/reports/stitch/` | Đã tạo (02 báo cáo A4, 05 báo cáo A11) | Báo cáo review/triển khai từng màn hình theo Stitch (xem mục 12). |
 
 ## 12. Quy tắc review, báo cáo và lịch sử
 

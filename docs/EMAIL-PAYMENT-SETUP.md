@@ -14,7 +14,7 @@ SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=your-project@gmail.com
 SMTP_PASS=your-app-password
-SMTP_FROM="EventHub <your-project@gmail.com>"
+SMTP_FROM=EventHub <your-project@gmail.com>
 ```
 
 STARTTLS bắt buộc; không dùng mật khẩu đăng nhập Gmail thông thường. `SMTP_FROM` phải trùng tài khoản gửi. App Password bị thu hồi khi đổi mật khẩu Google.
