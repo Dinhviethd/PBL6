@@ -89,6 +89,8 @@ export function Field({
   required = true,
   placeholder,
   options,
+  icon,
+  disabled = false,
 }: {
   label: string;
   name: string;
@@ -97,13 +99,15 @@ export function Field({
   required?: boolean;
   placeholder?: string;
   options?: { value: string; label: string }[];
+  icon?: ReactNode;
+  disabled?: boolean;
 }) {
   const labelId = useId();
   return (
     <label className="field">
       <span id={labelId}>{label}</span>
       {options ? (
-        <select aria-labelledby={labelId} name={name} defaultValue={value} required={required}>
+        <select aria-labelledby={labelId} name={name} defaultValue={value} required={required} disabled={disabled}>
           {options.map((o) => (
             <option key={o.value} value={o.value}>
               {o.label}
@@ -117,16 +121,35 @@ export function Field({
           required={required}
           placeholder={placeholder}
           rows={4}
+          disabled={disabled}
         />
       ) : (
-        <input
-          name={name}
-          type={type}
-          defaultValue={value}
-          required={required}
-          placeholder={placeholder}
-          min={type === "number" ? 0 : undefined}
-        />
+        icon ? (
+          <span className="field-input-with-icon">
+            <span className="field-input-icon" aria-hidden="true">
+              {icon}
+            </span>
+            <input
+              name={name}
+              type={type}
+              defaultValue={value}
+              required={required}
+              placeholder={placeholder}
+              min={type === "number" ? 0 : undefined}
+              disabled={disabled}
+            />
+          </span>
+        ) : (
+          <input
+            name={name}
+            type={type}
+            defaultValue={value}
+            required={required}
+            placeholder={placeholder}
+            min={type === "number" ? 0 : undefined}
+            disabled={disabled}
+          />
+        )
       )}
     </label>
   );

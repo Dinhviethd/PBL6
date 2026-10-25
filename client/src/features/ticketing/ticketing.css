@@ -418,6 +418,28 @@ svg {
   min-height: 44px;
   max-width: 100%;
 }
+.field-input-with-icon {
+  position: relative;
+  display: block;
+}
+.field-input-with-icon .field-input-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  display: inline-flex;
+  color: var(--brand-accent);
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+.field-input-with-icon input {
+  padding-left: 40px;
+}
+.field input:disabled,
+.field select:disabled,
+.field textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
 .field input::placeholder,
 .field textarea::placeholder {
   color: #8791ac;

@@ -8,7 +8,7 @@
 | Mục đích | Tài liệu bộ nhớ tổng của dự án: giúp AI hiểu trạng thái hiện tại, quản lý tiến độ, xác định công việc tiếp theo và điều hướng đến các tài liệu chi tiết trong các phiên làm việc sau. |
 | Phạm vi | Tổng quan, trạng thái đã kiểm chứng, phạm vi chức năng, danh mục màn hình Stitch, kế hoạch chuyển thiết kế thành frontend, tích hợp API, luồng nghiệp vụ, rủi ro/phụ thuộc, tiến độ, điều hướng tài liệu. Không bao gồm triển khai chi tiết từng hàm/endpoint. |
 | Ngày lập | 2026-10-24 |
-| Ngày cập nhật gần nhất | 2026-10-25 (A11 React recreation built and browser-reviewed at desktop/mobile; Stitch artifact unchanged; report `A11_20261025_165155_implementation.md`) |
+| Ngày cập nhật gần nhất | 2026-10-25 (A10 profile save now preserves the existing avatarUrl instead of clearing it; backend unchanged; report `A10_20261025_231720_preserve_avatar_on_profile_save.md`) |
 | Trạng thái tài liệu | Đang hoạt động |
 | Quy tắc cập nhật | Sau mỗi nhiệm vụ liên quan, cập nhật tiến độ / ma trận tích hợp / rủi ro bằng bằng chứng từ repo hoặc kết quả kiểm thử. Chỉ đánh dấu `COMPLETED` khi có bằng chứng. Nếu thông tin lỗi thời, đối chiếu repo trước khi dùng. |
 | Thứ tự ưu tiên nguồn khi mâu thuẫn | 1) Code đang chạy (route/API/module thực tế) → 2) Migration/schema/contract → 3) Tài liệu đã xác minh (README, IMPLEMENTATION-STATUS, audit) → 4) Tài liệu kế hoạch/Stitch → 5) Giả định (phải ghi rõ). |
@@ -59,7 +59,7 @@ Chỉ liệt kê endpoint đã thấy trong `server/src/app.ts`/code; chưa xác
 | # | Module | Vai trò | Trang frontend | API/backend (đã xác minh) | Trạng thái | Việc còn lại |
 |---|---|---|---|---|---|---|
 | 1 | Tài khoản, đăng nhập/đăng xuất | Tất cả | `pages/auth/AuthPage.tsx`, App Guard | `POST /auth/register`, `/auth/login`, `/auth/refresh-token`, `/auth/logout`; `GET /auth/me` | Đã tích hợp | Đồng bộ UI Stitch (A4, A11); theo dõi session isolation. |
-| 2 | Hồ sơ cá nhân | Customer/Organizer | `pages/account/Profile.tsx` | `PATCH /me`, `POST /me/password` | Đã tích hợp | Đồng bộ A10. |
+| 2 | Hồ sơ cá nhân | Customer/Organizer | `pages/account/Profile.tsx` | `GET /auth/me` (`createdAt`), `GET /me/tickets`, `PATCH /me` (profile + avatar autosave), `POST /media`, `POST /me/password` | Đã tích hợp có điều kiện | A10 có nút “Lưu thay đổi” riêng cho họ tên/số điện thoại; email read-only không gửi; avatar chỉ tự lưu qua picker nhỏ cạnh ảnh; form mật khẩu có xác nhận và icon, kiểm tra khớp trước API; browser authenticated/runtime mutation/responsive cần xác minh. |
 | 3 | Đăng ký & phê duyệt Organizer | Customer/Admin | `Profile.tsx`, `pages/admin/Admin.tsx` | `GET/POST /me/organizer-applications`; `GET/POST /admin/organizer-applications/:id/review` | Đã tích hợp | Đồng bộ A5, C4–C6. |
 | 4 | Danh mục sự kiện | Admin | `Admin.tsx` (categories) | `GET /categories`; `POST/PATCH/DELETE /admin/categories/*` | Đã tích hợp | Đồng bộ C7. |
 | 5 | Tạo/sửa/gửi duyệt/hủy sự kiện | Organizer/Admin | `pages/organizer/EditorPage.tsx`, `Organizer.tsx` | `POST/PATCH /organizer/events/*`, `/submit`, `/cancel` | Đã tích hợp | Đồng bộ B2–B4; làm rõ luồng trạng thái DRAFT/PENDING_REVIEW/APPROVED/REJECTED/PUBLISHED. |
@@ -96,7 +96,7 @@ Tiền tố Stitch ID: `projects/10374042969343935993/screens/<ID>`. Ba lớp tr
 | A7 | Kết quả thanh toán | `4330e7e4069e49bcb54e47dbc8f3851b` | Chưa xác minh (trang riêng hay trạng thái) | Cần kiểm tra |
 | A8 | Vé của tôi & thẻ QR check-in | `4ff75d38004140409e70cd99de7e1432` | `/tickets`, `/tickets/:id` | Có code, cần đồng bộ |
 | A9 | Lịch sử đơn hàng | `4c62fed99aea4822ab345033e5d95dba` | `/orders` | Có code, cần đồng bộ |
-| A10 | Hồ sơ cá nhân | `2ffc6d2afffe4e98928685030e86b1c8` | `/profile` | Có code, cần đồng bộ |
+| A10 | Hồ sơ cá nhân | `2ffc6d2afffe4e98928685030e86b1c8` | `/profile` | Đã cập nhật frontend theo Stitch/ảnh tham chiếu với header/footer Login dùng chung, icon trước trường thông tin, email chỉ hiển thị, avatar autosave, animation, avatar lớn và picker; build/lint đã đạt; runtime authenticated cần xác minh |
 | A11 | Quên mật khẩu & đặt lại mật khẩu | `5d922b967e394167982a27a2dc35f31c` | `/auth/reset-password` | Đã tái tạo header, nội dung hai cột, panel preview, dải an toàn, footer theo ảnh; build và browser-review desktop 1440px/mobile 390px đạt, không tràn ngang |
 
 ### 5.2. Khu vực ban tổ chức (B1–B12)
@@ -141,6 +141,7 @@ Ghi chú: quản lý nhân viên check-in (`/organizer/events/:id/staff`) đã c
 |---|---|---|---|---|---|
 | A4 | `ĐÃ TẠO` — HTML `6748196296944310261`, ảnh `6313009675931005984` | `KHÔNG ĐẠT` | Brand `ENVENT` (0 `EVENTHUB`); bộ chọn vai trò ở màn đăng nhập; 0 `<h1>`, 0 `<label for>`, 0 `aria-label`; social login không có backend; dữ liệu cá nhân; `© 2025`; thiếu trạng thái lỗi/loading; palette lệch token Cosmic Graffiti; correction `BLOCKED` — đã thử lại 09:30 (brand) và 09:35 (đầy đủ), `edit_screens` trả `dom_operations` (`43028f4f`, `08805e32`) nhưng artifact không đổi | [`reports/stitch/A4_20261025_094146_correction.md`](reports/stitch/A4_20261025_094146_correction.md) | 2026-10-25 09:41 |
 | A11 | `ĐÃ TẠO` — Stitch screen `5d922b967e394167982a27a2dc35f31c` giữ nguyên; logic reset 3 bước, password/nút cập nhật ở LUỒNG 02, countdown/resend, logo, hourglass và màu nút active đã triển khai; build/lint đạt | Stitch review `BLOCKED` / artifact gốc `KHÔNG ĐẠT`; triển khai correction `ĐẠT CÓ ĐIỀU KIỆN` ở source/build/lint | Đã thêm logo phía trên tiêu đề, hourglass xoay trước countdown, min-height tận dụng viewport và màu active cho các nút LUỒNG 01. Form chính giữ OTP; password/nút cập nhật nằm ở LUỒNG 02. Browser visual review sau correction, runtime API và accessibility runtime chưa kiểm tra. | [`reports/stitch/A11_20261025_174555_visual_fullscreen_correction.md`](reports/stitch/A11_20261025_174555_visual_fullscreen_correction.md); correction trước: [`reports/stitch/A11_20261025_173921_flow2_submit_button_correction.md`](reports/stitch/A11_20261025_173921_flow2_submit_button_correction.md); implementation: [`reports/stitch/A11_20261025_172753_reset_flow_implementation.md`](reports/stitch/A11_20261025_172753_reset_flow_implementation.md) | 2026-10-25 17:45 |
+| A10 | `ĐÃ XÁC NHẬN CÓ THỂ TRUY CẬP` — Stitch screen `2ffc6d2afffe4e98928685030e86b1c8`, DESKTOP 2560×4002; artifact giữ nguyên | `ĐẠT CÓ ĐIỀU KIỆN` cho frontend / `CHƯA ĐỦ BẰNG CHỨNG` cho runtime | A10 dùng `AuthHeader`/`AuthFooter` chung của Login; App shell header/demo banner/footer bị tắt riêng trên `/profile`. Button “Lưu thay đổi” cập nhật họ tên/số điện thoại và gửi lại avatarUrl hiện tại để không xóa ảnh; email disabled/read-only không gửi. Avatar vẫn tự lưu qua picker nhỏ cạnh ảnh. Form mật khẩu có ba trường, icon KeyRound và chặn submit nếu mật khẩu mới không khớp. Icon UserRound/Phone/Mail, avatar 126px, animation, ẩn URL avatar, số sự kiện và loại bỏ ticket wallet vẫn giữ. Browser chưa đăng nhập nên upload, mutation, responsive/accessibility chưa xác minh | [`reports/stitch/A10_20261025_231720_preserve_avatar_on_profile_save.md`](reports/stitch/A10_20261025_231720_preserve_avatar_on_profile_save.md); trước đó: [`reports/stitch/A10_20261025_231310_profile_save_button.md`](reports/stitch/A10_20261025_231310_profile_save_button.md); kế hoạch: [`docs/ui/Feature_A10_Profile_Screen.md`](docs/ui/Feature_A10_Profile_Screen.md) | 2026-10-25 23:17 |
 
 ## 6. Kế hoạch chuyển Stitch thành frontend code
 
@@ -231,6 +232,7 @@ Master Plan chỉ điều hướng, không thay thế tài liệu chi tiết.
 | `docs/STITCH-WEB-IMPLEMENTATION.md` | Đã tồn tại | Báo cáo triển khai Stitch web. |
 | `docs/ui/Report1.md` | Đã tồn tại | Báo cáo triển khai Login theo Stitch. |
 | `docs/ui/Feature_A11_ResetPassword_Screen.md` | Đã tạo | Kế hoạch hiệu chỉnh A11 trên Stitch; không bao gồm sửa source code. |
+| `docs/ui/Feature_A10_Profile_Screen.md` | Đã tạo | Kế hoạch hiệu chỉnh A10 trên Stitch; không bao gồm sửa source code. |
 | `docs/reports/stitch/` | Đã tạo (02 báo cáo A4, 05 báo cáo A11) | Báo cáo review/triển khai từng màn hình theo Stitch (xem mục 12). |
 
 ## 12. Quy tắc review, báo cáo và lịch sử

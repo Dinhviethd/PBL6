@@ -69,9 +69,10 @@ export function App() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
   const isAuthPage = location.pathname.startsWith("/auth/");
+  const isProfilePage = location.pathname === "/profile";
   return (
-    <div className="eventhub">
-      {!isAuthPage && <header className="site-header">
+    <div className={`eventhub${isProfilePage ? " profile-route" : ""}`}>
+      {!isAuthPage && !isProfilePage && <header className="site-header">
         <Link className="brand" to="/">
           <span className="brand-mark">
             <Ticket size={23} />
@@ -122,7 +123,7 @@ export function App() {
           )}
         </div>
       </header>}
-      {!isAuthPage && config.data?.paymentMode === "demo" && (
+      {!isAuthPage && !isProfilePage && config.data?.paymentMode === "demo" && (
         <div className="demo-banner">
           Bản trải nghiệm MVP · Thanh toán demo, không thu tiền thật
         </div>
@@ -255,7 +256,7 @@ export function App() {
           />
         </Routes>
       </main>
-      {!isAuthPage && <footer className="site-footer">
+      {!isAuthPage && !isProfilePage && <footer className="site-footer">
         <Link className="brand" to="/">
           eventhub.
         </Link>
