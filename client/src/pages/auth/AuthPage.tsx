@@ -1,9 +1,319 @@
-import { useState } from "react";
+import { useEffect, useId, useState, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, Apple, Eye, EyeOff, Fingerprint, LockKeyhole, Mail, QrCode, ShieldCheck } from "lucide-react";
-import { ActionForm } from "@/components/ticketing/action-form";
-import { Field } from "@/components/ticketing/shared";
+import {
+  AlertCircle,
+  Apple,
+  ArrowLeft,
+  ArrowRight,
+  Drama,
+  Eye,
+  EyeOff,
+  Fingerprint,
+  KeyRound,
+  Loader2,
+  LockKeyhole,
+  LogIn,
+  Mail,
+  Orbit,
+  Phone,
+  ShieldCheck,
+  Ticket,
+  UserPlus,
+  UserRound,
+  Zap,
+} from "lucide-react";
 import authService from "@/features/auth/services/authService";
+import { useAuth } from "@/features/auth/stores/authStore";
+import { message } from "@/features/ticketing/data";
+import {
+  AuthBackground,
+  AuthFooter,
+  AuthHeader,
+  AuthSupport,
+  AuthToast,
+  type AuthMode,
+  type AuthRole,
+} from "./AuthShell";
+import "./auth.css";
+
+const STORAGE_KEY = "eventhub.auth.email";
+
+type FormState = {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  otp: string;
+};
+
+type FieldErrors = Partial<Record<keyof FormState | "terms", string>>;
+
+const emptyForm: FormState = {
+  name: "",
+  email: "",
+  phone: "",
+  password: "",
+  confirmPassword: "",
+  otp: "",
+};
+
+function AuthField({
+  label,
+  name,
+  type = "text",
+  value,
+  onChange,
+  error,
+  hint,
+  icon,
+  autoComplete,
+  placeholder,
+  topRight,
+  rightAction,
+  disabled = false,
+}: {
+  label: string;
+  name: string;
+  type?: string;
+  value: string;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+  hint?: string;
+  icon: ReactNode;
+  autoComplete?: string;
+  placeholder?: string;
+  topRight?: ReactNode;
+  rightAction?: ReactNode;
+  disabled?: boolean;
+}) {
+  const generatedId = useId();
+  const inputId = `auth-${name}-${generatedId}`;
+  const errorId = `${inputId}-error`;
+  const hintId = `${inputId}-hint`;
+
+  return (
+    <div className={`auth-field${error ? " has-error" : ""}`}>
+      <div className="auth-field-head">
+        <label htmlFor={inputId}>{label}</label>
+        {topRight}
+      </div>
+      <div className="auth-input">
+        <span className="auth-input-icon" aria-hidden="true">
+          {icon}
+        </span>
+        <input
+          id={inputId}
+          name={name}
+          type={type}
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          disabled={disabled}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={
+            [error ? errorId : null, hint ? hintId : null]
+              .filter(Boolean)
+              .join(" ") || undefined
+          }
+        />
+        {rightAction}
+      </div>
+      {error ? (
+        <p className="auth-field-error" id={errorId}>
+          <AlertCircle size={12} aria-hidden="true" /> {error}
+        </p>
+      ) : hint ? (
+        <p className="auth-field-hint" id={hintId}>
+          {hint}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function PasswordToggle({
+  shown,
+  onToggle,
+  disabled,
+}: {
+  shown: boolean;
+  onToggle: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <button
+      className="auth-input-action"
+      type="button"
+      aria-label={shown ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+      aria-pressed={shown}
+      onClick={onToggle}
+      disabled={disabled}
+    >
+      {shown ? <EyeOff size={16} /> : <Eye size={16} />}
+    </button>
+  );
+}
+
+function PasswordStrength({ value }: { value: string }) {
+  const score =
+    value.length === 0
+      ? 0
+      : (value.length >= 8 ? 1 : 0) +
+        (/[0-9]/.test(value) && /[a-zA-Z]/.test(value) ? 1 : 0) +
+        (/[^a-zA-Z0-9]/.test(value) ? 1 : 0);
+  const labels = ["Chưa nhập", "Yếu", "Trung bình", "Tuyệt đối"];
+  return (
+    <div className={`auth-strength auth-strength-${score}`}>
+      <div className="auth-strength-bars" aria-hidden="true">
+        <span className={score >= 1 ? "is-on" : ""} />
+        <span className={score >= 2 ? "is-on" : ""} />
+        <span className={score >= 3 ? "is-on" : ""} />
+      </div>
+      <span className="auth-strength-label" aria-live="polite">
+        {labels[score]}
+      </span>
+    </div>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg className="auth-google" viewBox="0 0 24 24" aria-hidden="true">
+      <path
+        d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z"
+        fill="#EA4335"
+      />
+      <path
+        d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5 3.7-8.8z"
+        fill="#4285F4"
+      />
+      <path
+        d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.8s.2-2.1.4-2.8L1.9 6.3C.7 8.7 0 10.3 0 12s.7 3.3 1.9 5.7l3.7-2.9z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 23c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16c1.8 3.7 5.6 7 10.1 7z"
+        fill="#34A853"
+      />
+    </svg>
+  );
+}
+
+function RoleSelector({
+  role,
+  onChange,
+}: {
+  role: AuthRole;
+  onChange: (role: AuthRole) => void;
+}) {
+  return (
+    <div
+      className="auth-role"
+      role="radiogroup"
+      aria-label="Bạn tham gia với tư cách"
+    >
+      <button
+        type="button"
+        role="radio"
+        aria-checked={role === "attendee"}
+        className={`auth-role-option${role === "attendee" ? " is-active" : ""}`}
+        onClick={() => onChange("attendee")}
+      >
+        <Ticket size={16} aria-hidden="true" />
+        Khán Giả Mua Vé
+      </button>
+      {/* <button
+        type="button"
+        role="radio"
+        aria-checked={role === "organizer"}
+        className={`auth-role-option${role === "organizer" ? " is-active" : ""}`}
+        onClick={() => onChange("organizer")}
+      >
+        <Drama size={16} aria-hidden="true" />
+        Ban Tổ Chức / Đối Tác
+      </button> */}
+    </div>
+  );
+}
+
+const tabs = [
+  {
+    mode: "login" as const,
+    to: "/auth/login",
+    label: "Đăng Nhập",
+    icon: <LogIn size={18} />,
+  },
+  {
+    mode: "register" as const,
+    to: "/auth/register",
+    label: "Đăng Ký Mới",
+    icon: <UserPlus size={18} />,
+  },
+];
+
+function AuthTabs({ mode }: { mode: AuthMode }) {
+  const navigate = useNavigate();
+
+  function handleKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const next = mode === "login" ? "/auth/register" : "/auth/login";
+    navigate(next);
+  }
+
+  return (
+    <div
+      className="auth-tabs"
+      role="tablist"
+      aria-label="Đăng nhập hoặc đăng ký"
+      onKeyDown={handleKeyDown}
+    >
+      {tabs.map((tab) => {
+        const active = mode === tab.mode;
+        return (
+          <Link
+            key={tab.mode}
+            to={tab.to}
+            role="tab"
+            aria-selected={active}
+            tabIndex={active ? 0 : -1}
+            className={`auth-tab${active ? " is-active" : ""}`}
+          >
+            {tab.icon}
+            {tab.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function SocialButtons({ onNotice }: { onNotice: (message: string) => void }) {
+  return (
+    <div className="auth-social" aria-label="Phương thức đăng nhập khác">
+      <button
+        type="button"
+        onClick={() => onNotice("Đăng nhập bằng Google đang được phát triển.")}
+      >
+        <GoogleIcon /> Google
+      </button>
+      <button
+        type="button"
+        onClick={() => onNotice("Đăng nhập bằng Apple đang được phát triển.")}
+      >
+        <Apple size={16} fill="currentColor" /> Apple
+      </button>
+      <button
+        type="button"
+        onClick={() => onNotice("Đăng nhập bằng Passkey đang được phát triển.")}
+      >
+        <Fingerprint size={18} /> Passkey
+      </button>
+    </div>
+  );
+}
 
 export function AuthPage({
   register = false,
@@ -12,130 +322,604 @@ export function AuthPage({
   register?: boolean;
   reset?: boolean;
 }) {
-  const navigate = useNavigate(),
-    location = useLocation(),
-    [sent, setSent] = useState(false),
-    [showPassword, setShowPassword] = useState(false);
-  const login = !register && !reset;
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentUser = useAuth((state) => state.user);
+  const mode: AuthMode = reset ? "reset" : register ? "register" : "login";
+
+  const [role, setRole] = useState<AuthRole>("attendee");
+  const [form, setForm] = useState<FormState>(emptyForm);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [remember, setRemember] = useState(true);
+  const [terms, setTerms] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [serverError, setServerError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved)
+      setForm((current) =>
+        current.email ? current : { ...current, email: saved },
+      );
+  }, []);
+
+  useEffect(() => {
+    setErrors({});
+    setServerError("");
+    setSent(false);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    setForm((current) => ({
+      ...current,
+      password: "",
+      confirmPassword: "",
+      otp: "",
+    }));
+  }, [mode]);
+
+  useEffect(() => {
+    const state = location.state as { notice?: string } | null;
+    if (state?.notice) setNotice(state.notice);
+  }, [location.state]);
+
+  useEffect(() => {
+    if (!notice) return;
+    const timer = window.setTimeout(() => setNotice(""), 7000);
+    return () => window.clearTimeout(timer);
+  }, [notice]);
+
+  function updateField(key: keyof FormState) {
+    return (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setForm((current) => ({ ...current, [key]: value }));
+      setErrors((current) => ({ ...current, [key]: undefined }));
+      setServerError("");
+    };
+  }
+
+  function validate(): FieldErrors {
+    const next: FieldErrors = {};
+    const email = form.email.trim();
+    const phone = form.phone.replace(/[\s.-]/g, "");
+
+    if (!email) next.email = "Vui lòng nhập email.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+      next.email = "Email chưa đúng định dạng.";
+
+    if (mode === "login") {
+      if (!form.password) next.password = "Vui lòng nhập mật khẩu.";
+      return next;
+    }
+
+    if (mode === "register") {
+      if (!form.name.trim()) next.name = "Vui lòng nhập họ và tên.";
+      if (!phone) next.phone = "Vui lòng nhập số điện thoại.";
+      else if (!/^(0|\+84)\d{9,10}$/.test(phone))
+        next.phone = "Số điện thoại chưa hợp lệ.";
+      if (!form.password) next.password = "Vui lòng nhập mật khẩu.";
+      else if (form.password.length < 8)
+        next.password = "Mật khẩu phải có ít nhất 8 ký tự.";
+      if (!form.confirmPassword)
+        next.confirmPassword = "Vui lòng xác nhận lại mật khẩu.";
+      else if (form.confirmPassword !== form.password)
+        next.confirmPassword = "Mật khẩu xác nhận không khớp.";
+      if (!terms)
+        next.terms = "Bạn cần đồng ý với điều khoản để tạo tài khoản.";
+      return next;
+    }
+
+    if (sent) {
+      if (!/^\d{6}$/.test(form.otp.trim()))
+        next.otp = "Mã xác nhận gồm 6 chữ số.";
+      if (!form.password) next.password = "Vui lòng nhập mật khẩu mới.";
+      else if (form.password.length < 8)
+        next.password = "Mật khẩu phải có ít nhất 8 ký tự.";
+      if (!form.confirmPassword)
+        next.confirmPassword = "Vui lòng xác nhận lại mật khẩu.";
+      else if (form.confirmPassword !== form.password)
+        next.confirmPassword = "Mật khẩu xác nhận không khớp.";
+    }
+
+    return next;
+  }
+
+  function rememberEmail(enabled: boolean, email: string) {
+    if (enabled) localStorage.setItem(STORAGE_KEY, email.trim());
+    else localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function safeRedirect(): string {
+    const state = location.state as { from?: string } | null;
+    const from = state?.from;
+    return typeof from === "string" &&
+      from.startsWith("/") &&
+      !from.startsWith("//")
+      ? from
+      : "/";
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const nextErrors = validate();
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    setBusy(true);
+    setServerError("");
+
+    try {
+      if (mode === "login") {
+        const result = await authService.login({
+          email: form.email.trim().toLowerCase(),
+          password: form.password,
+        });
+        rememberEmail(remember, form.email);
+
+        const target = safeRedirect();
+        if (target !== "/") {
+          navigate(target, { replace: true });
+        } else if (role === "organizer") {
+          const roles = result.data?.user?.roles ?? [];
+          navigate(
+            roles.some((value) => ["ORGANIZER", "ADMIN"].includes(value))
+              ? "/organizer"
+              : "/",
+            { replace: true },
+          );
+        } else {
+          navigate("/", { replace: true });
+        }
+        return;
+      }
+
+      if (mode === "register") {
+        await authService.register({
+          name: form.name.trim(),
+          email: form.email.trim().toLowerCase(),
+          password: form.password,
+          confirmPassword: form.confirmPassword,
+          phone: form.phone.trim() || undefined,
+        });
+        rememberEmail(remember, form.email);
+        setNotice(
+          role === "organizer"
+            ? "Tài khoản đã được tạo với quyền khán giả. Bạn có thể liên hệ hỗ trợ để nâng cấp Ban tổ chức."
+            : "Tạo tài khoản thành công. Chào mừng bạn đến với EVENTHUB!",
+        );
+        navigate(safeRedirect(), { replace: true });
+        return;
+      }
+
+      if (!sent) {
+        await authService.forgotPassword({
+          email: form.email.trim().toLowerCase(),
+        });
+        setSent(true);
+        setNotice("Mã xác nhận đã được gửi đến email của bạn.");
+      } else {
+        await authService.resetPassword({
+          email: form.email.trim().toLowerCase(),
+          otp: form.otp.trim(),
+          newPassword: form.password,
+          confirmPassword: form.confirmPassword,
+        });
+        navigate("/auth/login", {
+          replace: true,
+          state: { notice: "Đổi mật khẩu thành công. Hãy đăng nhập lại." },
+        });
+      }
+    } catch (error) {
+      setServerError(message(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const title =
+    mode === "login"
+      ? "CHÀO MỪNG TRỞ LẠI VŨ TRỤ EVENTHUB"
+      : mode === "register"
+        ? "KHỞI TẠO TÀI KHOẢN EVENTHUB"
+        : "ĐẶT LẠI MẬT KHẨU";
+
+  const subtitle =
+    mode === "login"
+      ? "Truy cập ví vé điện tử chuẩn QR và không gian lễ hội âm nhạc số."
+      : mode === "register"
+        ? "Nhận mã định danh nghệ thuật số & kích hoạt quyền đặt chỗ trước các đại nhạc hội."
+        : sent
+          ? "Nhập mã xác nhận đã gửi đến email và đặt mật khẩu mới."
+          : "Mã xác nhận sẽ được gửi đến email của bạn.";
+
+  const cta =
+    mode === "login"
+      ? "ĐĂNG NHẬP NGAY"
+      : mode === "register"
+        ? "TẠO TÀI KHOẢN MỚI"
+        : sent
+          ? "ĐỔI MẬT KHẨU"
+          : "GỬI MÃ XÁC NHẬN";
+
+  const busyLabel =
+    mode === "login"
+      ? "ĐANG XÁC THỰC..."
+      : mode === "register"
+        ? "ĐANG TẠO TÀI KHOẢN..."
+        : sent
+          ? "ĐANG CẬP NHẬT..."
+          : "ĐANG GỬI...";
+
   return (
-    <main className={`auth-page${login ? " auth-page-login" : ""}`}>
-      <header className="auth-topbar">
-        <Link className="auth-brand" to="/" aria-label="NOVA Events — Trang chủ">
-          <strong>NOVA</strong><span>EVENTS</span>
-        </Link>
-        <nav className="auth-top-actions" aria-label="Điều hướng">
-          <Link to="/"><ArrowLeft size={15} /> Khám phá sự kiện</Link>
-          <button type="button" className="auth-language" aria-label="Ngôn ngữ: Tiếng Việt">
-            VIE <span>/</span> ENG
-          </button>
-        </nav>
-      </header>
-      <div className="auth-layout">
-        {login && <section className="auth-showcase" aria-label="Giới thiệu NOVA Events">
-          <div className="auth-showcase-art" aria-hidden="true">NOVA•RAW</div>
-          <div className="auth-showcase-copy">
-            <div className="auth-showcase-meta"><span><i /> SOUND CULTURE // 2025</span><small>EDITION: SGN-HN</small></div>
-            <p className="auth-kicker">Tuyên ngôn âm thanh độc bản</p>
-            <h2>Đánh thức nhịp đập ngầm của đô thị số.</h2>
-            <p className="auth-description">Hạ tầng phân phối vé bảo mật bằng Dynamic QR chống phe vé giả mạo, thiết kế tối giản dành riêng cho cộng đồng âm nhạc độc lập tại Việt Nam.</p>
+    <div className={`auth-shell auth-shell-${mode}`}>
+      <AuthBackground />
+      <AuthHeader
+        mode={mode}
+        user={currentUser}
+        search={search}
+        onSearchChange={setSearch}
+        onSearch={(event) => {
+          event.preventDefault();
+          const query = search.trim();
+          navigate(query ? `/?q=${encodeURIComponent(query)}` : "/");
+        }}
+      />
+
+      <div className="auth-main">
+        <section className="auth-card" aria-labelledby="auth-title">
+          {mode !== "reset" ? (
+            <div className="auth-card-head">
+              <div className="auth-card-kicker">
+                <span className="auth-pill">
+                  <Orbit size={14} aria-hidden="true" />
+                  CỔNG BẢO MẬT GIAO THỨC NEBULA
+                </span>
+              </div>
+              <RoleSelector role={role} onChange={setRole} />
+              <AuthTabs mode={mode} />
+            </div>
+          ) : (
+            <Link className="auth-back" to="/auth/login">
+              <ArrowLeft size={16} /> Quay lại đăng nhập
+            </Link>
+          )}
+
+          <div className="auth-card-intro">
+            <h1 className="auth-title" id="auth-title">
+              {title}
+              {mode !== "reset" && (
+                <span
+                  className={`auth-title-dot auth-title-dot-${mode}`}
+                  aria-hidden="true"
+                />
+              )}
+            </h1>
+            <p className="auth-subtitle">{subtitle}</p>
           </div>
-          <article className="auth-event-card">
-            <div className="auth-event-heading"><div><small>Sắp diễn ra tại TP. Hồ Chí Minh</small><h3>VŨ TRỤ ĐÊM 04</h3><p>The Warehouse, Thủ Thiêm • 24.11.2025</p></div><b>HOT DROP</b></div>
-            <div className="auth-event-footer"><span><QrCode size={17}/> Passcode mã hóa động 0.5s</span><strong>Còn lại 18 vé</strong></div>
-          </article>
-          <div className="auth-metrics"><div><strong>500.000+ <small>VÉ</small></strong><span>Kết nối an toàn tuyệt đối</span></div><div><strong>0.5s <small>TỐC ĐỘ</small></strong><span>Quét Dynamic QR tại cửa</span></div><div><strong>100% <small>CHÍNH CHỦ</small></strong><span>Xác thực danh tính số</span></div></div>
-        </section>}
-        <section className={`panel auth-panel${login ? "" : " auth-panel-compact"}`}>
-        {login && <div className="auth-form-heading"><span className="auth-identity"><i /> XÁC THỰC DANH TÍNH</span></div>}
-        <h2>
-          {reset
-            ? "Đặt lại mật khẩu"
-            : register
-              ? "Tạo tài khoản"
-          : "Chào mừng trở lại"}
-        </h2>
-        <p className="muted auth-subtitle">
-          {reset
-            ? "Mã xác nhận sẽ được gửi đến email của bạn."
-            : login ? "Đăng nhập để khám phá kho vé độc quyền hoặc quản trị sự kiện biểu diễn của bạn." : "Bắt đầu hành trình trải nghiệm của bạn."}
-        </p>
-        <ActionForm
-          key={`${register}-${reset}-${sent}`}
-          label={
-            reset
-              ? sent
-                ? "Đổi mật khẩu"
-                : "Gửi mã xác nhận"
-              : register
-                ? "Đăng ký"
-                : "Đăng nhập"
-          }
-          onSubmit={async (d) => {
-            if (reset) {
-              if (!sent) {
-                await authService.forgotPassword({ email: d.email });
-                setSent(true);
-              } else {
-                await authService.resetPassword({
-                  email: d.email,
-                  otp: d.otp,
-                  newPassword: d.password,
-                  confirmPassword: d.confirmPassword,
-                });
-                navigate("/auth/login");
-              }
-              return;
-            }
-            if (register)
-              await authService.register({
-                name: d.name,
-                email: d.email,
-                password: d.password,
-                confirmPassword: d.confirmPassword,
-              });
-            else
-              await authService.login({ email: d.email, password: d.password });
-            const from = location.state?.from;
-            navigate(
-              typeof from === "string" &&
-                from.startsWith("/") &&
-                !from.startsWith("//")
-                ? from
-                : "/",
-            );
-          }}
-        >
-          {register && <Field label="Họ và tên" name="name" />}
-          {login ? <label className="field auth-input-field"><span>Email hoặc Số điện thoại <small>Bắt buộc</small></span><div className="auth-input-wrap"><Mail size={16}/><input aria-label="Email" autoComplete="username" name="email" placeholder="name@novaevents.vn hoặc 0909xxxxxx" type="email" required /></div></label> : <Field label="Email" name="email" type="email" />}
-          {(!reset || sent) && (
-            login ? <label className="field auth-input-field"><span>Mật khẩu <Link to="/auth/reset-password">Quên mật khẩu?</Link></span><div className="auth-input-wrap"><LockKeyhole size={16}/><input autoComplete="current-password" name="password" placeholder="••••••••••••" type={showPassword ? "text" : "password"} required/><button type="button" aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"} onClick={() => setShowPassword(v => !v)}>{showPassword ? <EyeOff size={17}/> : <Eye size={17}/>}</button></div></label> : <Field
-              label="Mật khẩu (ít nhất 8 ký tự)"
-              name="password"
-              type="password"
-            />
+
+          <form className="auth-form" onSubmit={submit} noValidate>
+            {serverError && (
+              <div className="auth-alert" role="alert">
+                <AlertCircle size={15} aria-hidden="true" />
+                <span>{serverError}</span>
+              </div>
+            )}
+
+            {mode === "login" && (
+              <>
+                <AuthField
+                  label="Email hoặc Tên tài khoản"
+                  name="email"
+                  type="email"
+                  value={form.email}
+                  onChange={updateField("email")}
+                  error={errors.email}
+                  hint="Hiện hỗ trợ đăng nhập bằng email."
+                  icon={<Mail size={18} />}
+                  autoComplete="username"
+                  placeholder="user@eventhub.vn"
+                  disabled={busy}
+                 // topRight={<span className="auth-field-code">AUTH_ID_V2</span>}
+                />
+                <AuthField
+                  label="Mật mã vũ trụ"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={updateField("password")}
+                  error={errors.password}
+                  icon={<KeyRound size={18} />}
+                  autoComplete="current-password"
+                  placeholder="••••••••••••"
+                  disabled={busy}
+                  topRight={
+                    <Link className="auth-field-link" to="/auth/reset-password">
+                      Quên mật khẩu?
+                    </Link>
+                  }
+                  rightAction={
+                    <PasswordToggle
+                      shown={showPassword}
+                      onToggle={() => setShowPassword((value) => !value)}
+                      disabled={busy}
+                    />
+                  }
+                />
+
+                <label className="auth-remember">
+                  <input
+                    type="checkbox"
+                    checked={remember}
+                    onChange={(event) => setRemember(event.target.checked)}
+                    disabled={busy}
+                  />
+                  <span>Ghi nhớ phiên đăng nhập trên thiết bị này</span>
+                </label>
+              </>
+            )}
+
+            {mode === "register" && (
+              <>
+                <AuthField
+                  label="Họ và tên đầy đủ"
+                  name="name"
+                  value={form.name}
+                  onChange={updateField("name")}
+                  error={errors.name}
+                  icon={<UserRound size={18} />}
+                  autoComplete="name"
+                  placeholder="Trần Khả Hảo"
+                  disabled={busy}
+                />
+                <div className="auth-row">
+                  <AuthField
+                    label="Hộp thư điện tử"
+                    name="email"
+                    type="email"
+                    value={form.email}
+                    onChange={updateField("email")}
+                    error={errors.email}
+                    icon={<Mail size={18} />}
+                    autoComplete="email"
+                    placeholder="trankhahao7@gmail.com"
+                    disabled={busy}
+                  />
+                  <AuthField
+                    label="Số điện thoại xác thực"
+                    name="phone"
+                    type="tel"
+                    value={form.phone}
+                    onChange={updateField("phone")}
+                    error={errors.phone}
+                    icon={<Phone size={18} />}
+                    autoComplete="tel"
+                    placeholder="0378531013"
+                    disabled={busy}
+                  />
+                </div>
+                <div className="auth-password-block">
+                  <AuthField
+                    label="Mật mã bảo mật"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={form.password}
+                    onChange={updateField("password")}
+                    error={errors.password}
+                    icon={<LockKeyhole size={18} />}
+                    autoComplete="new-password"
+                    placeholder="Tối thiểu 8 ký tự, có số và ký hiệu"
+                    disabled={busy}
+                    rightAction={
+                      <PasswordToggle
+                        shown={showPassword}
+                        onToggle={() => setShowPassword((value) => !value)}
+                        disabled={busy}
+                      />
+                    }
+                  />
+                  <PasswordStrength value={form.password} />
+                </div>
+                <AuthField
+                  label="Xác nhận lại mật mã"
+                  name="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  value={form.confirmPassword}
+                  onChange={updateField("confirmPassword")}
+                  error={errors.confirmPassword}
+                  icon={<LockKeyhole size={18} />}
+                  autoComplete="new-password"
+                  placeholder="Nhập lại chính xác mật khẩu"
+                  disabled={busy}
+                  rightAction={
+                    <PasswordToggle
+                      shown={showConfirmPassword}
+                      onToggle={() => setShowConfirmPassword((value) => !value)}
+                      disabled={busy}
+                    />
+                  }
+                />
+
+                <div className={`auth-terms${errors.terms ? " has-error" : ""}`}>
+                  <input
+                    id="auth-terms"
+                    type="checkbox"
+                    checked={terms}
+                    onChange={(event) => {
+                      setTerms(event.target.checked);
+                      setErrors((current) => ({ ...current, terms: undefined }));
+                    }}
+                    disabled={busy}
+                    aria-label="Tôi đồng ý với điều khoản dịch vụ và chính sách bảo mật"
+                    aria-invalid={errors.terms ? true : undefined}
+                    aria-describedby={errors.terms ? "auth-terms-error" : undefined}
+                  />
+                  <label htmlFor="auth-terms">
+                    Tôi đồng ý với{" "}
+                    <button
+                      type="button"
+                      className="auth-inline-link"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setNotice("Điều khoản dịch vụ đang được cập nhật.");
+                      }}
+                    >
+                      Điều khoản dịch vụ
+                    </button>{" "}
+                    và cam kết tuân thủ{" "}
+                    <button
+                      type="button"
+                      className="auth-inline-link"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setNotice("Chính sách bảo mật vé số hóa đang được cập nhật.");
+                      }}
+                    >
+                      Chính sách bảo mật vé số hóa
+                    </button>{" "}
+                    của EVENTHUB.
+                  </label>
+                </div>
+                {errors.terms && (
+                  <p className="auth-field-error" id="auth-terms-error">
+                    <AlertCircle size={12} aria-hidden="true" /> {errors.terms}
+                  </p>
+                )}
+              </>
+            )}
+
+            {mode === "reset" && (
+              <>
+                <AuthField
+                  label="Hộp thư điện tử"
+                  name="reset-email"
+                  type="email"
+                  value={form.email}
+                  onChange={updateField("email")}
+                  error={errors.email}
+                  icon={<Mail size={18} />}
+                  autoComplete="email"
+                  placeholder="user@cosmicticket.vn"
+                  disabled={busy || sent}
+                  topRight={
+                    sent ? (
+                      <button
+                        type="button"
+                        className="auth-field-link"
+                        onClick={() => {
+                          setSent(false);
+                          setForm((current) => ({
+                            ...current,
+                            password: "",
+                            confirmPassword: "",
+                            otp: "",
+                          }));
+                        }}
+                      >
+                        Đổi email
+                      </button>
+                    ) : undefined
+                  }
+                />
+                {sent && (
+                  <>
+                    <AuthField
+                      label="Mã xác nhận 6 số"
+                      name="otp"
+                      value={form.otp}
+                      onChange={updateField("otp")}
+                      error={errors.otp}
+                      icon={<ShieldCheck size={18} />}
+                      autoComplete="one-time-code"
+                      placeholder="000000"
+                      disabled={busy}
+                    />
+                    <AuthField
+                      label="Mật khẩu mới"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={form.password}
+                      onChange={updateField("password")}
+                      error={errors.password}
+                      icon={<KeyRound size={18} />}
+                      autoComplete="new-password"
+                      placeholder="••••••••••••"
+                      disabled={busy}
+                      rightAction={
+                        <PasswordToggle
+                          shown={showPassword}
+                          onToggle={() => setShowPassword((value) => !value)}
+                          disabled={busy}
+                        />
+                      }
+                    />
+                    <AuthField
+                      label="Xác nhận lại mật khẩu"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={form.confirmPassword}
+                      onChange={updateField("confirmPassword")}
+                      error={errors.confirmPassword}
+                      icon={<LockKeyhole size={18} />}
+                      autoComplete="new-password"
+                      placeholder="Nhập lại chính xác mật khẩu"
+                      disabled={busy}
+                      rightAction={
+                        <PasswordToggle
+                          shown={showConfirmPassword}
+                          onToggle={() => setShowConfirmPassword((value) => !value)}
+                          disabled={busy}
+                        />
+                      }
+                    />
+                  </>
+                )}
+              </>
+            )}
+
+            <button
+              className={`auth-submit auth-submit-${mode}`}
+              type="submit"
+              disabled={busy}
+            >
+              {busy && (
+                <Loader2 className="auth-spin" size={16} aria-hidden="true" />
+              )}
+              {busy ? busyLabel : cta}
+              {!busy && mode === "login" && (
+                <Zap size={18} aria-hidden="true" />
+              )}
+              {!busy && mode === "register" && (
+                <ArrowRight size={18} aria-hidden="true" />
+              )}
+              {!busy && mode === "reset" && (
+                <ShieldCheck size={16} aria-hidden="true" />
+              )}
+            </button>
+          </form>
+
+          {mode === "login" && (
+            <div className="auth-extra">
+              <div className="auth-divider">
+                <span>HOẶC TIẾP TỤC VỚI</span>
+              </div>
+              <SocialButtons onNotice={setNotice} />
+            </div>
           )}
-          {(register || sent) && (
-            <Field
-              label="Nhập lại mật khẩu"
-              name="confirmPassword"
-              type="password"
-            />
-          )}
-          {sent && <Field label="Mã xác nhận 6 số" name="otp" />}
-        </ActionForm>
-        {login && <div className="auth-login-options"><label><input type="checkbox" defaultChecked/> Ghi nhớ phiên đăng nhập (30 ngày)</label><span><ShieldCheck size={13}/> SSL 256-bit</span></div>}
-        {login && <div className="auth-divider"><span>HOẶC TIẾP TỤC VỚI</span></div>}
-        {login && <div className="auth-providers" aria-label="Phương thức đăng nhập khác"><button type="button" disabled><b className="google-mark">G</b> Google</button><button type="button" disabled><Apple size={14} fill="currentColor"/> Apple</button><button type="button" disabled><Fingerprint size={15}/> Passkey</button></div>}
-        <div className="auth-links">
-          <Link to={register ? "/auth/login" : "/auth/register"}>
-            {register
-              ? "Đã có tài khoản? Đăng nhập"
-              : <>{login ? "Chưa có tài khoản? " : ""}<strong>Đăng ký tham gia ngay</strong></>}
-          </Link>
-          {!login && <Link to="/auth/reset-password">Quên mật khẩu?</Link>}
-        </div>
-      </section>
+
+          <AuthSupport />
+        </section>
       </div>
-    </main>
+
+      <AuthFooter onNotice={setNotice} />
+      {notice && (
+        <AuthToast message={notice} onClose={() => setNotice("")} />
+      )}
+    </div>
   );
 }

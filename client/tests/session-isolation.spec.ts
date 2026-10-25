@@ -33,16 +33,18 @@ async function login(page: Page, email: string) {
   await submitLogin(page, email);
 }
 async function submitLogin(page: Page, email: string) {
-  await page.getByLabel("Email", { exact: true }).fill(email);
   await page
-    .getByLabel("Mật khẩu (ít nhất 8 ký tự)", { exact: true })
-    .fill(password);
+    .getByLabel("Email hoặc Tên tài khoản", { exact: true })
+    .fill(email);
+  await page.getByLabel("Mật mã vũ trụ", { exact: true }).fill(password);
   const submit = async () => {
     const response = page.waitForResponse(
       (r) =>
         r.url().endsWith("/api/auth/login") && r.request().method() === "POST",
     );
-    await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+    await page
+      .getByRole("button", { name: "ĐĂNG NHẬP NGAY", exact: true })
+      .click();
     return response;
   };
   let response = await submit();

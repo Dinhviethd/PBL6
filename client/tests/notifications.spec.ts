@@ -46,11 +46,13 @@ for (const width of [1280, 390]) {
     ).toBeTruthy();
 
     await page.goto("/auth/login");
-    await page.getByLabel("Email", { exact: true }).fill(email);
     await page
-      .getByLabel("Mật khẩu (ít nhất 8 ký tự)", { exact: true })
-      .fill(password);
-    await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+      .getByLabel("Email hoặc Tên tài khoản", { exact: true })
+      .fill(email);
+    await page.getByLabel("Mật mã vũ trụ", { exact: true }).fill(password);
+    await page
+      .getByRole("button", { name: "ĐĂNG NHẬP NGAY", exact: true })
+      .click();
     await page.getByRole("link", { name: /Thông báo, 1 chưa đọc/ }).click();
     await expect(
       page.getByRole("heading", { name: "Thông báo của bạn" }),

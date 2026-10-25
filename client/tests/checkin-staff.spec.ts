@@ -3,11 +3,11 @@ import { test, expect, type Page } from "@playwright/test";
 const password = process.env.DEMO_PASSWORD || "LocalDemo2026!";
 async function login(page: Page, email: string) {
   await page.goto("/auth/login");
-  await page.getByLabel("Email", { exact: true }).fill(email);
   await page
-    .getByLabel("Mật khẩu (ít nhất 8 ký tự)", { exact: true })
-    .fill(password);
-  await page.getByRole("button", { name: "Đăng nhập", exact: true }).click();
+    .getByLabel("Email hoặc Tên tài khoản", { exact: true })
+    .fill(email);
+  await page.getByLabel("Mật mã vũ trụ", { exact: true }).fill(password);
+  await page.getByRole("button", { name: "ĐĂNG NHẬP NGAY", exact: true }).click();
   await expect(page.getByRole("button", { name: "Đăng xuất" })).toBeVisible();
 }
 

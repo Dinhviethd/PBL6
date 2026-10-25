@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState, type FormEvent } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { EventCard, FeaturedEvent } from "@/components/ticketing/event-visuals";
 import { useAuth } from "@/features/auth/stores/authStore";
@@ -7,14 +7,33 @@ import { Empty, Field, Loading, Notice, PageHead, Pager } from "@/components/tic
 import { useLoad, values } from "@/features/ticketing/data";
 import type { Category, Event } from "@/features/ticketing/types";
 
+const filterKeys = ["q", "category", "city", "from", "to"] as const;
+
+function filterFromParams(params: URLSearchParams) {
+  const next = new URLSearchParams();
+  for (const key of filterKeys) {
+    const value = params.get(key);
+    if (value) next.set(key, value);
+  }
+  return next.toString();
+}
+
 export function Explore() {
   const user = useAuth((state) => state.user);
-  const [filter, setFilter] = useState(""),
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [filter, setFilter] = useState(() => filterFromParams(searchParams)),
     [page, setPage] = useState(0),
     { data, error, loading } = useLoad<{ items: Event[]; total: number }>(
       `/events?page=${page}&${filter}`,
     ),
     categories = useLoad<Category[]>("/categories");
+  const searchString = searchParams.toString();
+
+  useEffect(() => {
+    setFilter(filterFromParams(new URLSearchParams(searchString)));
+    setPage(0);
+  }, [searchString]);
+
   function search(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const d = values(e),
@@ -27,6 +46,7 @@ export function Explore() {
         );
     setPage(0);
     setFilter(params.toString());
+    setSearchParams(params);
   }
   return (
     <>

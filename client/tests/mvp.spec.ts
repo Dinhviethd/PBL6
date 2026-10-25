@@ -2,16 +2,16 @@ import { test, expect, type Page } from "@playwright/test";
 const password = process.env.DEMO_PASSWORD || "LocalDemo2026!";
 async function login(page: Page, email: string) {
   await page.goto("/auth/login");
-  await page.getByLabel("Email", { exact: true }).fill(email);
   await page
-    .getByLabel("Mật khẩu (ít nhất 8 ký tự)", { exact: true })
-    .fill(password);
+    .getByLabel("Email hoặc Tên tài khoản", { exact: true })
+    .fill(email);
+  await page.getByLabel("Mật mã vũ trụ", { exact: true }).fill(password);
   await Promise.all([
     page.waitForResponse(
       (r) =>
         r.url().endsWith("/api/auth/login") && r.request().method() === "POST",
     ),
-    page.getByRole("button", { name: "Đăng nhập", exact: true }).click(),
+    page.getByRole("button", { name: "ĐĂNG NHẬP NGAY", exact: true }).click(),
   ]);
   await expect(page.getByRole("button", { name: "Đăng xuất" })).toBeVisible();
 }
@@ -49,11 +49,17 @@ test("customer purchases demo ticket and organizer checks in exactly once", asyn
 }) => {
   const email = `web-${Date.now()}@example.test`;
   await page.goto("/auth/register");
-  await page.getByLabel("Họ và tên").fill("Khách kiểm thử web");
-  await page.getByLabel("Email", { exact: true }).fill(email);
-  await page.getByLabel("Mật khẩu (ít nhất 8 ký tự)").fill(password);
-  await page.getByLabel("Nhập lại mật khẩu").fill(password);
-  await page.getByRole("button", { name: "Đăng ký", exact: true }).click();
+  await page.getByLabel("Họ và tên đầy đủ").fill("Khách kiểm thử web");
+  await page.getByLabel("Hộp thư điện tử", { exact: true }).fill(email);
+  await page.getByLabel("Số điện thoại xác thực").fill("0901234567");
+  await page.getByLabel("Mật mã bảo mật", { exact: true }).fill(password);
+  await page.getByLabel("Xác nhận lại mật mã", { exact: true }).fill(password);
+  await page
+    .getByLabel("Tôi đồng ý với điều khoản dịch vụ và chính sách bảo mật")
+    .check();
+  await page
+    .getByRole("button", { name: "TẠO TÀI KHOẢN MỚI", exact: true })
+    .click();
   await expect(page).toHaveURL(/\/$/);
   await page.goto("/events/dem-nhac-song-han");
   await page.getByLabel("Số lượng Vé tiêu chuẩn").selectOption("1");

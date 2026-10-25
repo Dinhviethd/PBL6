@@ -127,7 +127,10 @@ export function App() {
           Bản trải nghiệm MVP · Thanh toán demo, không thu tiền thật
         </div>
       )}
-      <main className="site-main" key={revision}>
+      <main
+        className={isAuthPage ? "site-main auth-main" : "site-main"}
+        key={revision}
+      >
         {!isAuthPage && sessionNotice && <Notice error={sessionNotice} />}
         <Routes>
           <Route
