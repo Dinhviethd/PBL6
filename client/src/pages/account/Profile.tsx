@@ -161,7 +161,7 @@ export function Profile() {
       <header className="profile-hero">
         <div>
           <div className="profile-brand" aria-label="EventHub">
-            <span className="profile-brand-mark">✦</span>
+            {/* <span className="profile-brand-mark">✦</span> */}
             {/* <strong>EVENT<span>HUB</span></strong> */}
           </div>
           <span className="profile-kicker">

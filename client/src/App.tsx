@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Link,
   NavLink,
@@ -6,6 +6,7 @@ import {
   Routes,
   Route,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import { Ticket, ArrowUpRight } from "lucide-react";
 import authService from "./features/auth/services/authService";
@@ -13,6 +14,7 @@ import { useAuth } from "./features/auth/stores/authStore";
 import { Explore } from "./pages/public/Explore";
 import { EventDetail } from "./pages/public/EventDetail";
 import { AuthPage } from "./pages/auth/AuthPage";
+import { AuthFooter, AuthHeader, AuthToast } from "./pages/auth/AuthShell";
 import { Checkout } from "./pages/booking/Checkout";
 import { MyOrders } from "./pages/account/MyOrders";
 import { MyTickets } from "./pages/account/MyTickets";
@@ -30,6 +32,7 @@ import { useLoad } from "./features/ticketing/data";
 import { NotificationLink } from "./components/ticketing/notification-link";
 import type { ReactNode } from "react";
 import "./features/ticketing/ticketing.css";
+import "./pages/auth/auth.css";
 function Guard({
   children,
   roles = [],
@@ -49,9 +52,12 @@ function Guard({
   return <>{children}</>;
 }
 export function App() {
-  const { user, revision, sessionNotice } = useAuth(),
+  const { user, revision, sessionNotice, isAuthVerified } = useAuth(),
     config = useLoad<{ paymentMode: string }>("/config"),
-    location = useLocation();
+    location = useLocation(),
+    navigate = useNavigate();
+  const [homeSearch, setHomeSearch] = useState("");
+  const [homeNotice, setHomeNotice] = useState("");
   useEffect(() => {
     const started = useAuth.getState().revision;
     authService
@@ -70,9 +76,22 @@ export function App() {
   }, [location.pathname]);
   const isAuthPage = location.pathname.startsWith("/auth/");
   const isProfilePage = location.pathname === "/profile";
+  const isPublicHome = location.pathname === "/" && isAuthVerified && !user;
   return (
     <div className={`eventhub${isProfilePage ? " profile-route" : ""}`}>
-      {!isAuthPage && !isProfilePage && <header className="site-header">
+      {isPublicHome ? (
+        <AuthHeader
+          mode="login"
+          user={null}
+          search={homeSearch}
+          onSearchChange={setHomeSearch}
+          onSearch={(event) => {
+            event.preventDefault();
+            const query = homeSearch.trim();
+            navigate(query ? `/?q=${encodeURIComponent(query)}` : "/");
+          }}
+        />
+      ) : !isAuthPage && !isProfilePage && <header className="site-header">
         <Link className="brand" to="/">
           <span className="brand-mark">
             <Ticket size={23} />
@@ -256,7 +275,17 @@ export function App() {
           />
         </Routes>
       </main>
-      {!isAuthPage && !isProfilePage && <footer className="site-footer">
+      {isPublicHome ? (
+        <>
+          <AuthFooter onNotice={setHomeNotice} />
+          {homeNotice && (
+            <AuthToast
+              message={homeNotice}
+              onClose={() => setHomeNotice("")}
+            />
+          )}
+        </>
+      ) : !isAuthPage && !isProfilePage && <footer className="site-footer">
         <Link className="brand" to="/">
           eventhub.
         </Link>

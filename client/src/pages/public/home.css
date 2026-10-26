@@ -1,0 +1,822 @@
+.site-main:has(.home-page) {
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  padding: 0 0 64px;
+}
+
+.home-page {
+  --home-canvas: #080b1a;
+  --home-surface: #10162b;
+  --home-raised: #141c36;
+  --home-line: #1e293b;
+  --home-purple: #7c3aed;
+  --home-cyan: #22d3ee;
+  --home-pink: #f472b6;
+  --home-text: #f8fafc;
+  --home-muted: #94a3b8;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 0 0 24px;
+  background:
+    radial-gradient(ellipse at 6% 45%, rgb(34 211 238 / 5%), transparent 32%),
+    radial-gradient(ellipse at 92% 75%, rgb(124 58 237 / 10%), transparent 34%),
+    var(--home-canvas);
+  color: var(--home-text);
+}
+
+.home-page :where(h1, h2, h3, p) {
+  overflow-wrap: normal;
+}
+
+.home-page h1,
+.home-page h2,
+.home-page h3 {
+  font-family:"Be Vietnam Pro", sans-serif;
+}
+
+.home-hero {
+  min-height: 700px;
+  padding: 78px 32px 72px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-hero::before,
+.home-hero::after,
+.home-hero-glow {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(90px);
+}
+
+.home-hero::before {
+  width: min(72vw, 900px);
+  height: 460px;
+  top: -150px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, rgb(124 58 237 / 27%), rgb(34 211 238 / 16%), transparent 75%);
+}
+
+.home-hero::after {
+  width: 340px;
+  height: 340px;
+  bottom: 24px;
+  left: -180px;
+  background: rgb(244 114 182 / 12%);
+}
+
+.home-hero-glow {
+  width: 460px;
+  height: 360px;
+  right: -220px;
+  top: 230px;
+  background: rgb(34 211 238 / 10%);
+}
+
+.home-hero-content {
+  width: min(100%, 1240px);
+  position: relative;
+  z-index: 1;
+}
+
+.home-kicker,
+.home-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--home-cyan);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.home-kicker {
+  padding: 9px 15px;
+  border: 1px solid rgb(34 211 238 / 16%);
+  border-radius: 999px;
+  background: rgb(16 22 43 / 85%);
+  box-shadow: 0 0 22px rgb(34 211 238 / 12%);
+}
+
+.home-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--home-cyan);
+  box-shadow: 0 0 12px var(--home-cyan);
+  animation: auth-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.home-sparkle-ping {
+  animation: home-sparkle-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 0 5px currentColor);
+  transform-origin: center;
+}
+
+@keyframes auth-ping {
+  0%,
+  75% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes home-sparkle-ping {
+  0%,
+  45% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  75%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1.28);
+  }
+}
+
+.home-hero h1 {
+  font-family: "Be Vietnam Pro", sans-serif;
+  max-width: 1120px;
+  margin: 28px auto 0;
+  color: var(--home-text);
+  font-size: clamp(35px, 4.5vw, 65px);
+  font-weight: 800;
+  letter-spacing: -.055em;
+  line-height: 1.06;
+  text-transform: uppercase;
+}
+
+.home-hero h1 span {
+  display: inline;
+  color: transparent;
+  background: linear-gradient(90deg, var(--home-cyan), #a78bfa 48%, var(--home-pink));
+  background-clip: text;
+  -webkit-background-clip: text;
+}
+
+.home-hero-copy {
+  max-width: 690px;
+  margin: 23px auto 0;
+  color: #c1ccdd;
+  font-size: 16px;
+  line-height: 1.85;
+}
+
+.home-hero-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 27px;
+}
+
+.home-button {
+  display: inline-flex;
+  min-height: 48px;
+  padding: 0 22px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--home-text);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .055em;
+  text-align: center;
+  text-transform: uppercase;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+
+.home-button:hover {
+  transform: translateY(-2px);
+}
+
+.home-button-primary {
+  background: var(--home-cyan);
+  box-shadow: 0 0 24px rgb(34 211 238 / 26%);
+  color: #07111b;
+}
+
+.home-button-primary:hover {
+  box-shadow: 0 0 32px rgb(34 211 238 / 45%);
+}
+
+.home-button-secondary {
+  border-color: rgb(148 163 184 / 16%);
+  background: rgb(20 28 54 / 82%);
+  color: var(--home-text);
+}
+
+.home-button-secondary:hover {
+  border-color: rgb(34 211 238 / 52%);
+}
+
+.home-search-panel {
+  display: grid;
+  grid-template-columns: minmax(240px, 2fr) minmax(160px, 1fr) minmax(140px, .8fr) minmax(140px, .8fr) 150px;
+  gap: 10px;
+  width: min(100%, 1040px);
+  margin: 54px auto 0;
+  padding: 16px;
+  border: 1px solid rgb(148 163 184 / 11%);
+  border-radius: 18px;
+  background: rgb(16 22 43 / 88%);
+  box-shadow: 0 20px 65px rgb(0 0 0 / 34%);
+  backdrop-filter: blur(18px);
+  text-align: left;
+}
+
+.home-search-field {
+  display: flex;
+  min-width: 0;
+  min-height: 50px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 13px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: #0b1023;
+  color: var(--home-cyan);
+}
+
+.home-search-field:focus-within {
+  border-color: rgb(34 211 238 / 60%);
+  box-shadow: 0 0 0 3px rgb(34 211 238 / 11%);
+}
+
+.home-search-field input,
+.home-search-field select {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--home-text);
+  font-size: 13px;
+}
+
+.home-search-field input::placeholder {
+  color: #8592a8;
+}
+
+.home-search-field select {
+  cursor: pointer;
+}
+
+.home-search-field select option {
+  background: #10162b;
+}
+
+.home-search-field input[type="date"] {
+  color-scheme: dark;
+}
+
+.home-search-submit {
+  display: inline-flex;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 9px;
+  background: linear-gradient(110deg, var(--home-cyan), var(--home-purple));
+  color: white;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.home-search-submit:hover {
+  filter: brightness(1.12);
+}
+
+.home-trending {
+  display: flex;
+  min-width: 0;
+  grid-column: 1 / -1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 2px 0;
+  color: var(--home-muted);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.home-trending a {
+  padding: 6px 10px;
+  border: 1px solid rgb(148 163 184 / 10%);
+  border-radius: 999px;
+  background: #0b1023;
+  color: #c6d0df;
+  text-transform: none;
+  transition: border-color .18s ease, color .18s ease;
+}
+
+.home-trending a:hover {
+  border-color: var(--home-cyan);
+  color: var(--home-cyan);
+}
+
+.home-section {
+  width: min(100% - 64px, 1440px);
+  margin: 0 auto;
+}
+
+.home-categories {
+  padding-top: 48px;
+}
+
+.home-section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+
+.home-section-heading h2,
+.home-benefits-heading h2,
+.home-organizer h2 {
+  margin: 7px 0 0;
+  color: var(--home-text);
+  font-size: clamp(24px, 2.4vw, 34px);
+  font-weight: 700;
+  letter-spacing: -.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.home-section-heading > p {
+  max-width: 370px;
+  margin: 0 0 3px;
+  color: var(--home-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.home-page .home-category-title {
+  margin: 7px 0 0;
+  font-family:"Be Vietnam Pro", sans-serif;
+  font-size: clamp(24px, 2.4vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: normal;
+}
+
+.home-page .home-events-title {
+  margin: 7px 0 0;
+  font-family:"Be Vietnam Pro", sans-serif;
+  font-size: clamp(24px, 2.4vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  white-space: normal;
+}
+
+
+
+.home-category-grid {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.home-category-card {
+  display: flex;
+  min-height: 154px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 19px 12px;
+  border: 1px solid rgb(148 163 184 / 8%);
+  border-radius: 13px;
+  background: var(--home-surface);
+  text-align: center;
+  transition: transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.home-category-card:hover {
+  transform: translateY(-4px);
+  border-color: rgb(34 211 238 / 34%);
+  background: #141c36;
+}
+
+.home-category-card > span:not(.home-icon) {
+  font-family:"Be Vietnam Pro", sans-serif;
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.home-category-card small {
+  color: var(--home-muted);
+  font-size: 10px;
+}
+
+.home-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 15px;
+  background: rgb(124 58 237 / 15%);
+  color: #c4a5fd;
+  box-shadow: 0 0 22px rgb(124 58 237 / 16%);
+}
+
+.tone-cyan .home-icon { background: rgb(34 211 238 / 12%); color: var(--home-cyan); box-shadow: 0 0 22px rgb(34 211 238 / 13%); }
+.tone-pink .home-icon { background: rgb(244 114 182 / 12%); color: var(--home-pink); box-shadow: 0 0 22px rgb(244 114 182 / 13%); }
+.tone-blue .home-icon { background: rgb(96 165 250 / 13%); color: #93c5fd; box-shadow: 0 0 22px rgb(96 165 250 / 13%); }
+
+.home-events {
+  padding-top: 82px;
+  scroll-margin-top: 100px;
+}
+
+.home-events-total {
+  color: var(--home-cyan);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 12px;
+}
+
+.home-event-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.home-event-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgb(148 163 184 / 9%);
+  border-radius: 15px;
+  background: var(--home-surface);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 20%);
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+
+.home-event-card:hover {
+  transform: translateY(-4px);
+  border-color: rgb(124 58 237 / 55%);
+  box-shadow: 0 18px 40px rgb(0 0 0 / 32%), 0 0 24px rgb(124 58 237 / 10%);
+}
+
+.home-event-poster {
+  position: relative;
+  display: grid;
+  height: 236px;
+  overflow: hidden;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at 28% 80%, rgb(34 211 238 / 40%), transparent 43%),
+    radial-gradient(ellipse at 75% 22%, rgb(124 58 237 / 58%), transparent 52%),
+    linear-gradient(135deg, #10162b, #24153f);
+}
+
+.home-event-poster::after {
+  content: "";
+  position: absolute;
+  inset: 35% 0 0;
+  background: linear-gradient(transparent, rgb(8 11 26 / 82%));
+}
+
+.home-event-poster img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .4s ease;
+}
+
+.home-event-card:hover .home-event-poster img {
+  transform: scale(1.045);
+}
+
+.home-poster-fallback {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  color: rgb(248 250 252 / 88%);
+}
+
+.home-poster-fallback span {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 10px;
+  letter-spacing: .24em;
+}
+
+.home-event-badge,
+.home-event-date {
+  position: absolute;
+  z-index: 1;
+  top: 13px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgb(8 11 26 / 82%);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+}
+
+.home-event-badge { left: 13px; color: var(--home-cyan); }
+.home-event-date { right: 13px; color: var(--home-text); }
+.tone-violet .home-event-badge { color: #c4a5fd; }
+.tone-pink .home-event-badge { color: var(--home-pink); }
+.tone-blue .home-event-badge { color: #93c5fd; }
+
+.home-event-info {
+  display: flex;
+  min-height: 204px;
+  flex: 1;
+  flex-direction: column;
+  padding: 17px 17px 0;
+}
+
+.home-event-meta,
+.home-event-venue {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  color: var(--home-muted);
+  font-size: 10px;
+  line-height: 1.55;
+}
+
+.home-event-meta svg,
+.home-event-venue svg { color: var(--home-cyan); }
+
+.home-event-title {
+  display: -webkit-box;
+  min-height: 48px;
+  margin: 10px 0 7px;
+  overflow: hidden;
+  color: var(--home-text);
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.55;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.home-event-title:hover { color: var(--home-cyan); }
+.home-event-venue { min-height: 34px; }
+
+.home-event-price {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: auto -17px 0;
+  padding: 14px 17px;
+  border-top: 1px solid rgb(148 163 184 / 8%);
+  background: rgb(8 11 26 / 42%);
+}
+
+.home-event-price > span { display: grid; gap: 4px; }
+.home-event-price small { color: var(--home-muted); font-size: 9px; }
+.home-event-price strong { color: var(--home-cyan); font-size: 15px; }
+.tone-violet .home-event-price strong { color: #c4a5fd; }
+.tone-pink .home-event-price strong { color: var(--home-pink); }
+
+.home-event-price > a {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 11px;
+  border-radius: 7px;
+  background: var(--home-cyan);
+  color: #07111b;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.home-benefits {
+  position: relative;
+  margin-top: 90px;
+  padding: 54px;
+  overflow: hidden;
+  border: 1px solid rgb(148 163 184 / 9%);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 98% 100%, rgb(124 58 237 / 24%), transparent 40%),
+    #111629;
+}
+
+.home-benefits-heading { position: relative; z-index: 1; max-width: 680px; }
+.home-benefits-heading > p,
+.home-organizer-copy > p { color: #b8c3d5; font-size: 13px; line-height: 1.8; }
+
+.home-benefit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 34px;
+}
+
+.home-benefit-card {
+  min-height: 232px;
+  padding: 23px;
+  border: 1px solid rgb(148 163 184 / 8%);
+  border-radius: 15px;
+  background: rgb(20 28 54 / 83%);
+}
+
+.home-benefit-card:nth-child(2) .home-icon { background: rgb(34 211 238 / 12%); color: var(--home-cyan); }
+.home-benefit-card:nth-child(3) .home-icon { background: rgb(244 114 182 / 12%); color: var(--home-pink); }
+
+.home-benefit-tag {
+  display: table;
+  margin-top: 17px;
+  padding: 5px 8px;
+  border-radius: 4px;
+  background: #0b1023;
+  color: var(--home-cyan);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+
+.home-benefit-card h3 { margin: 10px 0 7px; font-size: 17px; letter-spacing: -.02em; }
+.home-benefit-card p { margin: 0; color: var(--home-muted); font-size: 12px; line-height: 1.75; }
+
+.home-organizer {
+  position: relative;
+  display: flex;
+  width: min(100% - 64px, 1440px);
+  min-height: 320px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 44px;
+  margin: 78px auto 0;
+  padding: 48px 54px 48px 60px;
+  overflow: hidden;
+  border: 1px solid rgb(148 163 184 / 10%);
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at 2% 0%, rgb(34 211 238 / 14%), transparent 38%),
+    linear-gradient(115deg, #10162b, #1c2033 75%);
+}
+
+.home-organizer::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(var(--home-cyan), var(--home-purple), var(--home-pink));
+}
+
+.home-organizer-copy { max-width: 780px; position: relative; z-index: 1; }
+.home-organizer h2 { max-width: 760px; margin-top: 15px; font-size: clamp(27px, 3vw, 42px); }
+.home-organizer h2 span { color: var(--home-cyan); }
+
+.home-organizer ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  margin: 20px 0 0;
+  padding: 0;
+  color: #c5d0df;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 10px;
+  list-style: none;
+}
+
+.home-organizer li { display: inline-flex; align-items: center; gap: 7px; }
+.home-organizer li svg { color: var(--home-cyan); }
+
+.home-organizer-actions {
+  display: flex;
+  min-width: 225px;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.home-organizer-actions .home-button { width: 100%; }
+
+.home-page .loading,
+.home-page .empty,
+.home-page .notice {
+  margin: 16px 0;
+}
+
+@media (max-width: 1050px) {
+  .home-hero { min-height: 660px; }
+  .home-category-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .home-event-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-event-poster { height: 260px; }
+  .home-organizer { gap: 28px; }
+}
+
+@media (max-width: 760px) {
+  .site-main:has(.home-page) { padding-bottom: 40px; }
+  .home-hero { min-height: auto; padding: 54px 18px 55px; }
+  .home-kicker { max-width: 100%; font-size: 9px; letter-spacing: .08em; }
+  .home-hero h1 { margin-top: 24px; font-size: clamp(34px, 9.2vw, 58px); }
+  .home-hero-copy { max-width: 520px; font-size: 14px; }
+  .home-hero-actions { gap: 10px; }
+  .home-button { min-height: 46px; padding: 0 15px; font-size: 10px; }
+  .home-search-panel { grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 35px; padding: 11px; }
+  .home-keyword-field { grid-column: 1 / -1; }
+  .home-search-field { min-height: 46px; padding: 0 10px; }
+  .home-search-field input,
+  .home-search-field select { font-size: 11px; }
+  .home-search-submit { min-height: 46px; grid-column: 1 / -1; }
+  .home-trending { grid-column: 1 / -1; gap: 6px; }
+  .home-trending a { padding: 6px 8px; font-size: 9px; }
+  .home-section { width: calc(100% - 36px); }
+  .home-categories { padding-top: 34px; }
+  .home-section-heading { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 19px; }
+  .home-section-heading h2,
+  .home-benefits-heading h2 { font-size: 25px; }
+  .home-section-heading > p { font-size: 12px; }
+  .home-category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .home-category-card { min-height: 135px; }
+  .home-events { padding-top: 56px; }
+  .home-event-grid { gap: 11px; }
+  .home-event-poster { height: 190px; }
+  .home-event-date { top: 45px; right: 9px; }
+  .home-event-badge { left: 9px; }
+  .home-event-info { min-height: 205px; padding: 13px 12px 0; }
+  .home-event-title { min-height: 44px; font-size: 12px; }
+  .home-event-meta,
+  .home-event-venue { font-size: 9px; }
+  .home-event-price { margin-right: -12px; margin-left: -12px; padding: 12px; }
+  .home-event-price strong { font-size: 12px; }
+  .home-event-price > a { min-height: 32px; padding: 0 8px; font-size: 9px; }
+  .home-benefits { width: calc(100% - 36px); margin-top: 56px; padding: 27px 20px; border-radius: 18px; }
+  .home-benefit-grid { grid-template-columns: 1fr; gap: 11px; margin-top: 23px; }
+  .home-benefit-card { min-height: auto; padding: 18px; }
+  .home-benefit-card .home-icon { width: 46px; height: 46px; }
+  .home-organizer { width: calc(100% - 36px); align-items: stretch; flex-direction: column; gap: 25px; margin-top: 50px; padding: 29px 22px; border-radius: 18px; }
+  .home-organizer h2 { font-size: 26px; }
+  .home-organizer ul { flex-direction: column; gap: 10px; }
+  .home-organizer-actions { min-width: 0; }
+}
+
+@media (max-width: 430px) {
+  .home-hero { padding-right: 14px; padding-left: 14px; }
+  .home-kicker { gap: 6px; padding: 8px 10px; }
+  .home-hero h1 { font-size: 34px; }
+  .home-hero-actions { flex-direction: column; align-items: stretch; }
+  .home-hero-actions .home-button { width: 100%; }
+  .home-search-panel { grid-template-columns: 1fr; }
+  .home-keyword-field,
+  .home-trending,
+  .home-search-submit { grid-column: auto; }
+  .home-search-field { min-height: 44px; }
+  .home-event-grid { grid-template-columns: 1fr; }
+  .home-event-poster { height: 235px; }
+  .home-event-info { min-height: 194px; padding-right: 16px; padding-left: 16px; }
+  .home-event-price { margin-right: -16px; margin-left: -16px; padding-right: 16px; padding-left: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-page *,
+  .home-page *::before,
+  .home-page *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation: none !important; }
+}
