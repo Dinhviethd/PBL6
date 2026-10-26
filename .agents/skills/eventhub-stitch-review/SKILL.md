@@ -156,6 +156,26 @@ Trước khi gọi hoặc tích hợp một API backend vào màn hình, thực 
 5. Nếu API chưa tồn tại, sai hợp đồng dữ liệu hoặc không hoạt động, dừng tích hợp, ghi trạng thái `BLOCKED` và không tuyên bố đã hoàn thành.
 6. Không dùng mock hoặc dữ liệu hard-code thay thế API thật, trừ khi người dùng yêu cầu rõ ràng; khi đó phải ghi chú rõ đây là dữ liệu mô phỏng.
 
+### Kỹ thuật chuyển thiết kế Stitch thành React component
+
+Áp dụng tiểu mục này khi nhiệm vụ có yêu cầu triển khai hoặc cập nhật frontend theo Stitch. Với nhiệm vụ chỉ thiết kế hoặc rà soát trên Stitch, tiếp tục quy trình tương ứng ở các mục hiện có. Các yêu cầu về phạm vi, tuân thủ thiết kế và xác minh API ở trên vẫn là điều kiện bắt buộc.
+
+Tham khảo kỹ thuật: [stitch::react-components](https://github.com/google-labs-code/stitch-skills/blob/main/plugins/stitch-build/skills/react-components/SKILL.md). Hướng dẫn dưới đây đã được điều chỉnh cho cấu trúc và API hiện có của EventHub.
+
+1. **Lấy nguồn thiết kế:** dùng công cụ Stitch MCP thực sự có sẵn để lấy metadata, HTML và ảnh chụp của màn hình mục tiêu. Tải tài nguyên bằng công cụ khả dụng, xem trực tiếp ảnh ở kích thước đủ để đối chiếu bố cục rồi đọc HTML tương ứng. Ghi project ID, screen ID, kích thước và nguồn tham chiếu thực tế vào báo cáo của phiên. Chỉ lấy và xử lý các màn hình trong phạm vi được giao; nếu thiếu nguồn thiết kế cần thiết, ghi rõ trở ngại theo quy trình hiện có.
+
+2. **Ánh xạ style và chuyển HTML sang JSX:** trích xuất màu, font, khoảng cách, bo góc và bố cục từ HTML/CSS cùng ảnh tham chiếu; ánh xạ vào token, CSS hoặc Tailwind hiện có của dự án. Chuyển các thuộc tính như `class` thành `className`, `for` thành `htmlFor`, xử lý thẻ tự đóng và cú pháp style theo JSX. Sử dụng asset đúng nguồn và kiểm tra đường dẫn ảnh/font; cấu hình style trong hệ thống build hiện có thay vì chép script hoặc CDN của bản xuất Stitch vào ứng dụng. Giữ bố cục và diện mạo theo thiết kế đã được xác minh.
+
+3. **Tổ chức component:** kiểm tra các page, layout và component dùng chung hiện có trước khi tạo mới. Tách các phần có thể tái sử dụng như thẻ sự kiện, bộ lọc hoặc phân trang thành component `.tsx` tại vị trí phù hợp với cấu trúc dự án. Khai báo kiểu props rõ ràng, ưu tiên kiểu dữ liệu API hiện có và truyền dữ liệu vào component qua props; không buộc mọi trang phải có interface props rỗng.
+
+4. **Tổ chức hành vi và dữ liệu:** đưa xử lý có thể tái sử dụng vào hook hoặc lớp dữ liệu phù hợp, sử dụng Axios client và cơ chế xác thực hiện có. Dữ liệu nghiệp vụ động phải lấy từ API đã được xác minh theo tiểu mục phía trên; khi API thiếu, sai hợp đồng hoặc không hoạt động, dừng tích hợp và ghi `BLOCKED` theo quy định hiện có. Nhãn và nội dung giao diện tĩnh có thể nằm trong component hoặc cấu trúc nội dung sẵn có. Chỉ dùng dữ liệu mô phỏng khi người dùng yêu cầu rõ ràng và phải ghi chú theo quy định hiện tại.
+
+5. **Nối điều hướng và tương tác:** thay các liên kết giả như `href="#"` bằng `Link`/`NavLink` đến route React Router thực tế; dùng nút cho hành động và giữ đúng quyền truy cập của route. Nối form, bộ lọc và các nút với hành vi tương ứng. Xử lý loading, empty, error, success và disabled theo chức năng; giữ label, focus và khả năng thao tác bàn phím phù hợp.
+
+6. **Kiểm tra kết quả chuyển đổi:** đọc các script trong `client/package.json`, chạy build TypeScript/Vite bằng `npm run build` trong `client/` và những kiểm tra phù hợp đang có cho phần thay đổi. So sánh giao diện chạy thực tế với ảnh Stitch trên desktop và mobile, kiểm tra điều hướng, tương tác và trạng thái dữ liệu. Ghi kết quả, sai lệch và tiêu chí chưa xác minh vào báo cáo theo mục 8, rồi cập nhật Master Plan theo mục 9; chỉ kết luận đạt khi có bằng chứng tương ứng.
+
+Sử dụng cấu trúc thư mục và công cụ thực sự có trong EventHub. Việc tham khảo skill nguồn không yêu cầu thêm script Bash, validator AST, `mockData.ts`, thay hệ thống style hoặc tạo một quy trình báo cáo khác.
+
 ## 7. Danh sách tiêu chí rà soát
 
 Đánh giá màn hình theo các tiêu chí sau:

@@ -5,3 +5,4 @@ playwright-report/
 *.log
 opencode.json
 .vscode/mcp.json
+.qoder/

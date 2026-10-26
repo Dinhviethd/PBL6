@@ -481,6 +481,16 @@
   white-space: nowrap;
 }
 
+/* A1: the authenticated customer Home keeps every primary action reachable
+   on compact screens without changing the organizer/admin shell. */
+.auth-header-home-user .notification-bell {
+  min-width: 40px;
+  min-height: 40px;
+  border-color: rgba(93, 230, 255, 0.3);
+  border-radius: 8px;
+  color: var(--auth-secondary);
+}
+
 /* Card */
 .auth-main {
   position: relative;
@@ -1348,6 +1358,31 @@
     max-width: 240px;
     margin-left: auto;
   }
+  .auth-header-home-user .auth-header-inner {
+    height: auto;
+    min-height: 80px;
+    flex-wrap: wrap;
+    row-gap: 0;
+    padding-top: 12px;
+    padding-bottom: 10px;
+  }
+  .auth-header-home-user .auth-nav {
+    display: flex;
+    order: 3;
+    width: 100%;
+    gap: 20px;
+    padding-bottom: 4px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+  .auth-header-home-user .auth-search {
+    order: 2;
+    flex: 1 1 180px;
+    margin-left: 0;
+  }
+  .auth-header-home-user .auth-header-actions {
+    order: 2;
+  }
 }
 @media (max-width: 767px) {
   .auth-bg-word {
@@ -1390,6 +1425,33 @@
   .auth-footer-bottom > div {
     flex-wrap: wrap;
     gap: 8px 16px;
+  }
+  .auth-header-home-user .auth-header-inner {
+    min-height: 68px;
+    padding-top: 10px;
+    padding-bottom: 8px;
+  }
+  .auth-header-home-user .auth-nav {
+    gap: 18px;
+    padding-top: 4px;
+    padding-bottom: 2px;
+    font-size: 12px;
+  }
+  .auth-header-home-user .auth-search {
+    display: none;
+  }
+  .auth-header-home-user .auth-header-actions {
+    margin-left: auto;
+    gap: 10px;
+  }
+  .auth-header-home-user .auth-avatar > span,
+  .auth-header-home-user .auth-avatar-image {
+    width: 38px;
+    height: 38px;
+  }
+  .auth-header-home-user .notification-bell {
+    min-width: 38px;
+    min-height: 38px;
   }
 }
 @media (max-width: 640px) {

@@ -8,8 +8,10 @@ import {
 } from "lucide-react";
 import type { User } from "@/features/auth/stores/authStore";
 import authService from "@/features/auth/services/authService";
+import { NotificationLink } from "@/components/ticketing/notification-link";
 
 export type AuthMode = "login" | "register" | "reset";
+export type AuthHeaderVariant = "auth" | "home";
 
 export function AuthHeader({
   mode,
@@ -17,15 +19,25 @@ export function AuthHeader({
   search,
   onSearchChange,
   onSearch,
+  variant = "auth",
 }: {
   mode: AuthMode;
   user: User | null;
   search: string;
   onSearchChange: (value: string) => void;
   onSearch: (event: FormEvent<HTMLFormElement>) => void;
+  variant?: AuthHeaderVariant;
 }) {
   const [avatarMenuOpen, setAvatarMenuOpen] = useState(false);
   const avatarMenuRef = useRef<HTMLDivElement>(null);
+  const isAuthenticatedHome = variant === "home" && Boolean(user);
+  const avatarInitials = user?.name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(-2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase() || "EH";
 
   useEffect(() => {
     function closeMenu(event: MouseEvent) {
@@ -50,7 +62,9 @@ export function AuthHeader({
   }
 
   return (
-    <header className="auth-header auth-shared">
+    <header
+      className={`auth-header auth-shared${isAuthenticatedHome ? " auth-header-home-user" : ""}`}
+    >
       <div className="auth-header-inner">
         <Link className="auth-logo" to="/" aria-label={mode === "reset" ? "ENVENT HUB — Trang chủ" : "EVENTHUB — Trang chủ"}>
           <span className="auth-logo-mark">
@@ -69,12 +83,20 @@ export function AuthHeader({
           {/* <a href="/#discover">
             Danh mục <ChevronDown size={12} />
           </a> */}
-          <Link
-            to={user ? "/tickets" : "/auth/login"}
-            state={user ? undefined : { from: "/tickets" }}
-          >
-            Khám phá sự kiện
-          </Link>
+          {isAuthenticatedHome ? (
+            <>
+              <Link to="/#discover">Khám phá sự kiện</Link>
+              <Link to="/tickets">Vé của tôi</Link>
+              <Link to="/checkin">Nhân viên check-in</Link>
+            </>
+          ) : (
+            <Link
+              to={user ? "/tickets" : "/auth/login"}
+              state={user ? undefined : { from: "/tickets" }}
+            >
+              Khám phá sự kiện
+            </Link>
+          )}
           {mode === "reset" && (
             <Link
               to={user ? "/orders" : "/auth/login"}
@@ -119,45 +141,48 @@ export function AuthHeader({
               </Link>
             </>
           ) : user ? (
-            <div className="auth-avatar-menu" ref={avatarMenuRef}>
-              <button
-                type="button"
-                className="auth-avatar"
-                title="Tài khoản"
-                aria-expanded={avatarMenuOpen}
-                aria-haspopup="menu"
-                onClick={() => setAvatarMenuOpen((open) => !open)}
-              >
-                {user.avatarUrl ? (
-                  <img
-                    className="auth-avatar-image"
-                    src={user.avatarUrl}
-                    alt=""
-                  />
-                ) : (
-                  <span>{user.name.slice(0, 1).toUpperCase()}</span>
+            <>
+              {isAuthenticatedHome && <NotificationLink key={user.idUser} />}
+              <div className="auth-avatar-menu" ref={avatarMenuRef}>
+                <button
+                  type="button"
+                  className="auth-avatar"
+                  title="Tài khoản"
+                  aria-expanded={avatarMenuOpen}
+                  aria-haspopup="menu"
+                  onClick={() => setAvatarMenuOpen((open) => !open)}
+                >
+                  {user.avatarUrl ? (
+                    <img
+                      className="auth-avatar-image"
+                      src={user.avatarUrl}
+                      alt=""
+                    />
+                  ) : (
+                    <span>{avatarInitials}</span>
+                  )}
+                  <ChevronDown size={18} aria-hidden="true" />
+                </button>
+                {avatarMenuOpen && (
+                  <div className="auth-avatar-dropdown" role="menu">
+                    <Link
+                      to="/profile"
+                      role="menuitem"
+                      onClick={() => setAvatarMenuOpen(false)}
+                    >
+                      Hồ sơ cá nhân
+                    </Link>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => void handleLogout()}
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
                 )}
-                <ChevronDown size={18} aria-hidden="true" />
-              </button>
-              {avatarMenuOpen && (
-                <div className="auth-avatar-dropdown" role="menu">
-                  <Link
-                    to="/profile"
-                    role="menuitem"
-                    onClick={() => setAvatarMenuOpen(false)}
-                  >
-                    Hồ sơ cá nhân
-                  </Link>
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => void handleLogout()}
-                  >
-                    Đăng xuất
-                  </button>
-                </div>
-              )}
-            </div>
+              </div>
+            </>
           ) : (
             <>
               <Link

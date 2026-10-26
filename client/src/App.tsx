@@ -77,12 +77,19 @@ export function App() {
   const isAuthPage = location.pathname.startsWith("/auth/");
   const isProfilePage = location.pathname === "/profile";
   const isPublicHome = location.pathname === "/" && isAuthVerified && !user;
+  const isUserHome =
+    location.pathname === "/" &&
+    isAuthVerified &&
+    Boolean(user) &&
+    !user?.roles.some((role) => ["ORGANIZER", "ADMIN"].includes(role));
+  const usesSharedHomeShell = isPublicHome || isUserHome;
   return (
     <div className={`eventhub${isProfilePage ? " profile-route" : ""}`}>
-      {isPublicHome ? (
+      {usesSharedHomeShell ? (
         <AuthHeader
           mode="login"
-          user={null}
+          user={user}
+          variant="home"
           search={homeSearch}
           onSearchChange={setHomeSearch}
           onSearch={(event) => {
@@ -275,7 +282,7 @@ export function App() {
           />
         </Routes>
       </main>
-      {isPublicHome ? (
+      {usesSharedHomeShell ? (
         <>
           <AuthFooter onNotice={setHomeNotice} />
           {homeNotice && (
