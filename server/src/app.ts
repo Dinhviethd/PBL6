@@ -113,6 +113,7 @@ export function createApplication(config: {
   paymentProvider?: PaymentProvider;
   clientUrl?: string;
 }) {
+  const clientOrigin = config.clientUrl ?? "http://localhost:5173";
   ensure(
     config.secret.length >= 32 && config.qrSecret.length >= 32,
     "CONFIG",
@@ -166,7 +167,7 @@ export function createApplication(config: {
   );
   app.use(
     cors({
-      origin: config.clientUrl ?? "http://localhost:5173",
+      origin: clientOrigin,
       credentials: true,
     }),
     express.json({ limit: "1mb" }),
@@ -353,16 +354,27 @@ export function createApplication(config: {
   api.post(
     "/auth/refresh-token",
     route(async (req, res) => {
+      if (req.headers.origin && req.headers.origin !== clientOrigin)
+        console.warn("Rejected refresh-token Origin", {
+          receivedOrigin: req.headers.origin,
+          expectedOrigin: clientOrigin,
+        });
       ensure(
         !req.headers.origin ||
-          req.headers.origin === (config.clientUrl ?? "http://localhost:5173"),
+          req.headers.origin === clientOrigin,
         "ORIGIN",
-        "Origin không hợp lệ.",
+        "Origin không được phép làm mới phiên đăng nhập.",
         403,
       );
+      const refreshToken = req.cookies.refreshToken;
+      if (typeof refreshToken !== "string" || !refreshToken.trim())
+        throw Object.assign(new Error("Phiên đăng nhập đã hết hạn."), {
+          status: 401,
+          code: "UNAUTHORIZED",
+        });
       return loginResult(
         res,
-        await auth.refresh(text.parse(req.cookies.refreshToken)),
+        await auth.refresh(text.parse(refreshToken)),
       );
     }),
   );
@@ -531,6 +543,12 @@ export function createApplication(config: {
             contactEmail: email,
             contactPhone: text.max(30),
             description: text.max(4000),
+            businessName: text.max(200),
+            taxIdOrBusinessLicense: text.max(100),
+            websiteOrSocial: text.max(500),
+            headOfficeAddress: text.max(500),
+            mainEventCategory: text.max(200),
+            expectedEventScale: text.max(100),
           })
           .parse(req.body),
       ),
@@ -704,10 +722,37 @@ export function createApplication(config: {
       ),
     ),
   );
+  // Only expose event display fields after the ticket's ownership is checked.
+  const ticketEvent = async (eventId: string) => {
+    const event = await events.one(eventId);
+    if (!event) return null;
+    return {
+      id: event.id,
+      slug: event.slug,
+      title: event.title,
+      venue_name: event.venue_name,
+      address: event.address,
+      starts_at: event.starts_at,
+      ends_at: event.ends_at,
+    };
+  };
   api.get(
     "/me/tickets",
     protect,
-    route((req, res) => orders.tickets(who(res).userId, null, page(req) * 50)),
+    route(async (req, res) => {
+      const tickets = await orders.tickets(who(res).userId, null, page(req) * 50);
+      const metadata = new Map(
+        await Promise.all(
+          [...new Set(tickets.map((t) => String(t.event_id)))].map(
+            async (eventId) => [eventId, await ticketEvent(eventId)] as const,
+          ),
+        ),
+      );
+      return tickets.map((ticket) => ({
+        ...ticket,
+        event: metadata.get(ticket.event_id) ?? null,
+      }));
+    }),
   );
   api.get(
     "/me/tickets/:id",
@@ -717,6 +762,7 @@ export function createApplication(config: {
       const { token, ...safe } = t;
       return {
         ...safe,
+        event: await ticketEvent(t.eventId),
         qrImage: await QRCode.toDataURL(token, { width: 320, margin: 2 }),
       };
     }),

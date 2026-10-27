@@ -1,29 +1,55 @@
+import { useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
-import { BookingSteps } from "@/components/ticketing/event-visuals";
-import { Loading, Notice, PageHead, Status } from "@/components/ticketing/shared";
+import { ArrowLeft, RefreshCw } from "lucide-react";
+import { Loading } from "@/components/ticketing/shared";
 import { useLoad } from "@/features/ticketing/data";
 import type { TicketDetail } from "@/features/ticketing/types";
+import { TicketCard, TicketGuide } from "./TicketCard";
+import "./my-tickets.css";
 
 export function TicketPage() {
   const { id } = useParams(),
     r = useLoad<TicketDetail>(`/me/tickets/${id}`);
-  if (r.loading) return <Loading />;
-  if (!r.data) return <Notice error={r.error} />;
-  const t = r.data;
+  useEffect(() => {
+    document.title = "Vé điện tử | EventHub";
+  }, []);
   return (
-    <>
-      <BookingSteps step={3} />
-      <PageHead eyebrow="VÉ ĐIỆN TỬ" title={t.eventTitle} />
-      <div className="panel qr-card">
-        <Status value={t.status} />
-        <h2>{t.typeName}</h2>
-        <div className="qr-image">
-          <img src={t.qrImage} width={320} height={320} alt="Mã QR của vé" />
+    <div className="my-tickets-page">
+      <div className="mt-container">
+        <Link className="mt-back" to="/tickets">
+          <ArrowLeft size={16} />
+          Vé của tôi
+        </Link>
+        <div className="mt-heading mt-no-print">
+          <div>
+            <span className="mt-eyebrow">Vé điện tử EventHub</span>
+            <h1>Chi tiết vé</h1>
+          </div>
+          <button className="mt-button" onClick={r.reload} disabled={r.loading}>
+            <RefreshCw size={16} />
+            Tải lại vé
+          </button>
         </div>
-        <strong className="mono">{t.code}</strong>
-        <p>Xuất trình mã này tại cửa vào. Mỗi vé chỉ check-in một lần.</p>
-        <Link to="/tickets">← Ví vé của bạn</Link>
+        {r.loading ? (
+          <Loading />
+        ) : r.error || !r.data ? (
+          <div className="mt-state" role="alert">
+            <h2>Không tải được vé</h2>
+            <p>
+              {r.error || "Vé không tồn tại hoặc bạn không có quyền truy cập."}
+            </p>
+            <button className="mt-button" onClick={r.reload}>
+              Thử lại
+            </button>
+          </div>
+        ) : (
+          <TicketCard
+            key={`${r.data.id}:${r.data.status}:${r.data.qrImage}`}
+            ticket={r.data}
+          />
+        )}
+        <TicketGuide />
       </div>
-    </>
+    </div>
   );
 }

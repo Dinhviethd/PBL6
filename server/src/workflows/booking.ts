@@ -158,9 +158,24 @@ export function createBooking(
     async detail(p: Principal, id: string) {
       const o = await orders.one(id);
       ensure(o, "NOT_FOUND", "Không tìm thấy đơn.", 404);
-      if (o.buyer_id !== p.userId) await events.guard(o.event_id, p);
+      const event =
+        o.buyer_id === p.userId
+          ? await events.one(o.event_id)
+          : await events.guard(o.event_id, p);
+      ensure(event, "NOT_FOUND", "Không tìm thấy sự kiện.", 404);
       return {
         ...o,
+        event: {
+          id: event.id,
+          slug: event.slug,
+          title: event.title,
+          cover_image_url: event.cover_image_url,
+          venue_name: event.venue_name,
+          address: event.address,
+          city_code: event.city_code,
+          starts_at: event.starts_at,
+          ends_at: event.ends_at,
+        },
         items: await orders.items(id),
         payment: await payments.active(id),
         latest_payment: await payments.latest(id),

@@ -38,20 +38,37 @@ export interface Event {
   organizer?: { name: string };
   reviews?: { decision: string; reason: string; created_at: string }[];
 }
+export interface OrderEvent {
+  id: string;
+  slug: string;
+  title: string;
+  cover_image_url?: string | null;
+  venue_name: string;
+  address: string;
+  city_code: string;
+  starts_at: string;
+  ends_at: string;
+}
 export interface Order {
   id: string;
   order_code: string;
   event_id: string;
+  event?: OrderEvent;
   event_title_snapshot: string;
   buyer_name_snapshot: string;
+  buyer_email_snapshot?: string;
   status: string;
+  currency?: string;
   total_amount: string;
   total_quantity: number;
   expires_at: string;
   created_at: string;
+  paid_at?: string | null;
+  close_reason?: string | null;
   items?: {
     ticket_type_name_snapshot: string;
     quantity: number;
+    unit_price?: string;
     line_total: string;
   }[];
   payment?: Payment;
@@ -70,6 +87,15 @@ export interface Payment {
   requires_review: boolean;
   review_reason?: string;
 }
+export interface TicketEvent {
+  id: string;
+  slug: string;
+  title: string;
+  venue_name: string;
+  address: string;
+  starts_at: string;
+  ends_at: string;
+}
 export interface Ticket {
   id: string;
   event_id: string;
@@ -80,6 +106,7 @@ export interface Ticket {
   buyer_name_snapshot?: string;
   buyer_email_snapshot?: string;
   checked_in_at?: string;
+  event?: TicketEvent | null;
 }
 export interface TicketDetail {
   id: string;
@@ -89,6 +116,11 @@ export interface TicketDetail {
   eventTitle: string;
   typeName: string;
   qrImage: string;
+  buyerName?: string;
+  buyerEmail?: string;
+  checkedInAt?: string | null;
+  voidReason?: string | null;
+  event?: TicketEvent | null;
 }
 export interface Application {
   id: string;

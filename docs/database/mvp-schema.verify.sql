@@ -107,10 +107,10 @@ BEGIN
     -- 16: a replay cannot create a second inbox entry.
     PERFORM pg_temp.expect_sqlstate('INSERT INTO payment_notifications (id,provider,merchant_account,dedupe_key,payload_hash,sanitized_payload) VALUES (gen_random_uuid(),''test'',''merchant'',''NOTICE-A'',''hash'',''{}'')','23505'); checks := checks+1;
 
-    INSERT INTO organizer_applications (id,user_id,organization_name,contact_name,contact_email,contact_phone,description)
-    VALUES (gen_random_uuid(),buyer,'Org','Buyer','buyer@example.test','000','Demo');
+    INSERT INTO organizer_applications (id,user_id,organization_name,contact_name,contact_email,contact_phone,description,business_name,tax_id_or_business_license,website_or_social,head_office_address,main_event_category,expected_event_scale)
+    VALUES (gen_random_uuid(),buyer,'Org','Buyer','buyer@example.test','000','Demo','Org LLC','TAX-001','https://example.test','123 Demo Street','Âm nhạc','100-500');
     -- 17: concurrent organizer applications are bounded by a unique constraint.
-    PERFORM pg_temp.expect_sqlstate(format('INSERT INTO organizer_applications (id,user_id,organization_name,contact_name,contact_email,contact_phone,description) VALUES (gen_random_uuid(),%L,''Org'',''Buyer'',''buyer@example.test'',''000'',''Demo'')',buyer),'23505'); checks := checks+1;
+    PERFORM pg_temp.expect_sqlstate(format('INSERT INTO organizer_applications (id,user_id,organization_name,contact_name,contact_email,contact_phone,description,business_name,tax_id_or_business_license,website_or_social,head_office_address,main_event_category,expected_event_scale) VALUES (gen_random_uuid(),%L,''Org'',''Buyer'',''buyer@example.test'',''000'',''Demo'',''Org LLC'',''TAX-001'',''https://example.test'',''123 Demo Street'',''Âm nhạc'',''100-500'')',buyer),'23505'); checks := checks+1;
     -- 18: deleting an event with commerce records is rejected.
     PERFORM pg_temp.expect_sqlstate(format('DELETE FROM events WHERE id=%L',event_a),'23503'); checks := checks+1;
 

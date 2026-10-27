@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import {
   ChevronDown,
   Search,
-  Ticket,
   UserRound,
 } from "lucide-react";
 import type { User } from "@/features/auth/stores/authStore";
@@ -68,7 +67,7 @@ export function AuthHeader({
       <div className="auth-header-inner">
         <Link className="auth-logo" to="/" aria-label={mode === "reset" ? "ENVENT HUB — Trang chủ" : "EVENTHUB — Trang chủ"}>
           <span className="auth-logo-mark">
-            <Ticket size={18} />
+            <img src="/logo.png" alt="EventHub logo" />
           </span>
           <span>
             {mode === "reset" ? "ENVENT" : "EVENT"}<span>HUB</span>
@@ -85,14 +84,14 @@ export function AuthHeader({
           </a> */}
           {isAuthenticatedHome ? (
             <>
-              <Link to="/#discover">Khám phá sự kiện</Link>
+              <Link to="/explore">Khám phá sự kiện</Link>
               <Link to="/tickets">Vé của tôi</Link>
               <Link to="/checkin">Nhân viên check-in</Link>
             </>
           ) : (
             <Link
-              to={user ? "/tickets" : "/auth/login"}
-              state={user ? undefined : { from: "/tickets" }}
+              to={variant === "home" ? "/explore" : user ? "/tickets" : "/auth/login"}
+              state={variant === "home" || user ? undefined : { from: "/tickets" }}
             >
               Khám phá sự kiện
             </Link>
@@ -186,9 +185,9 @@ export function AuthHeader({
           ) : (
             <>
               <Link
-                className={`auth-header-link${mode === "login" ? " is-active" : ""}`}
+                className={`auth-header-link${variant === "auth" && mode === "login" ? " is-active" : ""}`}
                 to="/auth/login"
-                aria-current={mode === "login" ? "page" : undefined}
+                aria-current={variant === "auth" && mode === "login" ? "page" : undefined}
               >
                 Đăng nhập
               </Link>

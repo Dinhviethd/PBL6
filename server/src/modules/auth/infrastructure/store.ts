@@ -102,7 +102,7 @@ export function authStore(db: Store) {
       ),
     apply: (id: string, d: Row) =>
       db.query(
-        "INSERT INTO organizer_applications(id,user_id,organization_name,contact_name,contact_email,contact_phone,description) VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING *",
+        "INSERT INTO organizer_applications(id,user_id,organization_name,contact_name,contact_email,contact_phone,description,business_name,tax_id_or_business_license,website_or_social,head_office_address,main_event_category,expected_event_scale) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *",
         [
           randomUUID(),
           id,
@@ -111,6 +111,12 @@ export function authStore(db: Store) {
           d.contactEmail,
           d.contactPhone,
           d.description,
+          d.businessName,
+          d.taxIdOrBusinessLicense,
+          d.websiteOrSocial,
+          d.headOfficeAddress,
+          d.mainEventCategory,
+          d.expectedEventScale,
         ],
       ),
     review: (id: string, reviewer: string, approve: boolean, reason: string) =>

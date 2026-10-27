@@ -86,7 +86,7 @@ Thiết kế chi tiết đã được tách tại [MVP database design](database
 | --- | --- |
 | users, roles, permissions, bảng liên kết | Tái sử dụng; thêm active/inactive, locked_at, lý do khóa; role không do client tự gán |
 | auth_sessions | Hash refresh token, user, expiry, revoked_at; rotation và thu hồi session |
-| organizer_applications | Người gửi, thông tin tổ chức/liên hệ, trạng thái, reviewer, lý do, thời gian; tối đa một yêu cầu pending/user |
+| organizer_applications | Người gửi, thông tin tổ chức/liên hệ, hồ sơ pháp lý và quy mô sự kiện, trạng thái, reviewer, lý do, thời gian; tối đa một yêu cầu pending/user |
 | categories | Tên, slug unique, trạng thái archive |
 | events | Owner, category, slug, tên/mô tả/ảnh, địa điểm, thời gian, trạng thái duyệt, lý do từ chối, sales_paused |
 | ticket_types | Event, giá, capacity, reserved_quantity, sold_quantity, thời gian bán; số lượng không âm và reserved + sold ≤ capacity |

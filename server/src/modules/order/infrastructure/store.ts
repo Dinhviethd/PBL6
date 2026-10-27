@@ -164,7 +164,7 @@ export function orderStore(db: Store) {
     ticket: async (id: string) =>
       (
         await db.query(
-          "SELECT t.*,o.buyer_id,o.status AS order_status,o.event_title_snapshot,i.ticket_type_name_snapshot FROM tickets t JOIN order_items i ON i.id=t.order_item_id JOIN orders o ON o.id=i.order_id WHERE t.id=$1",
+          "SELECT t.*,o.buyer_id,o.buyer_name_snapshot,o.buyer_email_snapshot,o.status AS order_status,o.event_title_snapshot,i.ticket_type_name_snapshot FROM tickets t JOIN order_items i ON i.id=t.order_item_id JOIN orders o ON o.id=i.order_id WHERE t.id=$1",
           [id],
         )
       )[0],

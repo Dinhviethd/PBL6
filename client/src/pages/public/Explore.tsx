@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   ArrowRight,
   BriefcaseBusiness,
@@ -91,7 +91,8 @@ function EventTile({ event, index }: { event: Event; index: number }) {
 }
 
 export function Explore() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [filter, setFilter] = useState(searchParams.toString());
   const events = useLoad<{ items: Event[]; total: number }>(
     `/events?page=0&${filter}`,
@@ -114,14 +115,13 @@ export function Explore() {
       else if (key === "to") params.set(key, new Date(`${value}T23:59:59`).toISOString());
       else params.set(key, value);
     }
-    setFilter(params.toString());
-    setSearchParams(params);
+    navigate(`/explore?${params.toString()}`);
   }
 
   function categoryHref(categoryId: string) {
     const params = new URLSearchParams(filter);
     params.set("category", categoryId);
-    return `/?${params.toString()}#discover`;
+    return `/explore?${params.toString()}`;
   }
 
   const eventItems = events.data?.items ?? [];
@@ -145,10 +145,10 @@ export function Explore() {
             cho cuộc hẹn tiếp theo cùng EventHub.
           </p>
           <div className="home-hero-actions">
-            <a className="home-button home-button-primary" href="#discover">
+            <Link className="home-button home-button-primary" to="/explore">
               Khám phá sự kiện <ArrowRight size={17} />
-            </a>
-            <Link className="home-button home-button-secondary" to="/profile">
+            </Link>
+            <Link className="home-button home-button-secondary" to="/register-organizer">
               <Sparkles size={16} /> Dành cho Ban tổ chức
             </Link>
           </div>
@@ -315,10 +315,10 @@ export function Explore() {
           </ul>
         </div>
         <div className="home-organizer-actions">
-          <Link className="home-button home-button-primary" to="/profile">
+          <Link className="home-button home-button-primary" to="/register-organizer">
             Bắt đầu tổ chức <ArrowRight size={16} />
           </Link>
-          <Link className="home-button home-button-secondary" to="/profile">
+          <Link className="home-button home-button-secondary" to="/register-organizer">
             Tìm hiểu thêm
           </Link>
         </div>

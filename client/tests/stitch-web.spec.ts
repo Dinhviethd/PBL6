@@ -72,13 +72,27 @@ async function fixture(page: Page, role = "USER") {
         order_code: "EH-TEST",
         event_title_snapshot: event.title,
         buyer_name_snapshot: "Nguyễn Minh Anh",
+        buyer_email_snapshot: "minhanh@example.test",
         status: "PENDING_PAYMENT",
         total_amount: "900000",
+        total_quantity: 2,
         expires_at: new Date(Date.now() + 900000).toISOString(),
+        event: {
+          id: event.id,
+          slug: event.slug,
+          title: event.title,
+          cover_image_url: undefined,
+          venue_name: event.venue_name,
+          address: event.address,
+          city_code: event.city_code,
+          starts_at: event.starts_at,
+          ends_at: event.ends_at,
+        },
         items: [
           {
             ticket_type_name_snapshot: "Vé tiêu chuẩn",
             quantity: 2,
+            unit_price: "450000",
             line_total: "900000",
           },
         ],
@@ -181,7 +195,7 @@ test("ticket selection keeps order payload and checkout state", async ({
   expect(request.headers()["idempotency-key"]).toBeTruthy();
   await expect(page).toHaveURL(/checkout\/order$/);
   await expect(
-    page.getByRole("button", { name: "Tiếp tục thanh toán" }),
+    page.getByRole("button", { name: "Xác nhận và tiến hành thanh toán" }),
   ).toBeVisible();
   await expect(page.locator('[aria-current="step"]')).toContainText(
     "Thanh toán",
@@ -198,7 +212,7 @@ for (const width of [1440, 390]) {
     page.on("pageerror", (error) => failures.push(error.message));
     for (const [path, selector, name] of [
       ["/events/dem-nhac", ".booking-panel", "detail"],
-      ["/checkout/order", ".total", "checkout"],
+      ["/checkout/order", ".ck-ticket-total", "checkout"],
       ["/tickets/ticket", ".qr-image img", "ticket"],
       ["/admin/stats", ".stats-grid", "admin"],
     ]) {

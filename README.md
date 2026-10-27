@@ -83,7 +83,8 @@ Compose chạy API + web tại `http://localhost:8000` và worker; không tạo 
 - Đặt chứng chỉ tại `server/.local/certs/supabase-ca.crt`. File được mount chỉ đọc, không đóng vào image.
 - Preload `server/scripts/container-database.cjs` đổi `sslrootcert` trong URL sang `/app/certs/supabase-ca.crt`, bật `verify-full` cho API, worker và migration. `.env` trên máy không bị sửa.
 - Compose dùng `NODE_ENV=development` để chạy local qua HTTP và dùng thanh toán sandbox. Cấu hình này không dành cho public production.
-- Dừng API/worker chạy bằng `npm run dev` trước khi chạy Compose để tránh trùng cổng 8000 và worker. Compose đặt `CLIENT_URL=http://localhost:8000` cho web tích hợp; nếu dùng Vite riêng, đặt `$env:DOCKER_CLIENT_URL='http://localhost:5173'` trước khi khởi động Compose.
+- Dừng API/worker chạy bằng `npm run dev` trước khi chạy Compose để tránh trùng cổng 8000 và worker. Khi chạy Vite riêng, dùng URL chuẩn `http://localhost:5173`; `server/.env` phải đặt `CLIENT_URL=http://localhost:5173` và frontend cần được mở bằng đúng host này (không dùng `127.0.0.1`). Lệnh `npm run dev --prefix server` chạy TypeScript và nạp `server/.env`; sau đổi cấu hình, khởi động lại tiến trình. Lệnh root `npm run dev` chạy bản build ở `server/dist`, nên hãy chạy `npm run build --prefix server` trước khi khởi động lại bằng lệnh này.
+- Compose mặc định phục vụ web và API cùng origin `http://localhost:8000`, nên giữ `CLIENT_URL=http://localhost:8000`. Nếu chạy Vite riêng cùng Compose, đặt `$env:DOCKER_CLIENT_URL='http://localhost:5173'` trước khi khởi động Compose, mở frontend bằng `http://localhost:5173`, rồi khởi động lại API để áp dụng cấu hình. Không chạy đồng thời API local và Compose trên cùng cổng.
 
 ```powershell
 docker compose build

@@ -12,6 +12,7 @@ import { Ticket, ArrowUpRight } from "lucide-react";
 import authService from "./features/auth/services/authService";
 import { useAuth } from "./features/auth/stores/authStore";
 import { Explore } from "./pages/public/Explore";
+import { EventDiscovery } from "./pages/public/EventDiscovery";
 import { EventDetail } from "./pages/public/EventDetail";
 import { AuthPage } from "./pages/auth/AuthPage";
 import { AuthFooter, AuthHeader, AuthToast } from "./pages/auth/AuthShell";
@@ -22,6 +23,7 @@ import { TicketPage } from "./pages/account/TicketPage";
 import { Profile } from "./pages/account/Profile";
 import { Notifications } from "./pages/account/Notifications";
 import { Organizer } from "./pages/organizer/Organizer";
+import { RegisterOrganizer } from "./pages/organizer/RegisterOrganizer";
 import { EditorPage } from "./pages/organizer/EditorPage";
 import { Operations } from "./pages/organizer/Operations";
 import { Admin } from "./pages/admin/Admin";
@@ -59,6 +61,9 @@ export function App() {
   const [homeSearch, setHomeSearch] = useState("");
   const [homeNotice, setHomeNotice] = useState("");
   useEffect(() => {
+    setHomeSearch(new URLSearchParams(location.search).get("q") ?? "");
+  }, [location.search]);
+  useEffect(() => {
     const started = useAuth.getState().revision;
     authService
       .getCurrentUser()
@@ -76,15 +81,30 @@ export function App() {
   }, [location.pathname]);
   const isAuthPage = location.pathname.startsWith("/auth/");
   const isProfilePage = location.pathname === "/profile";
+  const isEventDetailPage = /^\/events\/[^/]+\/?$/.test(location.pathname);
+  const isCheckoutPage = location.pathname.startsWith("/checkout/");
+  const isRegisterOrganizerPage =
+    location.pathname === "/register-organizer";
   const isPublicHome = location.pathname === "/" && isAuthVerified && !user;
   const isUserHome =
     location.pathname === "/" &&
     isAuthVerified &&
     Boolean(user) &&
     !user?.roles.some((role) => ["ORGANIZER", "ADMIN"].includes(role));
-  const usesSharedHomeShell = isPublicHome || isUserHome;
+  const usesSharedHomeShell =
+    isPublicHome ||
+    isUserHome ||
+    location.pathname === "/explore" ||
+    isEventDetailPage ||
+    isCheckoutPage ||
+    /^\/tickets(?:\/[^/]+)?\/?$/.test(location.pathname) ||
+    isRegisterOrganizerPage;
   return (
-    <div className={`eventhub${isProfilePage ? " profile-route" : ""}`}>
+    <div
+      className={`eventhub${isProfilePage ? " profile-route" : ""}${
+        isRegisterOrganizerPage ? " register-organizer-route" : ""
+      }`}
+    >
       {usesSharedHomeShell ? (
         <AuthHeader
           mode="login"
@@ -95,7 +115,7 @@ export function App() {
           onSearch={(event) => {
             event.preventDefault();
             const query = homeSearch.trim();
-            navigate(query ? `/?q=${encodeURIComponent(query)}` : "/");
+            navigate(query ? `/explore?q=${encodeURIComponent(query)}` : "/explore");
           }}
         />
       ) : !isAuthPage && !isProfilePage && <header className="site-header">
@@ -185,7 +205,9 @@ export function App() {
             }
           />
           <Route path="/" element={<Explore />} />
+          <Route path="/explore" element={<EventDiscovery />} />
           <Route path="/events/:slug" element={<EventDetail />} />
+          <Route path="/register-organizer" element={<RegisterOrganizer />} />
           <Route path="/auth/login" element={<AuthPage />} />
           <Route path="/auth/register" element={<AuthPage register />} />
           <Route path="/auth/reset-password" element={<AuthPage reset />} />

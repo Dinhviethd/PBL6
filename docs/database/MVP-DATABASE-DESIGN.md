@@ -82,7 +82,7 @@ Reset OTP: khóa user trước khi vô hiệu hóa challenge cũ và tạo chall
 
 | Bảng | Cột chính | Ràng buộc/quy tắc |
 | --- | --- | --- |
-| `organizer_applications` | user_id, organization_name, contact_name/email/phone, description, status, reviewed_by/at, rejection_reason | Tối đa một PENDING và một APPROVED/user; REJECTED có lý do |
+| `organizer_applications` | user_id, organization_name, contact_name/email/phone, description, business_name, tax_id_or_business_license, website_or_social, head_office_address, main_event_category, expected_event_scale, status, reviewed_by/at, rejection_reason | Tối đa một PENDING và một APPROVED/user; REJECTED có lý do |
 | `categories` | name, slug, description, archived_at | Slug unique; danh mục dùng rồi chỉ archive |
 | `events` | organizer_id, category_id, slug/title/description, ảnh + Cloudinary public ID, venue/address/city_code, thời gian, status, review_version, sales_paused/checkin_paused | Bắt đầu < kết thúc; khung check-in hợp lệ; owner cố định trong MVP |
 | `event_reviews` | event_id, review_version, reviewer_id, decision, reason, reviewed_snapshot | Unique event + phiên duyệt; quyết định append-only, không ghi đè lịch sử |

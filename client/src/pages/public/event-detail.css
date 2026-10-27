@@ -1,0 +1,133 @@
+.site-main:has(.event-detail-page) { max-width: none; width: 100%; margin: 0; padding: 0; }
+.event-detail-page {
+  --ed-bg: #0f1222; --ed-panel: #181b2a; --ed-card: #1c1f2f; --ed-cyan: #5de6ff;
+  --ed-text: #e0e1f7; --ed-muted: #ccc3d8;
+  color: var(--ed-text); background: radial-gradient(ellipse at 85% 65%, #7c3aed12, transparent 50%), var(--ed-bg);
+  font: 14px/1.65 "Be Vietnam Pro", sans-serif; padding-bottom: 80px;
+}
+.event-detail-page :where(h1,h2,h3,p) { margin: 0; }
+.event-detail-page svg { flex-shrink: 0; }
+.event-detail-page :where(button,a):focus-visible { outline: 2px solid var(--ed-cyan); outline-offset: 4px; }
+.event-detail-container { max-width: 1280px; margin: auto; padding: 0 48px; }
+.event-detail-hero { position: relative; min-height: 540px; display: flex; align-items: end; isolation: isolate; }
+.event-detail-hero-art { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+.event-detail-hero-art .event-cover, .event-detail-hero-art .cover-fallback { width: 100%; height: 100%; object-fit: cover; }
+.event-detail-hero::after { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(0deg, #0a0d1c 0%, #0a0d1caa 55%, #0a0d1c40), linear-gradient(90deg, #0a0d1c70, transparent); }
+.event-detail-hero-content { width: 100%; padding-top: 80px; padding-bottom: 48px; }
+.event-detail-back { display: inline-flex; gap: 8px; align-items: center; color: var(--ed-muted); font-size: 12px; margin-bottom: 52px; }
+.event-detail-back:hover { color: var(--ed-cyan); }
+.event-detail-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+.event-detail-tags > * { display: inline-flex; align-items: center; gap: 8px; padding: 5px 12px; border-radius: 999px; background: #262939c9; font: 500 12px/1.5 "Space Grotesk", sans-serif; }
+.event-detail-tags a { background: #00cbe625; color: var(--ed-cyan); }
+.event-detail-page h1 { font: 800 clamp(30px, 4vw, 50px)/1.25 "Be Vietnam Pro", sans-serif; text-transform: uppercase; max-width: 900px; letter-spacing: -1px; color: var(--ed-text); text-wrap: balance; }
+.event-detail-hero-bottom { display: flex; gap: 24px; align-items: end; justify-content: space-between; margin-top: 28px; }
+.event-detail-meta { display: flex; flex-wrap: wrap; gap: 18px 24px; font: 500 13px/1.6 "Space Grotesk", sans-serif; }
+.event-detail-meta > * { display: flex; align-items: center; gap: 8px; }
+.event-detail-meta svg { color: var(--ed-cyan); }
+.event-detail-share { width: 48px; height: 48px; display: grid; place-items: center; border: 0; border-radius: 12px; background: #262939cc; color: var(--ed-text); flex-shrink: 0; }
+.event-detail-share:hover { background: #313445; color: var(--ed-cyan); }
+.event-detail-actions { display: flex; gap: 12px; flex-shrink: 0; }
+.event-detail-share.is-liked { color: #ffafd3; background: #ae397b30; box-shadow: 0 0 18px #f472b625; }
+.event-detail-cover { height: 270px; padding: 12px; border-radius: 16px; background: var(--ed-panel); overflow: hidden; }
+.event-detail-cover .event-cover,.event-detail-cover .cover-fallback { width: 100%; height: 100%; object-fit: cover; border-radius: 12px; }
+.event-detail-checkin { display: flex; align-items: start; gap: 8px; font-size: 12px; margin-top: 20px !important; }
+.event-detail-checkin svg { color: var(--ed-cyan); margin-top: 3px; }
+.event-detail-share-notice { margin-top: 14px !important; color: var(--ed-cyan); }
+.event-detail-body { display: grid; grid-template-columns: minmax(0,7fr) minmax(0,5fr); gap: 32px; padding-top: 40px; align-items: start; }
+.event-detail-information { display: grid; gap: 32px; min-width: 0; }
+.event-detail-panel { border-radius: 16px; background: var(--ed-panel); padding: 32px; scroll-margin-top: 100px; }
+.event-detail-panel h2 { display: flex; align-items: center; gap: 12px; font: 600 24px/1.4 "Syne", "Be Vietnam Pro", sans-serif; margin-bottom: 20px; }
+.event-detail-panel h2::before { content: ""; width: 7px; height: 24px; flex-shrink: 0; border-radius: 5px; background: linear-gradient(var(--ed-cyan), #7c3aed); }
+.event-detail-panel p { color: var(--ed-muted); }
+.event-detail-description { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 16px; line-height: 1.9; }
+.event-detail-location-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+.event-detail-location-heading h3 { font: 600 20px/1.5 "Syne", "Be Vietnam Pro", sans-serif; }
+.event-detail-location-heading a { display: inline-flex; align-items: center; gap: 5px; color: var(--ed-cyan); font-size: 11px; background: var(--ed-card); padding: 8px; border-radius: 8px; }
+.event-detail-map { margin-top: 20px; min-height: 224px; padding: 28px; border: 1px solid #313445; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; text-align: center; background: radial-gradient(ellipse at center, #22d3ee15, transparent 65%), repeating-linear-gradient(30deg, #26293940 0 1px, transparent 1px 40px), #10162b; }
+.event-detail-map > svg { color: var(--ed-cyan); margin-bottom: 8px; }
+.event-detail-map-caption { display: inline-flex; align-items: center; gap: 6px; color: var(--ed-cyan); font-size: 12px; }
+.event-detail-guidance h2::before { background: #fbbf24; }
+.event-detail-guidance-grid { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 16px; }
+.event-detail-guidance-grid > div { background: var(--ed-card); border-radius: 12px; padding: 20px; }
+.event-detail-guidance-grid svg { color: var(--ed-cyan); margin-bottom: 12px; }
+.event-detail-guidance-grid h3 { font: 600 13px/1.5 "Space Grotesk", sans-serif; margin-bottom: 8px; }
+.event-detail-guidance-grid p { font-size: 12px; }
+.event-detail-booking { position: sticky; top: 104px; min-width: 0; display: grid; gap: 24px; }
+.event-detail-ticket-box { position: relative; padding: 28px; background: var(--ed-panel); border-radius: 16px; box-shadow: 0 0 28px -6px #22d3ee35; overflow: hidden; }
+.event-detail-ticket-box::before { content: ""; position: absolute; height: 4px; inset: 0 0 auto; background: linear-gradient(90deg,var(--ed-cyan),#7c3aed,#ffafd3); }
+.event-detail-booking-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 8px 0 24px; }
+.event-detail-booking-heading h2 { font: 600 20px/1.4 "Syne", "Be Vietnam Pro", sans-serif; }
+.event-detail-booking-heading p { font-size: 11px; color: var(--ed-muted); margin-top: 6px; }
+.event-detail-booking-heading > svg { color: var(--ed-cyan); }
+.event-detail-tickets { display: grid; gap: 14px; }
+.event-detail-ticket { padding: 18px; background: var(--ed-card); border-radius: 12px; }
+.event-detail-ticket.is-unavailable { background: #1c1f2f80; }
+.event-detail-ticket.is-unavailable h3 { color: #aaa3b8; }
+.event-detail-ticket-top { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
+.event-detail-ticket-top > div:first-child { min-width: 0; }
+.event-detail-ticket h3 { font: 600 18px/1.45 "Syne", "Be Vietnam Pro", sans-serif; }
+.event-detail-ticket p { font-size: 12px; color: var(--ed-muted); margin-top: 8px; overflow-wrap: anywhere; }
+.event-detail-price { text-align: right; flex-shrink: 0; }
+.event-detail-price strong { display: block; font: 700 18px/1.5 "Syne", sans-serif; color: var(--ed-cyan); }
+.event-detail-price.is-purple strong { color: #d2bbff; }
+.event-detail-price span { display: block; color: #ffb4ab; font-size: 11px; margin-top: 4px; }
+.event-detail-price .is-available { color: #85e0bd; }
+.event-detail-counter-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; font-size: 12px; color: var(--ed-muted); }
+.event-detail-counter { display: flex; align-items: center; gap: 4px; background: #0a0d1c; border-radius: 8px; padding: 2px; }
+.event-detail-counter button { width: 36px; height: 36px; border: 0; border-radius: 6px; background: transparent; color: var(--ed-text); display: grid; place-items: center; }
+.event-detail-counter button:hover:not(:disabled) { background: #262939; color: var(--ed-cyan); }
+.event-detail-counter output { min-width: 28px; text-align: center; color: var(--ed-text); font: 700 14px "Space Grotesk", sans-serif; }
+.event-detail-limit { color: var(--ed-muted); font-size: 11px; margin: 14px 0 22px !important; }
+.event-detail-summary { padding: 20px; background: var(--ed-card); border-radius: 12px; margin-bottom: 24px; }
+.event-detail-summary h3 { font: 500 12px "Space Grotesk", sans-serif; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 18px; }
+.event-detail-summary > div { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; font-size: 13px; }
+.event-detail-summary-total { margin-top: 18px; padding-top: 16px; border-top: 1px solid #313445; }
+.event-detail-summary-total strong { font: 700 28px "Syne", sans-serif; color: var(--ed-cyan); }
+.event-detail-summary p { font-size: 11px; line-height: 1.6; color: var(--ed-muted); margin-top: 14px; }
+.event-detail-primary { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 17px 16px; border: 0; border-radius: 12px; background: var(--ed-cyan); color: #00363e; font: 700 14px/1.5 "Space Grotesk", sans-serif; text-transform: uppercase; box-shadow: 0 0 20px #22d3ee40; }
+.event-detail-primary:hover:not(:disabled) { background: #a2eeff; }
+.event-detail-delivery { margin-top: 24px; text-align: center; color: var(--ed-muted); font-size: 11px; overflow-wrap: anywhere; }
+.event-detail-delivery p + p { margin-top: 10px; }
+.event-detail-delivery svg { color: var(--ed-cyan); display: inline; vertical-align: middle; margin-right: 6px; }
+.event-detail-delivery a { color: var(--ed-cyan); text-decoration: underline; }
+.event-detail-assurance { display: flex; align-items: center; gap: 16px; padding: 20px; border-radius: 12px; background: var(--ed-panel); font-size: 12px; }
+.event-detail-assurance > svg { color: var(--ed-cyan); }
+.event-detail-assurance p { color: var(--ed-muted); margin-top: 4px; }
+.event-detail-assurance p svg { display: inline; vertical-align: middle; margin-right: 5px; }
+.event-detail-notice,.event-detail-error { padding: 16px; background: #262939; border-radius: 8px; margin-bottom: 18px; }
+.event-detail-error { color: #ffb4ab; font-size: 13px; }
+.event-detail-error button { display: block; border: 0; background: none; color: var(--ed-cyan); text-decoration: underline; padding: 8px 0; }
+.event-detail-empty,.event-detail-loading { min-height: 60vh; padding: 80px 24px; max-width: 650px; margin: auto; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; text-align: center; }
+.event-detail-empty > svg,.event-detail-loading > svg { color: var(--ed-cyan); }
+.event-detail-empty h1 { font-size: 28px; }
+.event-detail-empty .event-detail-primary { width: auto; }
+.event-detail-ticket .btn { margin-top: 12px; font-size: 12px; }
+@media(max-width: 1100px) {
+  .event-detail-container { padding-left: 24px; padding-right: 24px; }
+  .event-detail-body { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+  .event-detail-panel,.event-detail-ticket-box { padding: 24px; }
+  .event-detail-ticket-top { flex-direction: column; gap: 10px; }
+  .event-detail-price { text-align: left; }
+}
+@media(max-width: 900px) {
+  .event-detail-body { grid-template-columns: minmax(0, 1fr); }
+  .event-detail-booking { position: static; }
+  .event-detail-ticket-top { flex-direction: row; }
+  .event-detail-price { text-align: right; }
+  .event-detail-hero { min-height: 480px; }
+}
+@media(max-width: 599px) {
+  .event-detail-container { padding-left: 16px; padding-right: 16px; }
+  .event-detail-hero-content { padding-top: 40px; padding-bottom: 32px; }
+  .event-detail-back { margin-bottom: 40px; }
+  .event-detail-hero-bottom { align-items: start; flex-direction: column; }
+  .event-detail-meta { flex-direction: column; gap: 14px; font-size: 12px; }
+  .event-detail-panel,.event-detail-ticket-box { padding: 20px; }
+  .event-detail-panel h2 { font-size: 22px; }
+  .event-detail-body { padding-top: 24px; }
+  .event-detail-ticket-top { flex-direction: column; }
+  .event-detail-price { text-align: left; }
+  .event-detail-guidance-grid { grid-template-columns: minmax(0,1fr); }
+  .event-detail-page { padding-bottom: 40px; }
+  .event-detail-counter button { width: 44px; height: 44px; }
+}

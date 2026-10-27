@@ -47,12 +47,14 @@ test("VNPay checkout opens sandbox, polls confirmation and displays paid tickets
   );
   await page.goto("/checkout/order");
   await expect(
-    page.getByRole("button", { name: "Thanh toán qua VNPay" }),
+    page.getByRole("button", { name: "Xác nhận và tiến hành thanh toán" }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Mô phỏng thanh toán thành công" }),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Thanh toán qua VNPay" }).click();
+  await page
+    .getByRole("button", { name: "Xác nhận và tiến hành thanh toán" })
+    .click();
   await expect(page).toHaveURL(/sandbox\.vnpayment\.vn/);
   await page.goto("/checkout/order");
   await expect(
@@ -103,7 +105,9 @@ test("VNPay checkout preserves failed/review states and rejects an untrusted che
   await expect(
     page.getByText("Thanh toán thất bại hoặc đã hủy.", { exact: false }),
   ).toBeVisible();
-  await page.getByRole("button", { name: "Thanh toán qua VNPay" }).click();
+  await page
+    .getByRole("button", { name: "Xác nhận và tiến hành thanh toán" })
+    .click();
   await expect(
     page.getByText("Đường dẫn thanh toán VNPay không hợp lệ."),
   ).toBeVisible();

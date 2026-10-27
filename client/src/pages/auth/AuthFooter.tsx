@@ -4,7 +4,6 @@ import {
   MapPin,
   Phone,
   ShieldCheck,
-  Ticket,
 } from "lucide-react";
 
 const HOTLINE = "0378531013";
@@ -28,7 +27,7 @@ export function AuthFooter({
         <div className="auth-footer-brand">
           <Link className="auth-logo" to="/" aria-label={a11Reference ? "ENVENT HUB — Trang chủ" : "EVENTHUB — Trang chủ"}>
             <span className="auth-logo-mark">
-              <Ticket size={20} />
+              <img src="/logo.png" alt="EventHub logo" />
             </span>
             <span>
               {a11Reference ? "ENVENT" : "EVENT"}<span>HUB</span>
@@ -55,9 +54,9 @@ export function AuthFooter({
             </>
           ) : (
             <>
-              <Link to="/?q=l%E1%BB%85%20h%E1%BB%99i">Lễ hội Âm nhạc Hot</Link>
-              <Link to="/?q=underground">Sự kiện Underground</Link>
-              <Link to="/organizer">Dành cho Ban tổ chức</Link>
+              <Link to="/explore?q=l%E1%BB%85%20h%E1%BB%99i">Lễ hội Âm nhạc Hot</Link>
+              <Link to="/explore?q=underground">Sự kiện Underground</Link>
+              <Link to="/register-organizer">Dành cho Ban tổ chức</Link>
               <Link to="/tickets">Hướng dẫn mua vé QR</Link>
             </>
           )}

@@ -1,0 +1,650 @@
+.site-main:has(.my-tickets-page) {
+  max-width: none;
+  width: 100%;
+  padding: 0;
+}
+.my-tickets-page {
+  --mt-bg: #0f1222;
+  --mt-panel: #181b2a;
+  --mt-card: #1c1f2f;
+  --mt-text: #e0e1f7;
+  --mt-muted: #b8b0c6;
+  --mt-cyan: #5de6ff;
+  color: var(--mt-text);
+  font:
+    14px/1.65 "Be Vietnam Pro",
+    sans-serif;
+  background:
+    radial-gradient(ellipse at 20% 5%, #7c3aed25, transparent 40%),
+    radial-gradient(ellipse at 100% 50%, #22d3ee12, transparent 40%),
+    var(--mt-bg);
+  min-height: 70vh;
+  padding: 32px 0 56px;
+}
+.mt-container {
+  max-width: 1280px;
+  margin: auto;
+  padding: 0 48px;
+}
+.my-tickets-page :where(h1, h2, h3, h4, p) {
+  margin: 0;
+}
+.my-tickets-page :where(button, a):focus-visible {
+  outline: 2px solid var(--mt-cyan);
+  outline-offset: 4px;
+}
+.my-tickets-page svg {
+  flex-shrink: 0;
+}
+.mt-heading,
+.mt-metrics,
+.mt-card-top,
+.mt-shelf-title,
+.mt-card-bottom,
+.mt-qr-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.mt-heading {
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.mt-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--mt-cyan);
+  font:
+    600 11px/1.5 "Space Grotesk",
+    sans-serif;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.mt-heading h1 {
+  font:
+    700 clamp(28px, 3vw, 40px)/1.2,
+    "Be Vietnam Pro",
+    sans-serif;
+  margin-bottom: 10px;
+}
+.mt-heading p,
+.mt-muted {
+  color: var(--mt-muted);
+}
+.mt-metrics {
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.mt-metric {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--mt-panel);
+  padding: 12px 16px;
+  border-radius: 12px;
+}
+.mt-dot {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--mt-cyan);
+  box-shadow: 0 0 12px #22d3ee70;
+  animation: auth-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.mt-metric:last-of-type .mt-dot {
+  background: #958da1;
+  box-shadow: none;
+}
+.mt-metric small {
+  display: block;
+  color: var(--mt-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.mt-metric strong {
+  font:
+    700 22px/1.5 "Be Vietnam Pro",
+    sans-serif;
+}
+.mt-metric strong span {
+  font:
+    400 12px "Be Vietnam Pro",
+    sans-serif;
+  color: var(--mt-muted);
+}
+.mt-button {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 14px;
+  min-height: 44px;
+  background: #262939;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: var(--mt-text);
+  cursor: pointer;
+  font:
+    600 12px/1.4 "Space Grotesk",
+    "Be Vietnam Pro",
+    sans-serif;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+  text-decoration: none;
+}
+.mt-button:hover {
+  background: #353849;
+  border-color: #5de6ff60;
+}
+.mt-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.mt-button-primary {
+  background: #7c3aed;
+  color: white;
+}
+.mt-button-primary:hover {
+  background: #6d28d9;
+}
+.mt-icon-button {
+  width: 44px;
+  padding: 10px;
+}
+.mt-tabs {
+  display: flex;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 6px;
+  border-radius: 12px;
+  background: var(--mt-panel);
+  margin-bottom: 28px;
+}
+.mt-tabs button {
+  white-space: nowrap;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--mt-muted);
+  padding: 12px 18px;
+  font:
+    600 12px "Space Grotesk",
+    "Be Vietnam Pro",
+    sans-serif;
+  cursor: pointer;
+  min-height: 44px;
+}
+.mt-tabs button[aria-pressed="true"] {
+  background: var(--mt-cyan);
+  color: #00363e;
+  box-shadow: 0 0 16px #22d3ee30;
+}
+.mt-tabs span {
+  margin-left: 8px;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: #00000020;
+}
+.mt-spotlight {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  border-radius: 20px;
+  background:
+    radial-gradient(ellipse at 0 0, #7c3aed25, transparent 55%), var(--mt-panel);
+  overflow: hidden;
+  box-shadow: 0 16px 40px #0002;
+  margin-bottom: 32px;
+}
+.mt-ticket-info {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.mt-card-top {
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 11px;
+}
+.mt-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 30px;
+  padding: 5px 10px;
+  background: #7c3aed35;
+  color: #eaddff;
+  font:
+    600 11px/1.5 "Space Grotesk",
+    "Be Vietnam Pro",
+    sans-serif;
+  text-transform: uppercase;
+}
+.mt-code {
+  color: var(--mt-cyan);
+  overflow-wrap: anywhere;
+  font:
+    500 11px/1.6 "Space Grotesk",
+    monospace;
+}
+.mt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 24px;
+  background: #5de6ff18;
+  color: var(--mt-cyan);
+  padding: 5px 10px;
+  font-size: 11px;
+}
+.mt-badge-used {
+  background: #ffffff0b;
+  color: #c5bed2;
+}
+.mt-badge-void {
+  background: #ffb4ab14;
+  color: #ffb4ab;
+}
+.mt-event-title {
+  font:
+    800 clamp(25px, 3vw, 43px)/1.2 "Be Vietnam Pro",
+    sans-serif;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  margin: 22px 0 !important;
+}
+.mt-event-title span {
+  background: linear-gradient(110deg, #5de6ff, #d2bbff, #ffafd3);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+.mt-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.mt-meta {
+  padding: 15px;
+  background: var(--mt-card);
+  border-radius: 12px;
+  min-width: 0;
+}
+.mt-meta dt {
+  display: flex;
+  gap: 7px;
+  align-items: center;
+  color: var(--mt-muted);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.05em;
+  margin-bottom: 7px;
+}
+.mt-meta dt svg {
+  color: var(--mt-cyan);
+}
+.mt-meta dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.mt-meta dd strong {
+  font-weight: 600;
+}
+.mt-meta dd small {
+  display: block;
+  color: var(--mt-muted);
+  margin-top: 4px;
+}
+.mt-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 26px;
+}
+.mt-qr-panel {
+  position: relative;
+  min-width: 0;
+  background: linear-gradient(145deg, #1c1f2f, #1b2838);
+  border-left: 2px dashed #958da140;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.mt-qr-panel::before,
+.mt-qr-panel::after {
+  content: "";
+  position: absolute;
+  left: -13px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--mt-bg);
+}
+.mt-qr-panel::before {
+  top: -12px;
+}
+.mt-qr-panel::after {
+  bottom: -12px;
+}
+.mt-qr-heading {
+  width: 100%;
+  color: var(--mt-muted);
+  font:
+    500 10px "Space Grotesk",
+    sans-serif;
+  letter-spacing: 0.08em;
+  margin-bottom: 24px;
+}
+.mt-qr-frame {
+  padding: 16px;
+  border-radius: 16px;
+  background: #0a0d1c;
+  box-shadow: 0 0 30px #5de6ff20;
+  border: 1px solid #5de6ff60;
+  max-width: 100%;
+}
+.mt-qr-frame img {
+  display: block;
+  width: 240px;
+  max-width: 100%;
+  height: auto;
+  background: white;
+  border-radius: 4px;
+}
+.mt-qr-caption {
+  margin: 20px 0 8px !important;
+  font-weight: 600;
+  font-size: 12px;
+}
+.mt-qr-panel > p.mt-muted {
+  font-size: 12px;
+  margin-bottom: 20px;
+}
+.mt-unavailable {
+  padding: 38px 16px;
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  color: var(--mt-muted);
+}
+.mt-shelf-title {
+  margin: 24px 0 16px;
+  flex-wrap: wrap;
+}
+.mt-shelf-title h2,
+.mt-guide h2 {
+  font:
+    700 22px/1.4 "Be Vietnam Pro",
+    sans-serif;
+}
+.mt-shelf-title span {
+  color: var(--mt-muted);
+  font-size: 11px;
+}
+.mt-ticket-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.mt-small-ticket {
+  padding: 24px;
+  border-radius: 14px;
+  background: var(--mt-panel);
+  min-width: 0;
+}
+.mt-small-ticket h3 {
+  font:
+    700 21px/1.4 "Be Vietnam Pro",
+    sans-serif;
+  margin: 12px 0 8px;
+  overflow-wrap: anywhere;
+}
+.mt-small-meta {
+  padding: 12px;
+  background: var(--mt-card);
+  border-radius: 10px;
+  margin-top: 16px;
+}
+.mt-small-meta p {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--mt-muted);
+}
+.mt-small-meta p + p {
+  margin-top: 9px;
+}
+.mt-small-meta svg {
+  color: var(--mt-cyan);
+  margin-top: 2px;
+}
+.mt-card-bottom {
+  flex-wrap: wrap;
+  margin-top: 20px;
+  font-size: 12px;
+}
+.mt-guide {
+  border-radius: 20px;
+  padding: 32px;
+  margin-top: 36px;
+  background: linear-gradient(110deg, var(--mt-card), var(--mt-panel));
+}
+.mt-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 22px;
+}
+.mt-guide-step {
+  padding: 20px;
+  border-radius: 12px;
+  background: #0a0d1ccc;
+}
+.mt-guide-step > span {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  background: #5de6ff20;
+  color: var(--mt-cyan);
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.mt-guide-step:nth-child(2) > span {
+  background: #7c3aed25;
+  color: #d2bbff;
+}
+.mt-guide-step:nth-child(3) > span {
+  background: #ae397b30;
+  color: #ffafd3;
+}
+.mt-guide-step h3 {
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+.mt-guide-step p,
+.mt-guide-support {
+  font-size: 12px;
+  color: var(--mt-muted);
+}
+.mt-guide-support {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 24px;
+}
+.mt-back {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  color: var(--mt-cyan);
+  margin-bottom: 22px;
+}
+.mt-state {
+  padding: 40px 20px;
+  text-align: center;
+  background: var(--mt-panel);
+  border-radius: 16px;
+}
+.mt-state h2 {
+  margin-bottom: 10px;
+  font-size: 22px;
+}
+.mt-state .mt-button {
+  margin-top: 16px;
+}
+.mt-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+.mt-print-hint {
+  font-size: 12px;
+  color: var(--mt-muted);
+  margin: 10px 0 !important;
+}
+@media (max-width: 1000px) {
+  .mt-container {
+    padding: 0 24px;
+  }
+  .mt-ticket-info {
+    padding: 24px;
+  }
+  .mt-qr-panel {
+    padding: 22px;
+  }
+}
+@media (max-width: 760px) {
+  .my-tickets-page {
+    padding-top: 24px;
+  }
+  .mt-container {
+    padding: 0 16px;
+  }
+  .mt-spotlight,
+  .mt-ticket-grid,
+  .mt-guide-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mt-qr-panel {
+    border-left: 0;
+    border-top: 2px dashed #958da140;
+  }
+  .mt-qr-panel::before {
+    top: -13px;
+    left: -12px;
+  }
+  .mt-qr-panel::after {
+    top: -13px;
+    bottom: auto;
+    left: auto;
+    right: -12px;
+  }
+  .mt-heading h1 {
+    font-size: 28px;
+  }
+  .mt-guide {
+    padding: 24px 20px;
+  }
+  .mt-heading > div,
+  .mt-metrics {
+    max-width: 100%;
+  }
+  .mt-tabs button {
+    padding: 12px;
+  }
+  .mt-ticket-info {
+    padding: 22px 18px;
+  }
+}
+@media (max-width: 380px) {
+  .mt-meta-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .mt-metric {
+    padding: 10px;
+  }
+}
+@media print {
+  body:has(.my-tickets-page) {
+    background: white !important;
+  }
+  body:has(.my-tickets-page)
+    :is(
+      .auth-header,
+      .auth-footer,
+      .demo-banner,
+      .auth-toast,
+      .mt-no-print,
+      .mt-guide,
+      .mt-back
+    ) {
+    display: none !important;
+  }
+  .my-tickets-page {
+    padding: 0;
+    background: white;
+    color: black;
+  }
+  .my-tickets-page .mt-container {
+    padding: 0;
+    max-width: none;
+  }
+  .my-tickets-page .mt-spotlight {
+    display: grid;
+    grid-template-columns: 3fr 2fr;
+    background: white;
+    box-shadow: none;
+    border: 1px solid #888;
+    break-inside: avoid;
+    color: black;
+  }
+  .my-tickets-page :is(.mt-qr-panel, .mt-meta, .mt-qr-frame) {
+    background: white;
+    color: black;
+    box-shadow: none;
+  }
+  .my-tickets-page
+    :is(
+      .mt-code,
+      .mt-muted,
+      .mt-meta dt,
+      .mt-meta dd small,
+      .mt-event-title span,
+      .mt-badge,
+      .mt-type
+    ) {
+    color: black;
+    background: none;
+    -webkit-text-fill-color: black;
+  }
+  .my-tickets-page .mt-event-title {
+    font-size: 24px;
+  }
+  .my-tickets-page .mt-qr-panel::before,
+  .my-tickets-page .mt-qr-panel::after {
+    display: none;
+  }
+  @keyframes auth-ping {
+  75%,
+  100% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+}

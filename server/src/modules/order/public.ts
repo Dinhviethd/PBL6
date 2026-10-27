@@ -256,6 +256,10 @@ export function createOrders(db: Store, qrSecret: string) {
         status: t.status,
         eventTitle: t.event_title_snapshot,
         typeName: t.ticket_type_name_snapshot,
+        buyerName: t.buyer_name_snapshot,
+        buyerEmail: t.buyer_email_snapshot,
+        checkedInAt: (await r.checkinInfo(id))?.checked_in_at ?? null,
+        voidReason: t.void_reason ?? null,
         token: decrypt(t.qr_token_ciphertext),
       };
     },

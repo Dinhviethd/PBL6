@@ -45,6 +45,7 @@ if (!url) {
       status: r.status,
       body: await r.json(),
       cookie: r.headers.get("set-cookie"),
+      headers: r.headers,
     };
   };
   const ok = async (...args) => {
@@ -82,6 +83,7 @@ if (!url) {
       secret: "integration-secret-".repeat(3),
       qrSecret: "integration-qr-secret-".repeat(3),
       demo: true,
+      clientUrl: "http://localhost:5173",
     });
     await app.start();
     server = app.app.listen(0, "127.0.0.1");
@@ -1166,10 +1168,16 @@ if (!url) {
     const login = await call("POST", "/auth/login", {
       email: buyer.user.email,
       password,
-    });
+    }, undefined, { Origin: "http://localhost:5173" });
+    assert.equal(
+      login.headers.get("access-control-allow-origin"),
+      "http://localhost:5173",
+    );
+    assert.equal(login.headers.get("access-control-allow-credentials"), "true");
     const oldCookie = login.cookie.split(";")[0];
     const rotated = await call("POST", "/auth/refresh-token", {}, undefined, {
       Cookie: oldCookie,
+      Origin: "http://localhost:5173",
     });
     assert.equal(rotated.status, 200);
     assert.notEqual(rotated.cookie.split(";")[0], oldCookie);
@@ -1177,10 +1185,29 @@ if (!url) {
       (
         await call("POST", "/auth/refresh-token", {}, undefined, {
           Cookie: oldCookie,
+          Origin: "http://localhost:5173",
         })
       ).status,
       401,
     );
+    const missingCookie = await call(
+      "POST",
+      "/auth/refresh-token",
+      {},
+      undefined,
+      { Origin: "http://localhost:5173" },
+    );
+    assert.equal(missingCookie.status, 401);
+    assert.equal(missingCookie.body.code, "UNAUTHORIZED");
+    const rejectedOrigin = await call(
+      "POST",
+      "/auth/refresh-token",
+      {},
+      undefined,
+      { Cookie: rotated.cookie.split(";")[0], Origin: "http://127.0.0.1:5173" },
+    );
+    assert.equal(rejectedOrigin.status, 403);
+    assert.equal(rejectedOrigin.body.code, "ORIGIN");
     assert.equal(
       (await call("GET", "/auth/me", undefined, rotated.body.data.accessToken))
         .status,
