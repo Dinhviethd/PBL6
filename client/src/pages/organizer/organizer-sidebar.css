@@ -1,0 +1,139 @@
+/* Organizer sidebar, based on the B2 "Cosmic Ticket Ban Tổ Chức" Stitch artifact. */
+.osb-sidebar {
+  --osb-surface-low: #181b2a;
+  --osb-surface-lowest: #0a0d1c;
+  --osb-surface-high: #262939;
+  --osb-primary-container: #7c3aed;
+  --osb-primary: #d2bbff;
+  --osb-on-primary: #ede0ff;
+  --osb-secondary: #5de6ff;
+  --osb-on-surface: #e0e1f7;
+  --osb-on-surface-variant: #ccc3d8;
+  --osb-outline: #958da1;
+  --osb-outline-variant: #4a4455;
+
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 16rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0 1.5rem;
+  background: var(--osb-surface-low);
+  box-shadow: 0 1px 12px rgba(0, 0, 0, 0.6);
+  overflow-y: auto;
+  color: var(--osb-on-surface);
+  font-family: "Space Grotesk", sans-serif;
+}
+.osb-brand {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1rem;
+  margin-bottom: 1rem;
+}
+.osb-logo {
+  font-family: "Syne", sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--osb-on-surface);
+}
+.osb-logo span {
+  color: var(--osb-secondary);
+}
+.osb-badge {
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--osb-primary);
+  background: rgba(124, 58, 237, 0.3);
+  border: 1px solid rgba(210, 187, 255, 0.2);
+}
+.osb-section {
+  padding: 0 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--osb-outline);
+}
+.osb-nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 0.5rem;
+}
+.osb-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  color: var(--osb-on-surface-variant);
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+.osb-item:hover {
+  background: var(--osb-surface-high);
+  color: var(--osb-on-surface);
+}
+.osb-item.is-active {
+  background: var(--osb-primary-container);
+  color: var(--osb-on-primary);
+  box-shadow: 0 0 16px rgba(124, 58, 237, 0.3);
+}
+.osb-live {
+  margin: 1rem 0.5rem 0;
+  padding: 0.75rem 0.5rem;
+  border-radius: 0.75rem;
+  background: rgba(10, 13, 28, 0.6);
+  border: 1px solid rgba(74, 68, 85, 0.3);
+}
+.osb-live-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.osb-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--osb-secondary);
+  animation: osb-pulse 1.6s ease-in-out infinite;
+}
+.osb-live-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--osb-secondary);
+}
+.osb-live p {
+  margin: 0.25rem 0 0;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 12px;
+  color: var(--osb-outline);
+}
+@keyframes osb-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+@media (max-width: 900px) {
+  .osb-sidebar {
+    display: none;
+  }
+}

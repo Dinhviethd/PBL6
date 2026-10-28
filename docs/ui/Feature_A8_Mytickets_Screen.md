@@ -1,14 +1,17 @@
 # Kế hoạch A8 — Vé của tôi & thẻ QR check-in
 
-Cập nhật 2026-10-28 00:59, giờ Việt Nam. Đây là kế hoạch, chưa triển khai. Phiên làm việc và kế hoạch chỉ tập trung thiết kế màn hình A8 — Vé của tôi & thẻ QR check-in; A6 là màn hình khác, không liên quan đến phiên này.
+Cập nhật 2026-10-28 10:24, giờ Việt Nam. Đã triển khai A8 — Vé của tôi & thẻ QR check-in; kết quả frontend **ĐẠT CÓ ĐIỀU KIỆN**. Phạm vi chỉ A8; A6 là màn hình khác, không liên quan đến phiên này.
 
 ## Nguồn và phạm vi
 
 - Stitch project `10374042969343935993`, screen `4ff75d38004140409e70cd99de7e1432`, DESKTOP 2560×5324; HTML file `11005173468658712969`, ảnh file `12860080206984097624`. Giữ nguyên artifact; dùng ảnh và HTML làm tham chiếu.
-- Các route `/tickets`, `/tickets/:id`; dùng lại `AuthHeader` và `AuthFooter` chung. Hai route hiện chưa thuộc `usesSharedHomeShell` trong `App.tsx`.
+- Các route `/tickets`, `/tickets/:id` đã dùng lại `AuthHeader` và `AuthFooter` chung qua `usesSharedHomeShell` trong `App.tsx`.
+- [Báo cáo triển khai và nghiệm thu](../reports/stitch/A8_20261028_102426_implementation.md).
 - [Báo cáo cập nhật kế hoạch](../reports/stitch/A8_20261028_005904_plan_update.md); [báo cáo review trước](../reports/stitch/A8_20261028_005242_review.md).
 
-## Chênh lệch và vấn đề
+## Chênh lệch ghi nhận trước triển khai
+
+Các mục dưới đây lưu bối cảnh review ban đầu; trạng thái hiện tại xem phần kết quả triển khai ở cuối tài liệu.
 
 1. `MyTickets.tsx` chỉ có tiêu đề, lưới link với icon, trạng thái, tên sự kiện, loại vé, mã và phân trang; thiếu tổng quan, tab trạng thái, vé nổi bật với QR, các thẻ phụ và hướng dẫn ba bước như Stitch. `TicketPage.tsx` hiển thị QR riêng cùng tên, hạng, trạng thái và mã.
 2. Kiểu `Ticket`/`TicketDetail` hiện không khai báo thời gian, địa điểm, cổng và đặc quyền được minh họa trong Stitch. Cần kiểm tra response và hợp đồng thực tế trước khi ánh xạ; chưa kết luận backend thiếu dữ liệu.
@@ -28,3 +31,13 @@ Cập nhật 2026-10-28 00:59, giờ Việt Nam. Đây là kế hoạch, chưa t
 ## Tiêu chí nghiệm thu
 
 Bố cục đối chiếu Stitch và các ngoại lệ được xác nhận; shell chung hoạt động; dữ liệu và QR đến từ API hoạt động thực tế; nhấn từng nút Wallet, email, chuyển nhượng và VAT hiển thị “Chức năng đang trong quá trình phát triển”, không thực hiện nghiệp vụ tương ứng; trạng thái, điều hướng, responsive và accessibility được kiểm chứng; build và kiểm thử liên quan đạt. Nội dung mẫu, chức năng và khả năng scan chưa được xác minh trong phiên lập kế hoạch.
+
+## Quyết định và kết quả triển khai 2026-10-28
+
+- Người dùng đã duyệt hai cột thông tin/QR trên desktop, xếp dọc trên mobile; dữ liệu thật và bỏ cam kết chưa được hỗ trợ; PDF qua hộp thoại in/lưu PDF. Artifact Stitch không bị chỉnh sửa.
+- Đã triển khai tổng quan, bộ lọc, vé nổi bật, danh sách phụ, hướng dẫn, chi tiết và shell chung. Dùng “Chưa sử dụng” cho VALID để không suy diễn thời gian sự kiện. QR chỉ hiển thị với vé VALID; các trạng thái CHECKED_IN/VOID hiển thị thông tin và cảnh báo tương ứng.
+- Đã mở rộng và gọi thử thành công hai API vé với metadata sự kiện/người mua/check-in/lý do hủy trước tích hợp. Không seed hoặc thay đổi trạng thái vé trong phiên.
+- Bốn nút hiển thị đúng thông báo đã chốt. PDF được tạo trong kiểm thử headless; QR thật giải mã được. Tài khoản kiểm thử có đủ ba trạng thái; tài khoản demo rỗng dùng để kiểm tra empty và quyền sở hữu.
+- Build client/server, ESLint A8, kiểm tra ranh giới module, test Origin và 3/3 Playwright đạt. Responsive 1440/1024/768/390 không tràn ngang; đã xem ảnh desktop/mobile.
+- Còn cần nghiệm thu dữ liệu >50 vé/nhiều vé cùng trạng thái, quét tại cổng thật, audit screen reader/contrast đầy đủ và lưu PDF qua hộp thoại hệ điều hành. Không tuyên bố đã nghiệm thu thanh toán/phát hành vé end-to-end.
+- Nhật ký thay đổi và bằng chứng của phiên nằm trong [báo cáo triển khai](../reports/stitch/A8_20261028_102426_implementation.md); các report cũ giữ nguyên.

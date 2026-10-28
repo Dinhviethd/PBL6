@@ -538,3 +538,198 @@
     flex-direction: column;
   }
 }
+
+.profile-page .home-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #22d3ee;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.profile-page .home-sparkle-ping {
+  animation: home-sparkle-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+  filter: drop-shadow(0 0 5px currentColor);
+  transform-origin: center;
+}
+
+@keyframes home-sparkle-ping {
+  0%,
+  45% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  75%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1.28);
+  }
+}
+
+.profile-page .home-button {
+  display: inline-flex;
+  min-height: 48px;
+  padding: 0 22px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  color: #f8fafc;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  text-align: center;
+  text-transform: uppercase;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.profile-page .home-button:hover {
+  transform: translateY(-2px);
+}
+
+.profile-page .home-button-primary {
+  background: #22d3ee;
+  box-shadow: 0 0 24px rgb(34 211 238 / 26%);
+  color: #07111b;
+}
+
+.profile-page .home-button-primary:hover {
+  box-shadow: 0 0 32px rgb(34 211 238 / 45%);
+}
+
+.profile-page .home-button-secondary {
+  border-color: rgb(148 163 184 / 16%);
+  background: rgb(20 28 54 / 82%);
+  color: #f8fafc;
+}
+
+.profile-page .home-button-secondary:hover {
+  border-color: rgb(34 211 238 / 52%);
+}
+
+.profile-page .home-organizer {
+  position: relative;
+  display: flex;
+  width: min(100%, 1180px);
+  min-height: 320px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 44px;
+  margin: 78px auto 0;
+  padding: 48px 54px 48px 60px;
+  overflow: hidden;
+  border: 1px solid rgb(148 163 184 / 10%);
+  border-radius: 22px;
+  background:
+    radial-gradient(ellipse at 2% 0%, rgb(34 211 238 / 14%), transparent 38%),
+    linear-gradient(115deg, #10162b, #1c2033 75%);
+}
+
+.profile-page .home-organizer::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: linear-gradient(#22d3ee, #7c3aed, #f472b6);
+}
+
+.profile-page .home-organizer-copy {
+  max-width: 780px;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-page .home-organizer h2 {
+  max-width: 760px;
+  margin: 15px 0 0;
+  color: #f8fafc;
+  font-size: clamp(27px, 3vw, 42px);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.profile-page .home-organizer-copy > p {
+  color: #b8c3d5;
+  font-size: 13px;
+  line-height: 1.8;
+}
+
+.profile-page .home-organizer ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 22px;
+  margin: 20px 0 0;
+  padding: 0;
+  color: #c5d0df;
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 10px;
+  list-style: none;
+}
+
+.profile-page .home-organizer li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.profile-page .home-organizer li svg {
+  color: #22d3ee;
+}
+
+.profile-page .home-organizer-actions {
+  display: flex;
+  min-width: 225px;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.profile-page .home-organizer-actions .home-button {
+  width: 100%;
+}
+
+@media (max-width: 1050px) {
+  .profile-page .home-organizer {
+    gap: 28px;
+  }
+}
+
+@media (max-width: 760px) {
+  .profile-page .home-button {
+    min-height: 46px;
+    padding: 0 15px;
+    font-size: 10px;
+  }
+
+  .profile-page .home-organizer {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 25px;
+    margin-top: 50px;
+    padding: 29px 22px;
+    border-radius: 18px;
+  }
+
+  .profile-page .home-organizer h2 {
+    font-size: 26px;
+  }
+
+  .profile-page .home-organizer ul {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .profile-page .home-organizer-actions {
+    min-width: 0;
+  }
+}

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import {
   ChevronDown,
   Search,
+  //Ticket,
   UserRound,
 } from "lucide-react";
 import type { User } from "@/features/auth/stores/authStore";
@@ -86,6 +87,7 @@ export function AuthHeader({
             <>
               <Link to="/explore">Khám phá sự kiện</Link>
               <Link to="/tickets">Vé của tôi</Link>
+              <Link to="/orders">Lịch sử đơn hàng</Link>
               <Link to="/checkin">Nhân viên check-in</Link>
             </>
           ) : (

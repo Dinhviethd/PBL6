@@ -1,8 +1,10 @@
 import { randomUUID } from "node:crypto";
 import type { Store, Row } from "../../../contracts/core";
 import { waitQueueStore } from "./wait-queue";
+import { orderHistoryStore } from "./history";
 export function orderStore(db: Store) {
   return {
+    ...orderHistoryStore(db),
     ...waitQueueStore(db),
     reminderBuyers: (eventId: string) =>
       db.query(
@@ -236,5 +238,15 @@ export function orderStore(db: Store) {
       )[0];
       return { ...a, ...b };
     },
+    revenueByEvent: (ids: string[]) =>
+      db.query(
+        "SELECT event_id, coalesce(sum(total_amount),0) AS revenue FROM orders WHERE event_id=ANY($1::uuid[]) AND status='PAID' GROUP BY event_id",
+        [ids],
+      ),
+    capacityByEvent: (ids: string[]) =>
+      db.query(
+        "SELECT event_id, coalesce(sum(capacity),0) AS capacity, coalesce(sum(sold_quantity),0) AS sold_quantity FROM ticket_types WHERE event_id=ANY($1::uuid[]) GROUP BY event_id",
+        [ids],
+      ),
   };
 }

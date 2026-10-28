@@ -183,5 +183,10 @@ export function eventStore(db: Store) {
       ),
     summary: async () =>
       (await db.query("SELECT count(*) AS events FROM events"))[0],
+    statusCounts: (owner: string) =>
+      db.query(
+        "SELECT status, count(*)::int AS count FROM events WHERE organizer_id=$1 GROUP BY status ORDER BY status",
+        [owner],
+      ),
   };
 }

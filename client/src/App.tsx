@@ -85,6 +85,7 @@ export function App() {
   const isCheckoutPage = location.pathname.startsWith("/checkout/");
   const isRegisterOrganizerPage =
     location.pathname === "/register-organizer";
+  const isOrganizerDashboard = location.pathname === "/organizer";
   const isPublicHome = location.pathname === "/" && isAuthVerified && !user;
   const isUserHome =
     location.pathname === "/" &&
@@ -95,6 +96,7 @@ export function App() {
     isPublicHome ||
     isUserHome ||
     location.pathname === "/explore" ||
+    location.pathname === "/orders" ||
     isEventDetailPage ||
     isCheckoutPage ||
     /^\/tickets(?:\/[^/]+)?\/?$/.test(location.pathname) ||
@@ -118,7 +120,9 @@ export function App() {
             navigate(query ? `/explore?q=${encodeURIComponent(query)}` : "/explore");
           }}
         />
-      ) : !isAuthPage && !isProfilePage && <header className="site-header">
+      ) : !isAuthPage &&
+        !isProfilePage &&
+        !isOrganizerDashboard && <header className="site-header">
         <Link className="brand" to="/">
           <span className="brand-mark">
             <Ticket size={23} />
@@ -175,7 +179,13 @@ export function App() {
         </div>
       )}
       <main
-        className={isAuthPage ? "site-main auth-main" : "site-main"}
+        className={
+          isAuthPage
+            ? "site-main auth-main"
+            : isOrganizerDashboard
+              ? "organizer-main"
+              : "site-main"
+        }
         key={revision}
       >
         {!isAuthPage && sessionNotice && <Notice error={sessionNotice} />}
@@ -314,7 +324,9 @@ export function App() {
             />
           )}
         </>
-      ) : !isAuthPage && !isProfilePage && <footer className="site-footer">
+      ) : !isAuthPage &&
+        !isProfilePage &&
+        !isOrganizerDashboard && <footer className="site-footer">
         <Link className="brand" to="/">
           eventhub.
         </Link>

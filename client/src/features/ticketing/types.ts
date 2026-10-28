@@ -37,6 +37,11 @@ export interface Event {
   ticketTypes?: TicketType[];
   organizer?: { name: string };
   reviews?: { decision: string; reason: string; created_at: string }[];
+  revenue?: number;
+  capacity?: number;
+  sold_quantity?: number;
+  fill_rate?: number;
+  total_results?: string;
 }
 export interface OrderEvent {
   id: string;
@@ -138,5 +143,9 @@ export interface Account {
   email: string;
   status: string;
   locked_at?: string;
+}
+export interface StatusCount {
+  status: string;
+  count: number;
 }
 export type Stats = Record<string, string | number>;

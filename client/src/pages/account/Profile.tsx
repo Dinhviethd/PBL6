@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   CalendarDays,
   Camera,
@@ -7,6 +7,11 @@ import {
   Mail,
   Phone,
   Ticket,
+  Sparkles,
+  TicketCheck,
+  Wallet,
+  QrCode,
+  ArrowRight,
   UserRound,
 } from "lucide-react";
 import { ActionForm } from "@/components/ticketing/action-form";
@@ -290,6 +295,27 @@ export function Profile() {
               </div>
             </ActionForm>
           </section>
+        </div>
+      </section>
+
+      <section className="home-organizer" aria-labelledby="organizer-title">
+        <div className="home-organizer-copy">
+          <span className="home-eyebrow"><Sparkles className="home-sparkle-ping" size={14} /> DÀNH CHO BAN TỔ CHỨC</span>
+          <h2 id="organizer-title">Đưa sự kiện của bạn đến gần khán giả hơn.</h2>
+          <p>Tạo sự kiện, quản lý vé và theo dõi hoạt động bán vé trên EventHub.</p>
+          <ul>
+            <li><TicketCheck size={15} /> Quản lý thông tin sự kiện</li>
+            <li><Wallet size={15} /> Theo dõi đơn hàng và vé</li>
+            <li><QrCode size={15} /> Hỗ trợ quy trình check-in</li>
+          </ul>
+        </div>
+        <div className="home-organizer-actions">
+          <Link className="home-button home-button-primary" to="/register-organizer">
+            Bắt đầu tổ chức <ArrowRight size={16} />
+          </Link>
+          <Link className="home-button home-button-secondary" to="/register-organizer">
+            Tìm hiểu thêm
+          </Link>
         </div>
       </section>
 

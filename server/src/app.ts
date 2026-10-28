@@ -23,6 +23,7 @@ import { createAudit } from "./modules/audit/public";
 import { createNotifications } from "./modules/notification/public";
 import { createBooking } from "./workflows/booking";
 import { createWaitQueue } from "./workflows/wait-queue";
+import { createOrderHistory } from "./workflows/order-history";
 import { ensure, role, type Row, type Principal } from "./contracts/core";
 const uuid = z.string().uuid(),
   text = z.string().trim().min(1),
@@ -100,6 +101,8 @@ const decision = z
   .refine((d) => d.approve || d.reason.length > 0, "Cần nhập lý do từ chối.");
 const page = (r: Request) =>
   z.coerce.number().int().min(0).max(10000).default(0).parse(r.query.page);
+const pageSize = (r: Request) =>
+  z.coerce.number().int().min(1).max(100).default(50).parse(r.query.limit);
 const query = (r: Request, k: string) =>
   z.string().max(200).optional().parse(r.query[k]) ?? "";
 const id = (r: Request, k = "id") => uuid.parse(r.params[k]);
@@ -557,9 +560,49 @@ export function createApplication(config: {
   api.get(
     "/organizer/events",
     protect,
+    route(async (req, res) => {
+      role(who(res), ["ORGANIZER", "ADMIN"]);
+      const limit = pageSize(req);
+      const rows = await events.list({
+        owner: who(res).userId,
+        limit,
+        offset: page(req) * limit,
+      });
+      const ids = rows.map((e) => e.id);
+      const [revenue, capacity] = await Promise.all([
+        orders.revenueByEvent(ids),
+        orders.capacityByEvent(ids),
+      ]);
+      const revenueMap = new Map(
+        revenue.map((r) => [r.event_id, Number(r.revenue)]),
+      );
+      const capacityMap = new Map(
+        capacity.map((c) => [
+          c.event_id,
+          { capacity: Number(c.capacity), sold: Number(c.sold_quantity) },
+        ]),
+      );
+      return rows.map((e) => {
+        const { capacity: cap, sold } = capacityMap.get(e.id) ?? {
+          capacity: 0,
+          sold: 0,
+        };
+        return {
+          ...e,
+          revenue: revenueMap.get(e.id) ?? 0,
+          capacity: cap,
+          sold_quantity: sold,
+          fill_rate: cap === 0 ? 0 : sold / cap,
+        };
+      });
+    }),
+  );
+  api.get(
+    "/organizer/events/status-counts",
+    protect,
     route((req, res) => {
       role(who(res), ["ORGANIZER", "ADMIN"]);
-      return events.list({ owner: who(res).userId, offset: page(req) * 50 });
+      return events.statusCounts(who(res).userId);
     }),
   );
   api.post(
@@ -681,6 +724,19 @@ export function createApplication(config: {
       );
     }),
   );
+  api.get(
+    "/me/order-history",
+    protect,
+    route((req, res) => createOrderHistory(orders, payments).list(who(res), z.object({
+      page: z.coerce.number().int().min(0).max(10000).default(0),
+      pageSize: z.coerce.number().int().min(1).max(50).default(5),
+      q: z.string().trim().max(200).default(""),
+      group: z.enum(["all", "paid", "processing", "closed"]).default("all"),
+      from: date.optional(), toExclusive: date.optional(),
+    }).parse(req.query))),
+  );
+  api.get("/me/order-history/:id", protect,
+    route((req, res) => createOrderHistory(orders, payments).detail(who(res), id(req))));
   api.get(
     "/me/orders",
     protect,
