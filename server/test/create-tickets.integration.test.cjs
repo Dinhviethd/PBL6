@@ -19,8 +19,8 @@ async function verify(serve = false) {
   try {
     await app.start();
     for (const role of ['USER', 'ADMIN', 'ORGANIZER']) await db.query('INSERT INTO roles("idRole",code,name) VALUES($1,$2,$2) ON CONFLICT(code) DO NOTHING', [randomUUID(), role]);
-    const password = process.env.B5_TEST_PASSWORD;
-    assert.ok(password, 'B5_TEST_PASSWORD required');
+    // Accounts are created in the disposable test database; CI needs no external credential.
+    const password = process.env.B5_TEST_PASSWORD || `B5Fixture-${randomUUID()}!`;
     const owner = await app.auth.register({ name: 'BTC kiểm thử B5', email: 'organizer@example.test', password });
     const other = await app.auth.register({ name: 'Other organizer', email: 'b5-other@example.test', password });
     const user = await app.auth.register({ name: 'Customer', email: 'b5-user@example.test', password });
