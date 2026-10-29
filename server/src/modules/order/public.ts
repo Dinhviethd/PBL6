@@ -279,10 +279,17 @@ export function createOrders(db: Store, qrSecret: string) {
         "Mã vé không hợp lệ hoặc sai sự kiện.",
         400,
       );
-      if (t.status === "CHECKED_IN")
-        return { duplicate: true, ...(await r.checkinInfo(t.id)) };
-      ensure(t.status === "VALID", "VOID_TICKET", "Vé đã bị hủy.");
       const details = await r.ticket(t.id);
+      // Only return display fields after event ownership and ticket matching pass.
+      // Never expose the QR token, ciphertext, or buyer contact information.
+      const ticket = {
+        ticket_code: t.ticket_code,
+        buyer_name: details.buyer_name_snapshot,
+        ticket_type_name: details.ticket_type_name_snapshot,
+      };
+      if (t.status === "CHECKED_IN")
+        return { duplicate: true, ...(await r.checkinInfo(t.id)), ...ticket };
+      ensure(t.status === "VALID", "VOID_TICKET", "Vé đã bị hủy.");
       ensure(
         details.order_status === "PAID",
         "UNPAID_TICKET",
@@ -290,6 +297,7 @@ export function createOrders(db: Store, qrSecret: string) {
       );
       return {
         duplicate: false,
+        ...ticket,
         ...(await r.checkin(
           t.id,
           event.id,

@@ -1,0 +1,578 @@
+.qs-page {
+  min-height: 100vh;
+  background: #0f1222;
+  color: #e0e1f7;
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: 14px;
+}
+.qs-page * {
+  box-sizing: border-box;
+}
+.qs-page a {
+  text-decoration: none;
+}
+.qs-page button,
+.qs-page input {
+  font: inherit;
+}
+.qs-page button {
+  cursor: pointer;
+}
+.qs-page button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+.qs-page :focus-visible {
+  outline: 2px solid #5de6ff;
+  outline-offset: 4px;
+}
+.qs-body {
+  margin-left: 16rem;
+}
+.qs-header {
+  min-height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 24px;
+  background: #0a0d1c;
+  border-bottom: 1px solid #262939;
+}
+.qs-header nav,
+.qs-account,
+.qs-user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.qs-header nav {
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 12px;
+}
+.qs-header nav > span:last-child {
+  color: #5de6ff;
+}
+.qs-user {
+  gap: 8px;
+  font-size: 12px;
+}
+.qs-user > span {
+  display: grid;
+  place-items: center;
+  border: 2px solid #7c3aed;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  background: #262939;
+}
+.qs-user strong {
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.qs-content {
+  padding: 24px;
+  max-width: 1600px;
+  margin: auto;
+}
+.qs-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at top right, #5de6ff14, transparent 60%), #181b2a;
+}
+.qs-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #5de6ff;
+  font:
+    12px "Space Grotesk",
+    sans-serif;
+}
+.qs-hero h1 {
+  font-family: "Be Vietnam Pro", sans-serif;
+  font-size: clamp(24px, 2.6vw, 36px);
+  line-height: 1.2;
+  margin: 12px 0;
+  font-weight: 700;
+}
+.qs-hero p {
+  color: #ccc3d8;
+  font-size: 13px;
+  line-height: 1.7;
+  margin: 0;
+}
+.qs-event {
+  display: flex;
+  gap: 12px;
+  background: #1c1f2f;
+  padding: 16px;
+  border-radius: 8px;
+  flex: 0 1 340px;
+  min-width: 0;
+}
+.qs-event > svg {
+  color: #5de6ff;
+  flex-shrink: 0;
+}
+.qs-event > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.qs-event small,
+.qs-ticket-details small {
+  font:
+    10px "Space Grotesk",
+    sans-serif;
+  color: #ccc3d8;
+  letter-spacing: 0.07em;
+}
+.qs-event strong {
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.qs-event span {
+  color: #ccc3d8;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.qs-event a {
+  color: #5de6ff;
+  font-size: 12px;
+}
+.qs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: 20px;
+  align-items: start;
+}
+.qs-left {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.qs-camera-card {
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  background:
+    radial-gradient(#22d3ee18 1px, transparent 1px) 0 0 / 24px 24px,
+    #0a0d1c;
+}
+.qs-camera-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font:
+    11px "Space Grotesk",
+    sans-serif;
+  text-align: left;
+}
+.qs-camera-status > span {
+  width: 8px;
+  height: 8px;
+  background: #958da1;
+  border-radius: 50%;
+}
+.qs-camera-status > span.is-on {
+  background: #5de6ff;
+  box-shadow: 0 0 10px #5de6ff;
+}
+.qs-viewport {
+  position: relative;
+  max-width: 340px;
+  width: 100%;
+  aspect-ratio: 1;
+  margin: 32px auto 24px;
+  background: #181b2ae0;
+  border-radius: 10px;
+}
+.qs-viewport video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.qs-camera-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+  color: #5de6ff;
+}
+.qs-camera-placeholder p {
+  font:
+    11px "Space Grotesk",
+    sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.qs-corner {
+  position: absolute;
+  width: 28px;
+  height: 28px;
+  border: 4px solid #5de6ff;
+  pointer-events: none;
+}
+.qs-tl {
+  top: -3px;
+  left: -3px;
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 10px 0 0;
+}
+.qs-tr {
+  top: -3px;
+  right: -3px;
+  border-left: 0;
+  border-bottom: 0;
+  border-radius: 0 10px 0 0;
+}
+.qs-bl {
+  bottom: -3px;
+  left: -3px;
+  border-right: 0;
+  border-top: 0;
+  border-radius: 0 0 0 10px;
+}
+.qs-br {
+  bottom: -3px;
+  right: -3px;
+  border-left: 0;
+  border-top: 0;
+  border-radius: 0 0 10px;
+}
+.qs-laser {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  top: 50%;
+  height: 2px;
+  background: #5de6ff;
+  box-shadow: 0 0 16px #5de6ff;
+  animation: qs-scan 2s ease-in-out infinite alternate;
+}
+.qs-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #5de6ff;
+  color: #00363e;
+  border: 0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.qs-camera-card > .qs-button {
+  width: 100%;
+}
+.qs-camera-help {
+  color: #ccc3d8;
+  font-size: 12px;
+  margin: 16px 0 0;
+}
+.qs-camera-error {
+  color: #ffb4ab;
+  text-align: left;
+  line-height: 1.6;
+}
+.qs-manual {
+  background: #181b2a;
+  border-radius: 12px;
+  padding: 20px;
+}
+.qs-manual h2 {
+  font:
+    600 20px "Be Vietnam Pro",
+    sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+.qs-manual h2 svg {
+  color: #5de6ff;
+}
+.qs-manual p {
+  color: #ccc3d8;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.qs-manual form {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+.qs-code-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+}
+.qs-code-label input {
+  min-width: 0;
+  width: 100%;
+  padding: 12px;
+  background: #0a0d1c;
+  border: 1px solid #4a4455;
+  border-radius: 8px;
+  color: #e0e1f7;
+}
+.qs-result {
+  padding: 16px;
+  background: #181b2a;
+  border-radius: 12px;
+  min-width: 0;
+}
+.qs-result-heading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #262939;
+}
+.qs-result-heading > svg {
+  flex-shrink: 0;
+}
+.qs-result-heading h2 {
+  font:
+    700 22px "Be Vietnam Pro",
+    sans-serif;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+.qs-result-heading span {
+  font:
+    10px "Space Grotesk",
+    sans-serif;
+  letter-spacing: 0.04em;
+}
+.qs-result-success .qs-result-heading {
+  background: #5de6ff;
+  color: #00363e;
+  box-shadow: 0 0 20px #5de6ff30;
+}
+.qs-result-error .qs-result-heading {
+  background: #93000a60;
+  color: #ffb4ab;
+}
+.qs-result-duplicate .qs-result-heading {
+  background: #f59e0b20;
+  color: #fcd34d;
+}
+.qs-result-empty {
+  min-height: 350px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  padding: 24px 16px;
+  color: #ccc3d8;
+  line-height: 1.8;
+}
+.qs-result-empty > svg {
+  color: #5de6ff;
+  opacity: 0.6;
+}
+.qs-ticket-details {
+  background: #0a0d1c;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 16px;
+}
+.qs-ticket-details h3 {
+  font:
+    600 24px "Syne",
+    sans-serif;
+  margin: 8px 0 20px;
+  overflow-wrap: anywhere;
+}
+.qs-tier {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background: #262939;
+  color: #ffafd3;
+}
+.qs-tier > div {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.qs-tier strong {
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.qs-ticket-details dl {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 0;
+}
+.qs-ticket-details dt {
+  color: #ccc3d8;
+  font-size: 11px;
+}
+.qs-ticket-details dd {
+  font:
+    13px "Space Grotesk",
+    sans-serif;
+  margin: 8px 0 0;
+  overflow-wrap: anywhere;
+}
+.qs-result-note {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #ccc3d8;
+  margin: 20px 0 0;
+}
+.qs-result-note svg {
+  flex-shrink: 0;
+}
+.qs-next {
+  border: 1px solid #4a4455;
+  border-radius: 8px;
+  color: #5de6ff;
+  background: transparent;
+  padding: 12px;
+  margin-top: 20px;
+  width: 100%;
+}
+.qs-load-error {
+  padding: 16px;
+  background: #93000a40;
+  color: #ffb4ab;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+.qs-menu-button,
+.qs-backdrop {
+  display: none;
+}
+.qs-icon-button {
+  background: transparent;
+  border: 0;
+  color: #e0e1f7;
+  padding: 4px;
+}
+.qs-spin {
+  animation: qs-spin 1s linear infinite;
+}
+@keyframes qs-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes qs-scan {
+  from {
+    top: 20%;
+  }
+  to {
+    top: 80%;
+  }
+}
+@media (max-width: 1200px) {
+  .qs-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .qs-event {
+    flex-basis: auto;
+  }
+  .qs-manual form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .qs-user strong {
+    display: none;
+  }
+}
+@media (max-width: 900px) {
+  .qs-body {
+    margin-left: 0;
+  }
+  .qs-menu-button {
+    display: inline-flex;
+    z-index: 70;
+  }
+  .qs-menu-open .qs-sidebar .osb-sidebar {
+    display: flex;
+    top: 64px;
+  }
+  .qs-menu-open .qs-backdrop {
+    display: block;
+    position: fixed;
+    inset: 64px 0 0;
+    background: #0008;
+    z-index: 45;
+    border: 0;
+  }
+}
+@media (max-width: 650px) {
+  .qs-header {
+    padding: 12px;
+    gap: 8px;
+  }
+  .qs-header nav {
+    gap: 6px;
+    font-size: 10px;
+  }
+  .qs-header nav > span {
+    display: none;
+  }
+  .qs-account {
+    gap: 8px;
+  }
+  .qs-create {
+    padding: 8px;
+    font-size: 11px;
+  }
+  .qs-content {
+    padding: 16px;
+  }
+  .qs-hero {
+    padding: 20px;
+  }
+  .qs-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .qs-camera-card,
+  .qs-manual {
+    padding: 16px;
+  }
+  .qs-result-empty {
+    min-height: 240px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qs-spin,
+  .qs-laser {
+    animation: none;
+  }
+}

@@ -79,11 +79,15 @@ function EditorForm({
           >
             <Field label="Tên sự kiện" name="title" value={e?.title} />
             <div className="form-grid">
-              <Field
-                label="Đường dẫn (chữ thường, dấu gạch ngang)"
-                name="slug"
-                value={e?.slug}
-              />
+              {e && (
+                <Field
+                  label="Đường dẫn (tự động)"
+                  name="slug"
+                  value={e.slug}
+                  disabled
+                  required={false}
+                />
+              )}
               <Field
                 label="Danh mục"
                 name="categoryId"

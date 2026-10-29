@@ -25,6 +25,9 @@ import { Notifications } from "./pages/account/Notifications";
 import { Organizer } from "./pages/organizer/Organizer";
 import { RegisterOrganizer } from "./pages/organizer/RegisterOrganizer";
 import { EditorPage } from "./pages/organizer/EditorPage";
+import { CreateEventPage } from "./pages/organizer/CreateEventPage";
+import { CreateTicketsPage } from "./pages/organizer/CreateTicketsPage";
+import { QRScanPage } from "./pages/organizer/QRScanPage";
 import { Operations } from "./pages/organizer/Operations";
 import { Admin } from "./pages/admin/Admin";
 import { StaffAssignments } from "./pages/staff/StaffAssignments";
@@ -85,7 +88,7 @@ export function App() {
   const isCheckoutPage = location.pathname.startsWith("/checkout/");
   const isRegisterOrganizerPage =
     location.pathname === "/register-organizer";
-  const isOrganizerDashboard = location.pathname === "/organizer";
+  const isOrganizerDashboard = ["/organizer", "/organizer/new"].includes(location.pathname) || /^\/organizer\/events\/[^/]+\/(tickets|checkin)\/?$/.test(location.pathname);
   const isPublicHome = location.pathname === "/" && isAuthVerified && !user;
   const isUserHome =
     location.pathname === "/" &&
@@ -273,7 +276,7 @@ export function App() {
             path="/organizer/new"
             element={
               <Guard roles={["ORGANIZER", "ADMIN"]}>
-                <EditorPage />
+                <CreateEventPage />
               </Guard>
             }
           />
@@ -282,6 +285,18 @@ export function App() {
             element={
               <Guard roles={["ORGANIZER", "ADMIN"]}>
                 <EditorPage />
+              </Guard>
+            }
+          />
+          <Route
+            path="/organizer/events/:id/tickets"
+            element={<Guard roles={["ORGANIZER", "ADMIN"]}><CreateTicketsPage /></Guard>}
+          />
+          <Route
+            path="/organizer/events/:id/checkin"
+            element={
+              <Guard roles={["ORGANIZER", "ADMIN"]}>
+                <QRScanPage />
               </Guard>
             }
           />

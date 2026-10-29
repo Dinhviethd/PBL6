@@ -1,8 +1,15 @@
 import type { Store, Principal, Row } from "../../contracts/core";
 import { ensure, role } from "../../contracts/core";
 import { eventStore } from "./infrastructure/store";
+import { slugify } from "../../utils/slug";
 export function createEvents(db: Store) {
   const r = eventStore(db);
+  const uniqueSlug = async (title: string) => {
+    const base = slugify(title);
+    let slug = base;
+    for (let i = 2; await r.bySlug(slug); i++) slug = `${base}-${i}`;
+    return slug;
+  };
   return {
     ...r,
     async checkinGuard(id: string, p: Principal) {
@@ -109,6 +116,7 @@ export function createEvents(db: Store) {
         "Danh mục không khả dụng.",
         400,
       );
+      if (!d.slug) d.slug = await uniqueSlug(d.title);
       return r.save(p.userId, d);
     },
     async publicOne(slug: string) {

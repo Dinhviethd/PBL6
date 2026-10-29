@@ -1,0 +1,181 @@
+import { test, expect } from '@playwright/test';
+import { mkdir } from 'node:fs/promises';
+import path from 'node:path';
+
+test.skip(process.env.B5_LIVE_TEST !== '1', 'Requires disposable B5 API fixture on port 8015');
+test.use({ channel: 'chrome', timezoneId: 'America/New_York' });
+
+test('B4 to B5, real ticket CRUD, responsive, placeholders and submission', async ({ page, context }) => {
+  test.setTimeout(120000);
+  const login = await context.request.post('/api/auth/login', { data: { email: 'organizer@example.test', password: process.env.B5_TEST_PASSWORD } });
+  expect(login.status()).toBe(200);
+  const auth = (await login.json()).data;
+  const headers = { Authorization: `Bearer ${auth.accessToken}` };
+  const errors: string[] = [];
+  page.on('pageerror', e => errors.push(e.message));
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto('/organizer/new');
+  const category = (await (await context.request.get('/api/categories')).json()).data[0].id;
+  const title = `[TEST B5 UI] Âm nhạc ${Date.now()}`;
+  const fields = { title, venueName: 'Nhà hát', address: '123 Trần Phú', cityCode: 'DA_NANG', startsDate: '2027-11-25', startsTime: '18:00', endsDate: '2027-11-25', endsTime: '22:00', checkinOpensAt: '2027-11-25T17:00', checkinClosesAt: '2027-11-25T21:00' };
+  for (const [name, value] of Object.entries(fields)) await page.locator(`.ce-form [name="${name}"]`).fill(value);
+  await page.locator('textarea[name="description"]').fill('Sự kiện kiểm thử B5');
+  await page.locator('[name="categoryId"]').selectOption(category);
+  const createdResponse = page.waitForResponse(r => r.request().method() === 'POST' && r.url().endsWith('/api/organizer/events'));
+  await page.getByRole('button', { name: 'Tạo sự kiện', exact: true }).click();
+  const created = (await (await createdResponse).json()).data;
+  await expect(page).toHaveURL(/\/organizer\/new$/);
+  await expect(page.locator('.ce-inline-success').getByRole('status')).toContainText('Tạo bản nháp thành công');
+  await expect(page.locator('[name="title"]')).toHaveValue(title);
+  await expect(page.locator('[name="title"]')).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Đã tạo bản nháp', exact: true })).toBeDisabled();
+  await expect(page.locator('.ce-inline-success')).toBeFocused();
+  const next = page.getByRole('link', { name: 'Tạo loại vé', exact: true });
+  await expect(next).toHaveAttribute('href', `/organizer/events/${created.id}/tickets`);
+  const inlineOutput = path.resolve(process.env.B5_EVIDENCE_DIR || 'test-results/b5-evidence');
+  await mkdir(inlineOutput, { recursive: true });
+  for (const width of [1440, 768, 390]) {
+    await page.setViewportSize({ width, height: 1000 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const submitBox = await page.getByRole('button', { name: 'Đã tạo bản nháp', exact: true }).boundingBox();
+    const nextBox = await next.boundingBox();
+    expect(nextBox!.y).toBeGreaterThan(submitBox!.y + submitBox!.height);
+    await page.locator('.ce-actions').screenshot({ path: path.join(inlineOutput, `b4-inline-${width}.png`) });
+  }
+  let duplicatePosts = 0;
+  page.on('request', r => { if (r.method() === 'POST' && r.url().endsWith('/api/organizer/events')) duplicatePosts++; });
+  await page.locator('.ce-form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+  await expect(next).toBeVisible();
+  expect(duplicatePosts).toBe(0);
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await next.click();
+  await expect(page).toHaveURL(new RegExp(`/organizer/events/${created.id}/tickets$`));
+  await expect(page.getByRole('heading', { name: 'Quản lý loại vé & Sức chứa' })).toBeVisible();
+  const send = page.getByRole('button', { name: 'Gửi Admin phê duyệt', exact: true });
+  await expect(send).toBeDisabled();
+  await expect(page.getByText('Chưa có loại vé. Thêm loại vé đầu tiên ở biểu mẫu bên trên.')).toBeVisible();
+  for (const name of ['Xuất báo cáo vé', 'Chọn sự kiện', 'Sắp hết', 'Quy định hoàn tiền']) {
+    await page.getByRole('button', { name, exact: true }).click();
+    await expect(page.locator('.ct-toast')).toHaveText('Chức năng đang được phát triển');
+    await page.getByRole('button', { name: 'Đóng thông báo' }).click();
+  }
+  await expect(page.locator('.ct-content')).not.toContainText('QR');
+  const form = page.getByRole('form', { name: 'Thông tin loại vé' });
+  const fillTicket = async (name: string) => {
+    for (const [key, value] of Object.entries({ name, price: '250000', capacity: '100', saleStartsAt: '2027-11-01T10:00', saleEndsAt: '2027-11-25T18:00', description: 'Vé tiêu chuẩn\nKhu vực chung' })) await form.locator(`[name="${key}"]`).fill(value);
+  };
+  await fillTicket('Phổ thông');
+  await form.locator('[name="saleEndsAt"]').fill('2027-11-26T18:00');
+  await form.getByRole('button', { name: 'Thêm loại vé', exact: true }).click();
+  await expect(page.getByRole('alert')).toContainText('không được sau');
+  await form.locator('[name="saleEndsAt"]').fill('2027-11-25T18:00');
+  await context.setOffline(true);
+  await form.getByRole('button', { name: 'Thêm loại vé', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Thử tải lại' })).toBeVisible();
+  await expect(form.locator('[name="name"]')).toHaveValue('Phổ thông');
+  await context.setOffline(false);
+  await page.getByRole('button', { name: 'Thử tải lại' }).click();
+  await expect(form.getByRole('button', { name: 'Thêm loại vé', exact: true })).toBeEnabled();
+  await form.getByRole('button', { name: 'Thêm loại vé', exact: true }).click();
+  await expect(page.locator('tbody tr').filter({ hasText: 'Phổ thông' })).toContainText('250.000');
+  await expect(form.locator('[name="name"]')).toHaveValue('');
+  await expect(send).toBeEnabled();
+  let detail = (await (await context.request.get(`/api/organizer/events/${created.id}`, { headers })).json()).data;
+  expect(detail.ticketTypes).toHaveLength(1);
+  expect(new Date(detail.ticketTypes[0].sale_starts_at).toISOString()).toBe('2027-11-01T03:00:00.000Z');
+  await page.getByRole('button', { name: 'Sửa Phổ thông', exact: true }).click();
+  await expect(form.locator('[name="saleStartsAt"]')).toHaveValue('2027-11-01T10:00');
+  await form.locator('[name="capacity"]').fill('120');
+  await form.getByRole('button', { name: 'Lưu loại vé', exact: true }).click();
+  await expect(page.locator('tbody tr').filter({ hasText: 'Phổ thông' })).toContainText('0 / 120 vé');
+  await fillTicket('VIP');
+  await form.getByRole('button', { name: 'Thêm loại vé', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Ngừng dùng VIP', exact: true })).toBeEnabled();
+  page.once('dialog', d => d.accept());
+  await page.getByRole('button', { name: 'Ngừng dùng VIP', exact: true }).click();
+  await expect(page.locator('tbody tr')).toHaveCount(1);
+  await page.getByLabel('Hiển thị', { exact: true }).selectOption('archived');
+  await expect(page.locator('tbody tr')).toContainText('VIP');
+  await expect(page.getByRole('button', { name: 'Sửa VIP', exact: true })).toBeDisabled();
+  await page.getByLabel('Hiển thị', { exact: true }).selectOption('active');
+  const output = path.resolve(process.env.B5_EVIDENCE_DIR || 'test-results/b5-evidence');
+  await mkdir(output, { recursive: true });
+  for (const width of [1440, 768, 390]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.evaluate(() => window.scrollTo(0, 0));
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.screenshot({ path: path.join(output, `${width}.png`), fullPage: true });
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.reload();
+  await expect(page.locator('tbody tr')).toContainText('Phổ thông');
+  page.once('dialog', d => d.accept());
+  await send.click();
+  await expect(page.locator('.ct-event')).toContainText('Chờ');
+  await expect(send).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Sửa Phổ thông', exact: true })).toBeDisabled();
+  detail = (await (await context.request.get(`/api/organizer/events/${created.id}`, { headers })).json()).data;
+  expect(detail.status).toBe('PENDING_REVIEW');
+  expect(detail.ticketTypes.filter((t: { archived_at: string }) => !t.archived_at)).toHaveLength(1);
+  await page.screenshot({ path: path.join(output, 'submitted.png'), fullPage: true });
+  expect(errors).toEqual([]);
+});
+
+test('B5 rejects cross-owner event without showing its form or table', async ({ page, context }) => {
+  const ownerLogin = await context.request.post('/api/auth/login', { data: { email: 'organizer@example.test', password: process.env.B5_TEST_PASSWORD } });
+  const owner = (await ownerLogin.json()).data;
+  const events = (await (await context.request.get('/api/organizer/events', { headers: { Authorization: `Bearer ${owner.accessToken}` } })).json()).data;
+  const id = events[0].id;
+  await context.request.post('/api/auth/login', { data: { email: 'b5-other@example.test', password: process.env.B5_TEST_PASSWORD } });
+  await page.goto(`/organizer/events/${id}/tickets`);
+  await expect(page.getByRole('alert')).toBeVisible();
+  await expect(page.getByRole('form', { name: 'Thông tin loại vé' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Thử tải lại' })).toBeVisible();
+});
+
+test('B4 inline error handling and storage failure preserve the correct actions', async ({ page, context }) => {
+  await context.request.post('/api/auth/login', { data: { email: 'organizer@example.test', password: process.env.B5_TEST_PASSWORD } });
+  const category = (await (await context.request.get('/api/categories')).json()).data[0].id;
+  await page.goto('/organizer/new');
+  for (const [name, value] of Object.entries({ title: `Inline failure ${Date.now()}`, venueName: 'Nhà hát', address: '123 Trần Phú', cityCode: 'DA_NANG', startsDate: '2027-11-25', startsTime: '18:00', endsDate: '2027-11-25', endsTime: '22:00', checkinOpensAt: '2027-11-25T17:00', checkinClosesAt: '2027-11-25T21:00', description: 'Kiểm thử lỗi và khôi phục' })) await page.locator(`.ce-form [name="${name}"]`).fill(value);
+  await page.locator('[name="categoryId"]').selectOption(category);
+  const submit = page.getByRole('button', { name: 'Tạo sự kiện', exact: true });
+  await context.setOffline(true);
+  await submit.click();
+  await expect(page.locator('.ce-form>[role="alert"]')).toBeVisible();
+  await expect(page.locator('.ce-inline-success')).toHaveCount(0);
+  await context.setOffline(false);
+  // Explicit contract fault injection, separate from the real API assertions.
+  await page.route('**/api/organizer/events', route => route.fulfill({ json: { data: { status: 'DRAFT' } } }));
+  await submit.click();
+  await expect(page.locator('.ce-form>[role="alert"]')).toContainText('chưa trả về mã sự kiện');
+  await expect(page.locator('.ce-inline-success')).toHaveCount(0);
+  await page.unroute('**/api/organizer/events');
+  await page.evaluate(() => { Storage.prototype.removeItem = () => { throw new DOMException('Denied', 'SecurityError'); }; });
+  let creates = 0;
+  let uploads = 0;
+  page.on('request', r => {
+    if (r.method() === 'POST' && r.url().endsWith('/api/organizer/events')) creates++;
+    if (r.method() === 'POST' && r.url().includes('/media')) uploads++;
+  });
+  await submit.click();
+  await expect(page.locator('.ce-inline-success')).toContainText('Tạo bản nháp thành công');
+  await expect(page.getByRole('alert')).toContainText('chưa xóa được bản nháp');
+  await expect(page.locator('.ce-form')).toHaveAttribute('aria-busy', 'false');
+  await expect(page.locator('.ce-preview')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Lưu nháp trên thiết bị' })).toBeDisabled();
+  await expect(page.getByRole('button', { name: 'Chọn banner' })).toBeDisabled();
+  const snapshot = await page.evaluate(() => JSON.stringify(localStorage));
+  await page.locator('.ce-upload').evaluate(el => {
+    const dataTransfer = new DataTransfer();
+    dataTransfer.items.add(new File(['test'], 'test.png', { type: 'image/png' }));
+    el.dispatchEvent(new DragEvent('drop', { bubbles: true, dataTransfer }));
+  });
+  await page.locator('.ce-form').evaluate((form: HTMLFormElement) => form.requestSubmit());
+  await page.getByRole('link', { name: 'Tạo loại vé', exact: true }).focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/\/organizer\/events\/[^/]+\/tickets$/);
+  expect(creates).toBe(1);
+  expect(uploads).toBe(0);
+  expect(await page.evaluate(() => JSON.stringify(localStorage))).toBe(snapshot);
+});

@@ -61,7 +61,7 @@ const loginSchema = z.object({ email, password: z.string().min(1).max(200) });
 const eventSchema = z
   .object({
     categoryId: uuid,
-    slug: text.regex(/^[a-z0-9-]+$/).max(220),
+    slug: text.regex(/^[a-z0-9-]+$/).max(220).optional(),
     title: text.max(200),
     description: text.max(20000),
     coverImageUrl: imageUrl.optional(),

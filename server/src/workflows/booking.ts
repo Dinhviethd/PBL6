@@ -336,6 +336,7 @@ export function createBooking(
           "Danh mục không hợp lệ.",
           400,
         );
+        d.slug = d.slug || e.slug;
         const saved = await events.save(e.organizer_id, d, id);
         const changed =
           new Date(d.startsAt).getTime() !== new Date(e.starts_at).getTime() ||
