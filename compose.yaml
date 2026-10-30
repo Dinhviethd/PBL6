@@ -5,11 +5,9 @@ x-backend: &backend
     - path: ./server/.env
       format: raw
   environment:
-    # Local Docker development, including HTTP cookies and sandbox payments.
-    NODE_ENV: development
+    # Deployment mode and canonical client origin are loaded from server/.env.
     HOST: 0.0.0.0
     PORT: 8080
-    CLIENT_URL: ${DOCKER_CLIENT_URL:-http://localhost:8000}
     DB_SSL: "true"
     DB_SSL_CA_FILE: /app/certs/supabase-ca.crt
     STATIC_DIR: /app/public

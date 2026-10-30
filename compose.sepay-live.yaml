@@ -1,0 +1,72 @@
+name: pbl6-sepay-live
+
+x-live-runtime: &live-runtime
+  image: pbl6-sepay-live:local
+  build:
+    context: .
+    dockerfile: Dockerfile
+  environment:
+    SEPAY_RUNTIME_HOST: 0.0.0.0
+    SEPAY_RUNTIME_PORT: "8080"
+    SEPAY_RUNTIME_CLIENT_URL: https://richelle-unrelapsing-flavourlessly.ngrok-free.dev
+    SEPAY_RUNTIME_CLIENT_EXTRA_ORIGINS: http://localhost:5173
+    SEPAY_RUNTIME_DB_SSL_CA_FILE: /app/certs/supabase-ca.crt
+    SEPAY_RUNTIME_WORKER_HEALTH_FILE: /app/.local/runtime/sepay-worker-health.json
+  init: true
+  restart: unless-stopped
+
+services:
+  api:
+    <<: *live-runtime
+    command: ["node", "scripts/sepay-live-runtime.cjs", "api"]
+    volumes:
+      - type: bind
+        source: ./server/.env
+        target: /app/.env
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./server/.local/certs/supabase-ca.crt
+        target: /app/certs/supabase-ca.crt
+        read_only: true
+        bind:
+          create_host_path: false
+      - uploads:/app/.local/uploads
+    ports:
+      - "127.0.0.1:8011:8080"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8080/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      start_period: 30s
+      retries: 3
+  worker:
+    <<: *live-runtime
+    command: ["node", "scripts/sepay-live-runtime.cjs", "worker"]
+    volumes:
+      - type: bind
+        source: ./server/.env
+        target: /app/.env
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./server/.local/certs/supabase-ca.crt
+        target: /app/certs/supabase-ca.crt
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ./server/.local/sepay-live-runtime
+        target: /app/.local/runtime
+        bind:
+          create_host_path: false
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  uploads:
+    external: true
+    name: pbl6_uploads

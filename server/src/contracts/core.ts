@@ -13,6 +13,7 @@ export interface Principal {
 export interface UnitOfWork {
   run<T>(work: () => Promise<T>): Promise<T>;
 }
+export type ExclusiveWork = <T>(key: string, work: () => Promise<T>) => Promise<T>;
 export class Fault extends Error {
   constructor(
     public status: number,

@@ -72,3 +72,10 @@ export function createPayments(db: Store, provider: PaymentProvider) {
   };
 }
 export type Payments = ReturnType<typeof createPayments>;
+// Independent SePay interface; legacy provider factory and endpoints stay unchanged.
+export { createSepayPayments, newSepayCode, sepayDto, validateSepayConfig } from "./sepay";
+export { extractSepayCode, parseSepayWebhook, verifySepayHmac } from "./sepay";
+export type { SepayConfig, SepayPayments } from "./sepay";
+export type { SepayWebhookPayload } from "./sepay";
+export { createSepayReconciliation } from "./sepay-reconciliation";
+export { createSepayV2Reconciler, createSepayV2Client } from "./sepay-api-v2";

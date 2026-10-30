@@ -4,13 +4,16 @@ import {
   ArrowRight,
   CalendarDays,
   Check,
+  Copy,
   CreditCard,
+  Building2,
   Info,
   Lock,
   Mail,
   MapPin,
   Phone,
   QrCode,
+  RefreshCw,
   Rocket,
   ShieldCheck,
   Smartphone,
@@ -29,8 +32,15 @@ import { checkoutUrl, paymentMessage } from "@/features/ticketing/payment";
 import type { Order, Payment } from "@/features/ticketing/types";
 import "./checkout.css";
 
-type Method = "vnpay" | "vietqr" | "ewallet" | "card" | "wallet";
+type Method = "vnpay" | "mbbank" | "vietqr" | "ewallet" | "card" | "wallet";
 type Toast = { id: number; text: string };
+type SepayPayment = {
+  paymentId: string; orderId: string; orderStatus: string; status: string;
+  environment: "test" | "live"; amount: string; currency: string; bank: string;
+  accountNumber: string; accountName: string; transferContent: string;
+  qrUrl: string | null; canTransfer: boolean; expiresAt: string; holdUntil: string;
+  requiresReview: boolean; updatedAt: string; lastVerifiedAt: string | null;
+};
 const COMING_SOON = "Chức năng sẽ sớm được cập nhật";
 const VN_TIME_ZONE = "Asia/Ho_Chi_Minh";
 
@@ -78,11 +88,13 @@ function statusInfo(status: string) {
 export function Checkout() {
   const { id = "" } = useParams(),
     resource = useLoad<Order>(`/me/orders/${id}`),
-    config = useLoad<{ paymentMode: string }>("/config"),
+    config = useLoad<{ paymentMode: string; sepayEnabled?: boolean }>("/config"),
     user = useAuth((state) => state.user),
     o = resource.data,
     [method, setMethod] = useState<Method>("vnpay"),
     [payment, setPayment] = useState<Payment | null>(null),
+    [sepayInfo, setSepayInfo] = useState<SepayPayment | null>(null),
+    [sepayLoading, setSepayLoading] = useState(false),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [toast, setToast] = useState<Toast | null>(null),
@@ -90,6 +102,10 @@ export function Checkout() {
     [now, setNow] = useState(Date.now());
   const mode = config.data?.paymentMode ?? "";
   const paymentReady = mode === "vnpay_sandbox" || mode === "demo";
+  const sepayReady = config.data?.sepayEnabled === true;
+  useEffect(() => {
+    if (sepayReady && !paymentReady) setMethod("mbbank");
+  }, [sepayReady, paymentReady]);
   const remaining = o
     ? Math.max(0, Math.floor((Date.parse(o.expires_at) - now) / 1000))
     : 0;
@@ -126,6 +142,34 @@ export function Checkout() {
     };
   }, [pendingVnpay, reloadOrder]);
 
+  const hasSepayPayment = o?.payment?.provider === "sepay" || o?.latest_payment?.provider === "sepay";
+  useEffect(() => {
+    if (hasSepayPayment) setMethod("mbbank");
+  }, [hasSepayPayment]);
+  useEffect(() => {
+    if (!hasSepayPayment || o?.status !== "PENDING_PAYMENT") return;
+    let alive = true;
+    let inFlight = false;
+    const refreshSepay = async () => {
+      if (inFlight || !alive) return;
+      inFlight = true;
+      try {
+        const response = await api.get(`/sepay/orders/${id}/payment`);
+        if (!alive) return;
+        const data = response.data.data as SepayPayment;
+        setSepayInfo(data);
+        if (data.orderStatus === "PAID") reloadOrder();
+      } catch {
+        // Keep the last known server state; the user can retry manually.
+      } finally {
+        inFlight = false;
+      }
+    };
+    void refreshSepay();
+    const timer = window.setInterval(() => void refreshSepay(), 8000);
+    return () => { alive = false; window.clearInterval(timer); };
+  }, [hasSepayPayment, o?.status, id, reloadOrder]);
+
   const pendingExpired =
     o?.status === "PENDING_PAYMENT" &&
     Boolean(o.expires_at) &&
@@ -141,14 +185,59 @@ export function Checkout() {
   }
   function chooseMethod(next: Method) {
     setMethod(next);
-    if (next !== "vnpay") notify(COMING_SOON);
+    if (!["vnpay", "mbbank"].includes(next)) notify(COMING_SOON);
+  }
+  function requestVnpay() {
+    if (!canStartPayment) return;
+    if (!paymentReady) {
+      notify(COMING_SOON);
+      return;
+    }
+    chooseMethod("vnpay");
+  }
+  async function copyPaymentValue(value: string, label: string) {
+    try {
+      await navigator.clipboard.writeText(value);
+      notify(`${label} đã được sao chép.`);
+    } catch {
+      notify("Không thể sao chép tự động. Vui lòng chọn và sao chép thủ công.");
+    }
+  }
+  async function refreshSepay() {
+    if (!o) return;
+    setSepayLoading(true);
+    try {
+      const response = await api.get(`/sepay/orders/${o.id}/payment`);
+      const data = response.data.data as SepayPayment;
+      setSepayInfo(data);
+      if (data.orderStatus === "PAID") reloadOrder();
+    } catch (e) {
+      setError(message(e));
+    } finally {
+      setSepayLoading(false);
+    }
   }
   async function pay() {
+    if (method === "mbbank") {
+      if (!o || !remaining || !sepayReady || !canStartPayment) return;
+      setBusy(true);
+      setError("");
+      try {
+        const response = await api.post(`/sepay/orders/${o.id}/payment`, {});
+        setSepayInfo(response.data.data as SepayPayment);
+        reloadOrder();
+      } catch (e) {
+        setError(message(e));
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     if (method !== "vnpay") {
       notify(COMING_SOON);
       return;
     }
-    if (!o || !remaining || !paymentReady) return;
+    if (!o || !remaining || !paymentReady || !canStartPayment) return;
     setBusy(true);
     setError("");
     try {
@@ -237,12 +326,16 @@ export function Checkout() {
     isPending = o.status === "PENDING_PAYMENT",
     isPaid = o.status === "PAID",
     isClosed = o.status === "EXPIRED" || o.status === "CANCELLED",
+    orderPayment = o.payment ?? o.latest_payment,
+    activeOrderPayment = orderPayment && (["PENDING", "UNKNOWN"].includes(orderPayment.status) || orderPayment.requires_review) ? orderPayment : null,
     providerExpired = Boolean(
       o.payment?.provider_expires_at &&
         Date.parse(o.payment.provider_expires_at) <= now,
     ),
-    canPay =
-      isPending && remaining > 0 && paymentReady && !providerExpired && !busy,
+    canStartPayment = isPending && remaining > 0 && !providerExpired && !busy,
+    canPay = canStartPayment && (method === "mbbank"
+      ? sepayReady && (!activeOrderPayment || activeOrderPayment.provider === "sepay")
+      : method === "vnpay" && paymentReady && (!activeOrderPayment || activeOrderPayment.provider === "vnpay_sandbox" || activeOrderPayment.provider === "demo")),
     activePayment = payment ?? o.payment ?? o.latest_payment,
     fallbackPath = event?.slug ? `/events/${event.slug}` : "/explore",
     paymentHint =
@@ -252,14 +345,18 @@ export function Checkout() {
           ? "Thời gian giữ vé đã hết. Vui lòng quay lại sự kiện để đặt đơn mới."
           : providerExpired
             ? "Phiên thanh toán trước đã hết hạn. Hãy cập nhật trạng thái đơn trước khi thử lại."
-            : mode === "vnpay_sandbox"
+              : method === "mbbank"
+                ? "Sau khi tạo hướng dẫn, hãy chuyển đúng số tiền và nội dung để hệ thống tự xác nhận qua SePay."
+                : mode === "vnpay_sandbox"
               ? "Bạn sẽ được chuyển đến cổng VNPay Sandbox để xác thực. Sau khi hoàn tất, trạng thái đơn hàng được cập nhật tự động."
               : mode === "demo"
                 ? "Chế độ demo local tạo giao dịch mô phỏng, không thu tiền thật. Kết quả được chọn ở khung mô phỏng bên dưới."
                 : config.loading
                   ? "Đang kiểm tra cấu hình cổng thanh toán."
                   : "Cổng thanh toán chưa được cấu hình nên chưa thể khởi tạo giao dịch.";
-  const liveLabel = !isPending
+  const liveLabel = method === "mbbank"
+    ? sepayReady ? "Chuyển khoản MB Bank qua SePay" : "SePay chưa được cấu hình"
+    : !isPending
     ? status.label
     : remaining === 0
       ? "Đã hết thời gian giữ vé"
@@ -512,11 +609,11 @@ export function Checkout() {
                 Mã hóa 256-bit
               </span>
             </div>
-            {!paymentReady && (
+            {!paymentReady && !sepayReady && (
               <div className="ck-method-note">
                 {config.loading
                   ? "Đang kiểm tra cấu hình cổng thanh toán."
-                  : "Cổng thanh toán chưa được cấu hình. Bạn vẫn có thể xem đơn và hủy giữ chỗ."}
+                  : "Chưa cấu hình phương thức thanh toán. Bạn vẫn có thể xem đơn và hủy giữ chỗ."}
               </div>
             )}
             <div
@@ -525,8 +622,72 @@ export function Checkout() {
               aria-label="Phương thức thanh toán"
             >
               <div
-                className={`ck-method ck-method-primary${method === "vnpay" ? " is-selected" : ""}${canPay ? "" : " is-locked"}`}
-                onClick={() => canPay && chooseMethod("vnpay")}
+                className={`ck-method${method === "mbbank" ? " is-selected" : ""}${canStartPayment && sepayReady ? "" : " is-locked"}`}
+                onClick={() => canStartPayment && sepayReady && chooseMethod("mbbank")}
+              >
+                <div className="ck-method-top">
+                  <div className="ck-method-main">
+                    <input
+                      className="ck-radio"
+                      id="ck-method-mbbank"
+                      name="ck-payment-method"
+                      type="radio"
+                      checked={method === "mbbank"}
+                      onChange={() => chooseMethod("mbbank")}
+                      disabled={!canStartPayment || !sepayReady}
+                    />
+                    <label className="ck-method-copy" htmlFor="ck-method-mbbank">
+                      <span className="ck-method-title">
+                        Chuyển khoản MB Bank
+                        <span className="ck-badge purple">Tự động xác nhận</span>
+                      </span>
+                      <span className="ck-method-desc">
+                        Quét VietQR hoặc chuyển khoản đúng nội dung. SePay sẽ cập nhật đơn sau khi ngân hàng xác nhận.
+                      </span>
+                    </label>
+                  </div>
+                  <div className="ck-badges">
+                    <span className="ck-badge">MB BANK</span>
+                    <span className="ck-badge vietqr">SEPAY</span>
+                  </div>
+                </div>
+                {method === "mbbank" && (
+                  sepayInfo ? (
+                    <div className="ck-sepay-box" aria-live="polite">
+                      <div className="ck-sepay-head">
+                        <div>
+                          <strong>{sepayInfo.requiresReview ? "Giao dịch cần được tra soát" : sepayInfo.orderStatus === "PAID" ? "Đã nhận thanh toán" : sepayInfo.canTransfer ? "Đang chờ chuyển khoản" : "Phiên thanh toán đã kết thúc"}</strong>
+                          <p>{sepayInfo.requiresReview ? "Chưa phát hành vé. Bộ phận hỗ trợ sẽ kiểm tra giao dịch." : "Chỉ chuyển đúng số tiền và nội dung bên dưới để hệ thống tự nhận diện."}</p>
+                        </div>
+                        <button className="ck-sepay-refresh" type="button" onClick={() => void refreshSepay()} disabled={sepayLoading} aria-label="Kiểm tra trạng thái thanh toán">
+                          <RefreshCw size={15} className={sepayLoading ? "is-spinning" : ""} />
+                          Kiểm tra
+                        </button>
+                      </div>
+                      <div className="ck-sepay-instructions">
+                        {sepayInfo.qrUrl && sepayInfo.canTransfer && (
+                          <img className="ck-sepay-qr" src={sepayInfo.qrUrl} alt="Mã QR chuyển khoản MB Bank cho đơn hàng" />
+                        )}
+                        <div className="ck-sepay-fields">
+                          <div><span>Ngân hàng</span><strong><Building2 size={14} /> MB Bank</strong></div>
+                          <div><span>Chủ tài khoản</span><strong>{sepayInfo.accountName}</strong></div>
+                          <div><span>Số tài khoản</span><strong>{sepayInfo.accountNumber}<button type="button" onClick={() => void copyPaymentValue(sepayInfo.accountNumber, "Số tài khoản")} aria-label="Sao chép số tài khoản"><Copy size={13} /></button></strong></div>
+                          <div><span>Số tiền</span><strong>{money(sepayInfo.amount)}<button type="button" onClick={() => void copyPaymentValue(sepayInfo.amount, "Số tiền")} aria-label="Sao chép số tiền"><Copy size={13} /></button></strong></div>
+                          <div><span>Nội dung chuyển khoản</span><strong>{sepayInfo.transferContent}<button type="button" onClick={() => void copyPaymentValue(sepayInfo.transferContent, "Nội dung chuyển khoản")} aria-label="Sao chép nội dung chuyển khoản"><Copy size={13} /></button></strong></div>
+                          <div><span>Hạn thanh toán</span><strong>{timeText(sepayInfo.expiresAt)} · {dateText(sepayInfo.expiresAt)}</strong></div>
+                        </div>
+                      </div>
+                      <p className="ck-sepay-footnote">Không ghi thêm nội dung khác. Trạng thái chỉ đổi sau khi SePay xác nhận giao dịch từ MB Bank.</p>
+                    </div>
+                  ) : (
+                    <p className="ck-method-soon"><QrCode size={14} aria-hidden="true" /><span>{sepayReady ? "Nhấn nút thanh toán để tạo QR và nội dung chuyển khoản riêng cho đơn này." : "SePay đang tạm thời chưa sẵn sàng. Vui lòng chọn VNPay hoặc thử lại sau."}</span></p>
+                  )
+                )}
+              </div>
+
+              <div
+                className={`ck-method ck-method-primary${method === "vnpay" ? " is-selected" : ""}${canStartPayment && paymentReady ? "" : " is-locked"}`}
+                onClick={requestVnpay}
               >
                 <div className="ck-method-top">
                   <div className="ck-method-main">
@@ -536,8 +697,9 @@ export function Checkout() {
                       name="ck-payment-method"
                       type="radio"
                       checked={method === "vnpay"}
-                      onChange={() => chooseMethod("vnpay")}
-                      disabled={!canPay}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={requestVnpay}
+                      disabled={!canStartPayment}
                     />
                     <label
                       className="ck-method-copy"
@@ -588,7 +750,7 @@ export function Checkout() {
 
               <div
                 className={`ck-method${method === "vietqr" ? " is-selected" : ""}${canPay ? "" : " is-locked"}`}
-                onClick={() => canPay && chooseMethod("vietqr")}
+                onClick={() => canStartPayment && chooseMethod("vietqr")}
               >
                 <div className="ck-method-top">
                   <div className="ck-method-main">
@@ -599,7 +761,7 @@ export function Checkout() {
                       type="radio"
                       checked={method === "vietqr"}
                       onChange={() => chooseMethod("vietqr")}
-                      disabled={!canPay}
+                      disabled={!canStartPayment}
                     />
                     <label
                       className="ck-method-copy"
@@ -628,8 +790,8 @@ export function Checkout() {
               </div>
 
               <div
-                className={`ck-method${method === "ewallet" ? " is-selected" : ""}${canPay ? "" : " is-locked"}`}
-                onClick={() => canPay && chooseMethod("ewallet")}
+                className={`ck-method${method === "ewallet" ? " is-selected" : ""}${canStartPayment ? "" : " is-locked"}`}
+                onClick={() => canStartPayment && chooseMethod("ewallet")}
               >
                 <div className="ck-method-top">
                   <div className="ck-method-main">
@@ -640,7 +802,7 @@ export function Checkout() {
                       type="radio"
                       checked={method === "ewallet"}
                       onChange={() => chooseMethod("ewallet")}
-                      disabled={!canPay}
+                      disabled={!canStartPayment}
                     />
                     <label
                       className="ck-method-copy"
@@ -670,8 +832,8 @@ export function Checkout() {
               </div>
 
               <div
-                className={`ck-method${method === "card" ? " is-selected" : ""}${canPay ? "" : " is-locked"}`}
-                onClick={() => canPay && chooseMethod("card")}
+                className={`ck-method${method === "card" ? " is-selected" : ""}${canStartPayment ? "" : " is-locked"}`}
+                onClick={() => canStartPayment && chooseMethod("card")}
               >
                 <div className="ck-method-top">
                   <div className="ck-method-main">
@@ -682,7 +844,7 @@ export function Checkout() {
                       type="radio"
                       checked={method === "card"}
                       onChange={() => chooseMethod("card")}
-                      disabled={!canPay}
+                      disabled={!canStartPayment}
                     />
                     <label
                       className="ck-method-copy"
@@ -712,8 +874,8 @@ export function Checkout() {
               </div>
 
               <div
-                className={`ck-method${method === "wallet" ? " is-selected" : ""}${canPay ? "" : " is-locked"}`}
-                onClick={() => canPay && chooseMethod("wallet")}
+                className={`ck-method${method === "wallet" ? " is-selected" : ""}${canStartPayment ? "" : " is-locked"}`}
+                onClick={() => canStartPayment && chooseMethod("wallet")}
               >
                 <div className="ck-method-top">
                   <div className="ck-method-main">
@@ -724,7 +886,7 @@ export function Checkout() {
                       type="radio"
                       checked={method === "wallet"}
                       onChange={() => chooseMethod("wallet")}
-                      disabled={!canPay}
+                      disabled={!canStartPayment}
                     />
                     <label
                       className="ck-method-copy"
@@ -865,22 +1027,30 @@ export function Checkout() {
                 <button
                   type="button"
                   className="ck-cta"
-                  onClick={() => void pay()}
+                  onClick={() => void (method === "mbbank" && sepayInfo ? refreshSepay() : pay())}
                   disabled={!canPay}
                 >
-                  {busy
+                  {busy || (method === "mbbank" && sepayLoading)
                     ? "Đang xử lý..."
-                    : "Xác nhận và tiến hành thanh toán"}
+                    : method === "mbbank" && sepayInfo
+                      ? "Kiểm tra trạng thái thanh toán"
+                      : "Xác nhận và tiến hành thanh toán"}
                   <ArrowRight size={17} aria-hidden="true" />
                 </button>
               )}
 
-              {isPending && !paymentReady && (
+              {isPending && !paymentReady && !sepayReady && (
                 <p className="ck-cta-note">
                   {config.loading
                     ? "Đang kiểm tra cấu hình thanh toán..."
-                    : "Cổng thanh toán chưa được cấu hình."}
+                    : "Chưa cấu hình phương thức thanh toán."}
                 </p>
+              )}
+              {isPending && activeOrderPayment && method === "mbbank" && activeOrderPayment.provider !== "sepay" && (
+                <p className="ck-cta-note">Đơn này đang có giao dịch {activeOrderPayment.provider === "vnpay_sandbox" ? "VNPay" : "khác"} chưa kết thúc. Cập nhật trạng thái giao dịch đó trước khi đổi phương thức.</p>
+              )}
+              {isPending && activeOrderPayment && method === "vnpay" && !["vnpay_sandbox", "demo"].includes(activeOrderPayment.provider ?? "") && (
+                <p className="ck-cta-note">Đơn này đã có giao dịch SePay. Vui lòng tiếp tục thanh toán bằng MB Bank hoặc cập nhật trạng thái.</p>
               )}
               {isPending && remaining === 0 && (
                 <p className="ck-cta-note">

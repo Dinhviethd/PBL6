@@ -7,6 +7,7 @@ export default defineConfig({
   testMatch: [
     "stitch-web.spec.ts",
     "vnpay-ui.spec.ts",
+    "sepay-ui.spec.ts",
     "notifications-ui.spec.ts",
   ],
   use: { ...base.use, baseURL: "http://127.0.0.1:5174" },

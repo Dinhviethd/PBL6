@@ -1,0 +1,29 @@
+name: eventhub-sepay-local
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: eventhub-sepay-local
+    labels:
+      eventhub.purpose: sepay-local-only
+    environment:
+      POSTGRES_DB: eventhub_sepay_local
+      POSTGRES_USER: sepay_local
+      POSTGRES_PASSWORD: ${SEPAY_LOCAL_PASSWORD:?Run the local init script first}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      - data:/var/lib/postgresql/data
+    networks:
+      - isolated
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sepay_local -d eventhub_sepay_local"]
+      interval: 2s
+      timeout: 2s
+      retries: 20
+volumes:
+  data:
+    name: eventhub-sepay-local-data
+networks:
+  isolated:
+    labels:
+      eventhub.purpose: sepay-local-only

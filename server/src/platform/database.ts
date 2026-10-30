@@ -1,8 +1,10 @@
 import "reflect-metadata";
 import { AsyncLocalStorage } from "node:async_hooks";
+import { createHash } from "node:crypto";
+import type { ConnectionOptions } from "node:tls";
 import { DataSource, EntityManager } from "typeorm";
 import { astVisitor, parse } from "pgsql-ast-parser";
-import type { Owner, Store, UnitOfWork } from "../contracts/core";
+import { ensure, type Owner, type Store, type UnitOfWork, type ExclusiveWork } from "../contracts/core";
 
 export const ownership: Record<Owner, readonly string[]> = {
   auth: [
@@ -25,7 +27,7 @@ export const ownership: Record<Owner, readonly string[]> = {
     "tickets",
     "checkins",
   ],
-  payment: ["payments", "payment_notifications"],
+  payment: ["payments", "payment_notifications", "sepay_payment_details", "sepay_transactions", "sepay_transaction_reviews"],
   audit: ["audit_logs"],
   notification: ["notifications"],
 };
@@ -68,12 +70,13 @@ export function assertOwned(owner: Owner, sql: string) {
   visitor.statement(statements[0]);
 }
 
-export function createDatabase(url: string) {
+export type DatabaseTls = Pick<ConnectionOptions, "ca" | "rejectUnauthorized">;
+export function createDatabase(url: string, ssl?: DatabaseTls | false) {
   const source = new DataSource({
     type: "postgres",
     url,
     synchronize: false,
-    ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: true } : false,
+    ssl: ssl ?? (process.env.DB_SSL === "true" ? { rejectUnauthorized: true } : false),
     extra: { max: 12, statement_timeout: 15000 },
   });
   const context = new AsyncLocalStorage<EntityManager>();
@@ -85,10 +88,23 @@ export function createDatabase(url: string) {
       );
     },
   };
+  // Transaction-level lock is safe with transaction pooling; released on rollback/crash.
+  // Queries made by work use this same manager/connection through AsyncLocalStorage.
+  const exclusive: ExclusiveWork = async (key, work) => {
+    ensure(!context.getStore(), "EXCLUSIVE_NESTED", "Exclusive work cannot be nested.", 500);
+    const digest = createHash("sha256").update(key).digest();
+    return source.transaction("READ COMMITTED", async manager => {
+      const rows = await manager.query("SELECT pg_try_advisory_xact_lock($1,$2) AS acquired",
+        [digest.readInt32BE(0), digest.readInt32BE(4)]);
+      ensure(rows[0]?.acquired === true, "SEPAY_V2_BUSY", "Một lượt đối soát SePay đang chạy.", 409);
+      return context.run(manager, work);
+    });
+  };
   return {
     start: () => source.initialize(),
     close: () => source.destroy(),
     uow,
+    exclusive,
     owner(owner: Owner): Store {
       return {
         async query(sql, args = []) {

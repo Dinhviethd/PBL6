@@ -699,6 +699,107 @@
   line-height: 1.6;
 }
 
+.ck-sepay-box {
+  margin-top: 16px;
+  padding: 16px;
+  border: 1px solid #22d3ee38;
+  border-radius: 10px;
+  background: #090d1dcc;
+}
+.ck-sepay-head,
+.ck-sepay-instructions {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+.ck-sepay-head strong {
+  color: #7ce8ff;
+  font-size: 13px;
+}
+.ck-sepay-head p,
+.ck-sepay-footnote {
+  margin-top: 4px;
+  color: #b7b2c7;
+  font-size: 11.5px;
+  line-height: 1.6;
+}
+.ck-sepay-refresh,
+.ck-sepay-fields button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #5de6ff38;
+  border-radius: 7px;
+  background: #11182a;
+  color: #a6efff;
+  cursor: pointer;
+}
+.ck-sepay-refresh {
+  flex-shrink: 0;
+  padding: 7px 9px;
+  font-size: 11px;
+}
+.ck-sepay-refresh:disabled,
+.ck-sepay-fields button:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+.ck-sepay-instructions {
+  justify-content: flex-start;
+  margin-top: 14px;
+}
+.ck-sepay-qr {
+  width: 148px;
+  height: 148px;
+  flex: 0 0 148px;
+  padding: 7px;
+  border-radius: 8px;
+  background: #fff;
+  object-fit: contain;
+}
+.ck-sepay-fields {
+  display: grid;
+  flex: 1;
+  gap: 8px;
+  min-width: 0;
+}
+.ck-sepay-fields > div {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #ffffff12;
+}
+.ck-sepay-fields span {
+  color: #9994ab;
+  font-size: 10.5px;
+}
+.ck-sepay-fields strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #f0edf8;
+  font-size: 11px;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.ck-sepay-fields button {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+}
+.ck-sepay-footnote {
+  margin-top: 12px;
+  color: #ffd08a;
+}
+.is-spinning {
+  animation: ck-spin .8s linear infinite;
+}
+@keyframes ck-spin { to { transform: rotate(360deg); } }
+
 /* Trust badges */
 .ck-trust {
   display: grid;
@@ -1302,6 +1403,21 @@
   .ck-method-detail {
     align-items: flex-start;
   }
+  .ck-sepay-head {
+    flex-direction: column;
+  }
+  .ck-sepay-instructions {
+    align-items: center;
+    flex-direction: column;
+  }
+  .ck-sepay-qr {
+    width: 176px;
+    height: 176px;
+    flex-basis: 176px;
+  }
+  .ck-sepay-fields {
+    width: 100%;
+  }
   .ck-vnpay-orb {
     width: 46px;
     height: 46px;
@@ -1357,6 +1473,7 @@
 @media (prefers-reduced-motion: reduce) {
   .ck-countdown-dot::after,
   .ck-live-dot,
+  .ck-sepay-refresh .is-spinning,
   .ck-ticket-status i,
   .ck-step.is-active .ck-step-num,
   .ck-toast {

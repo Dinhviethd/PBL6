@@ -79,12 +79,12 @@ Enforcement ở code phục vụ modular monolith; các module vẫn dùng chung
 
 Compose chạy API + web tại `http://localhost:8000` và worker; không tạo PostgreSQL local. Yêu cầu Docker Desktop chạy Linux containers và Docker Compose >= 2.30 (hỗ trợ `env_file.format: raw` để giữ nguyên ký tự trong secrets).
 
-- Giữ cấu hình Supabase/secrets trong `server/.env`; Compose đọc file này lúc khởi động.
+- Giữ cấu hình Supabase/secrets trong `server/.env`; Compose đọc file này lúc khởi động bằng `format: raw`, vì vậy viết giá trị trực tiếp **không bọc trong dấu nháy** (đặc biệt `DATABASE_URL`). URL-encode ký tự đặc biệt trong username/password.
 - Đặt chứng chỉ tại `server/.local/certs/supabase-ca.crt`. File được mount chỉ đọc, không đóng vào image.
 - Preload `server/scripts/container-database.cjs` đổi `sslrootcert` trong URL sang `/app/certs/supabase-ca.crt`, bật `verify-full` cho API, worker và migration. `.env` trên máy không bị sửa.
-- Compose dùng `NODE_ENV=development` để chạy local qua HTTP và dùng thanh toán sandbox. Cấu hình này không dành cho public production.
+- Compose nạp `NODE_ENV`, `CLIENT_URL` và các biến tích hợp từ `server/.env`; các giá trị bind/port nội bộ Docker và TLS DB được đặt trong Compose. Bản `.env.example` dành cho phát triển; khi dùng SePay Live, giữ `NODE_ENV=production`, provider legacy `PAYMENT_MODE=disabled`, đúng Live credentials và DB TLS đã xác minh. Không bật sandbox trong runtime Live.
 - Dừng API/worker chạy bằng `npm run dev` trước khi chạy Compose để tránh trùng cổng 8000 và worker. Khi chạy Vite riêng, dùng URL chuẩn `http://localhost:5173`; `server/.env` phải đặt `CLIENT_URL=http://localhost:5173` và frontend cần được mở bằng đúng host này (không dùng `127.0.0.1`). Lệnh `npm run dev --prefix server` chạy TypeScript và nạp `server/.env`; sau đổi cấu hình, khởi động lại tiến trình. Lệnh root `npm run dev` chạy bản build ở `server/dist`, nên hãy chạy `npm run build --prefix server` trước khi khởi động lại bằng lệnh này.
-- Compose mặc định phục vụ web và API cùng origin `http://localhost:8000`, nên giữ `CLIENT_URL=http://localhost:8000`. Nếu chạy Vite riêng cùng Compose, đặt `$env:DOCKER_CLIENT_URL='http://localhost:5173'` trước khi khởi động Compose, mở frontend bằng `http://localhost:5173`, rồi khởi động lại API để áp dụng cấu hình. Không chạy đồng thời API local và Compose trên cùng cổng.
+- Compose phục vụ web/API tại `http://localhost:8000`. `CLIENT_URL` phải khớp origin frontend đang dùng: `http://localhost:8000` cho web tích hợp, `http://localhost:5173` nếu chạy Vite riêng, hoặc HTTPS origin được bàn giao khi dùng ngrok. Sửa `server/.env` rồi recreate API/worker để nạp lại cấu hình. Không chạy đồng thời hai stack API/worker trỏ tới cùng DB.
 
 ```powershell
 docker compose build

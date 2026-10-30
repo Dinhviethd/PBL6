@@ -30,6 +30,8 @@ Giao diện bám artifact đã kiểm tra, dùng sidebar chung; mỗi thời đi
 
 ## Nhật ký tài liệu
 
+- 2026-10-29 07:17 UTC+7: kiểm tra kết thúc; file báo cáo và ảnh tồn tại, diff check đạt. Docker Desktop chưa chạy nên chưa xác minh lại runtime; [báo cáo](../reports/stitch/B9_20261029_071702_completion_check.md). Giữ kết quả triển khai có điều kiện của phiên trước.
+
 - 2026-10-28 21:24 UTC+7: lập kế hoạch và báo cáo [phiên review](../reports/stitch/B7_20261028_212432_review_plan.md). Không sửa source hoặc Stitch. Các phiên sửa đổi tiếp theo phải bổ sung báo cáo mới và cập nhật liên kết tại đây.
 - 2026-10-28 21:31 UTC+7: đổi tên B9, xem ảnh/HTML Stitch, ghi nhận route, thành phần và các mục loại bỏ theo yêu cầu; [báo cáo mới](../reports/stitch/B9_20261028_213123_review_plan.md). Chưa triển khai source.
 - 2026-10-28 21:37 UTC+7: bỏ nhật ký khỏi B9, giữ nguyên mục sidebar không có route, xem Chrome bằng API mô phỏng và kiểm tra API source/HTTP không đăng nhập; [báo cáo](../reports/stitch/B9_20261028_213716_review_plan.md). Chưa sửa code.

@@ -1,15 +1,8 @@
 import "dotenv/config";
 import { createApplication } from "./app";
-import { paymentProviderFromEnv } from "./modules/payment/public";
+import { loadRuntimeConfig } from "./configs/sepay-runtime";
 async function main() {
-  const app = createApplication({
-    databaseUrl: process.env.DATABASE_URL ?? "",
-    secret: process.env.JWT_ACCESS_SECRET ?? "",
-    qrSecret: process.env.QR_SECRET ?? "",
-    demo: process.env.PAYMENT_MODE === "demo",
-    paymentProvider: paymentProviderFromEnv(),
-    clientUrl: process.env.CLIENT_URL,
-  });
+  const app = createApplication(loadRuntimeConfig().app);
   await app.start();
   const server = app.app.listen(
     Number(process.env.PORT ?? 8000),
@@ -23,6 +16,6 @@ async function main() {
     });
 }
 void main().catch((e) => {
-  console.error("Startup failed:", e.message);
+  console.error("Startup failed:", e.code ?? e.name);
   process.exit(1);
 });

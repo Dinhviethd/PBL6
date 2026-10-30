@@ -6,6 +6,7 @@ import express, {
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "node:path";
+import { parseSepayWebhook, verifySepayHmac } from "./modules/payment/public";
 import { z, ZodError } from "zod";
 import QRCode from "qrcode";
 import multer from "multer";
@@ -18,10 +19,16 @@ import {
   createPayments,
   demoProvider,
   type PaymentProvider,
+  createSepayPayments,
+  createSepayReconciliation,
+  createSepayV2Reconciler,
+  type SepayConfig,
 } from "./modules/payment/public";
 import { createAudit } from "./modules/audit/public";
 import { createNotifications } from "./modules/notification/public";
 import { createBooking } from "./workflows/booking";
+import { createSepayBooking } from "./workflows/sepay-booking";
+import { createSepayWebhook } from "./workflows/sepay-webhook";
 import { createWaitQueue } from "./workflows/wait-queue";
 import { createOrderHistory } from "./workflows/order-history";
 import { ensure, role, type Row, type Principal } from "./contracts/core";
@@ -115,8 +122,15 @@ export function createApplication(config: {
   demo?: boolean;
   paymentProvider?: PaymentProvider;
   clientUrl?: string;
+  clientOrigins?: string[];
+  sepay?: SepayConfig;
+  sepayApiV2SandboxToken?: string;
+  sepayApiV2Token?: string;
+  sepayAcceptNewPayments?: boolean;
+  databaseSsl?: import("./platform/database").DatabaseTls | false;
 }) {
   const clientOrigin = config.clientUrl ?? "http://localhost:5173";
+  const allowedClientOrigins = new Set([clientOrigin, ...(config.clientOrigins ?? [])]);
   ensure(
     config.secret.length >= 32 && config.qrSecret.length >= 32,
     "CONFIG",
@@ -129,7 +143,10 @@ export function createApplication(config: {
     "Không được bật demo trong production.",
     500,
   );
-  const db = createDatabase(config.databaseUrl),
+  ensure(!(config.sepay?.environment === "live" && config.sepayApiV2SandboxToken), "SEPAY_CONFIG", "Sandbox token cannot be used for Live.", 500);
+  const sepayToken = config.sepayApiV2Token ?? (config.sepay?.environment === "test" ? config.sepayApiV2SandboxToken : undefined);
+  ensure(config.sepay?.environment !== "live" || (typeof sepayToken === "string" && sepayToken.trim().length >= 10), "SEPAY_CONFIG", "Live requires its own API v2 token.", 500);
+  const db = createDatabase(config.databaseUrl, config.databaseSsl),
     uow = db.uow,
     auth = createAuth(db.owner("auth"), uow, config.secret),
     events = createEvents(db.owner("event"));
@@ -140,6 +157,15 @@ export function createApplication(config: {
     ),
     audit = createAudit(db.owner("audit"));
   const notifications = createNotifications(db.owner("notification"));
+  // SePay is opt-in and cannot run with an enabled legacy simulator in this process.
+  ensure(!config.sepay || !payments.provider.enabled(), "SEPAY_LEGACY_MODE",
+    "SePay local phải chạy riêng với provider cũ disabled.", 500);
+  const sepayBooking = config.sepay ? createSepayBooking(orders, events, payments,
+    createSepayPayments(db.owner("payment"), config.sepay), audit, uow) : null;
+  const sepayStore = config.sepay ? createSepayPayments(db.owner("payment"), config.sepay) : null;
+  const sepayWebhook = sepayStore ? createSepayWebhook(sepayStore,payments,orders,uow,notifications,audit) : null;
+  const sepayAdmin = config.sepay ? createSepayReconciliation(db.owner("payment"),config.sepay) : null;
+  const sepayV2 = config.sepay ? createSepayV2Reconciler(db.owner("payment"),config.sepay,sepayToken ?? "",undefined,db.exclusive) : null;
   const booking = createBooking(
       auth,
       events,
@@ -168,9 +194,22 @@ export function createApplication(config: {
     "Thanh toán thử không được bật trong production.",
     500,
   );
+  if (sepayWebhook) app.post("/api/payments/sepay/webhook", express.raw({type:"application/json",limit:"32kb"}), async (req,res,next)=>{
+    try {
+      const raw=Buffer.isBuffer(req.body)?req.body:Buffer.alloc(0);
+      const headerCount=(name:string)=>req.rawHeaders.filter((value,index)=>index%2===0&&value.toLowerCase()===name).length;
+      if(headerCount("x-sepay-timestamp")!==1||headerCount("x-sepay-signature")!==1||!verifySepayHmac(raw,req.header("X-SePay-Timestamp"),req.header("X-SePay-Signature"),config.sepay!.webhookSecret)) {
+        res.status(401).json({success:false,message:"Unauthorized"});return;
+      }
+      const payload=parseSepayWebhook(raw);
+      await sepayWebhook!.receive(payload);
+      res.status(200).json({success:true});
+    } catch(error) { next(error); }
+  });
   app.use(
     cors({
-      origin: clientOrigin,
+      origin: (origin, callback) =>
+        callback(null, origin ? allowedClientOrigins.has(origin) : false),
       credentials: true,
     }),
     express.json({ limit: "1mb" }),
@@ -241,6 +280,65 @@ export function createApplication(config: {
     const { refreshToken: _, ...safe } = result;
     return safe;
   };
+  if (sepayBooking) {
+    const polls = new Map<string, { count: number; until: number }>();
+    api.post("/sepay/orders/:orderId/payment", protect, route(async (req, res) => {
+      ensure(config.sepayAcceptNewPayments !== false, "SEPAY_MAINTENANCE", "Tạm dừng tạo thanh toán mới. Vui lòng thử lại sau.", 503);
+      z.object({}).strict().parse(req.body ?? {});
+      const result = await sepayBooking.start(who(res), id(req, "orderId"));
+      res.status(result!.created ? 201 : 200);
+      res.setHeader("Cache-Control", "no-store");
+      return result!.data;
+    }));
+    api.get("/sepay/orders/:orderId/payment", protect, route((req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      const now = Date.now(), key = who(res).userId;
+      for (const [user, value] of polls) if (value.until <= now) polls.delete(user);
+      const limit = polls.get(key) ?? { count: 0, until: now + 60000 };
+      ensure(++limit.count <= 30, "SEPAY_POLL_LIMIT", "Vui lòng giảm tần suất kiểm tra thanh toán.", 429);
+      polls.set(key, limit);
+      return sepayBooking.detail(who(res), id(req, "orderId"));
+    }));
+  }
+  if (sepayAdmin && sepayWebhook) {
+    api.post("/admin/sepay/reconcile",protect,route(async(req,res)=>{
+      role(who(res),["ADMIN"]);
+      const body=z.object({lookbackMinutes:z.number().int().min(5).max(1440).default(60)}).strict().parse(req.body ?? {});
+      ensure(sepayToken,"SEPAY_V2_NOT_CONFIGURED","SePay API v2 token chưa được cấu hình.",503);
+      res.setHeader("Cache-Control","no-store");
+      // Reconcile performs read-only upstream calls and inserts/links transactions; each
+      // database query remains within the local, owner-guarded store.
+      return sepayV2!.reconcile(body.lookbackMinutes);
+    }));
+    api.get("/admin/sepay/transactions",protect,route((req,res)=>{
+      role(who(res),["ADMIN"]);
+      res.setHeader("Cache-Control","no-store");
+      const status=req.query.status===undefined?null:z.enum(["RECEIVED","PROCESSING","PROCESSED","REVIEW","ERROR"]).parse(req.query.status);
+      const filter=z.object({from:z.string().datetime({offset:true}).optional(),to:z.string().datetime({offset:true}).optional(),reference:z.string().trim().min(1).max(256).optional()}).parse(req.query);
+      ensure(!filter.from||!filter.to||Date.parse(filter.from)<=Date.parse(filter.to),"SEPAY_FILTER","Khoảng thời gian không hợp lệ.",400);
+      return sepayAdmin.list(status,page(req)*pageSize(req),pageSize(req),filter);
+    }));
+    api.get("/admin/sepay/transactions/:id",protect,route(async(req,res)=>{
+      res.setHeader("Cache-Control","no-store");
+      role(who(res),["ADMIN"]);const tx=await sepayAdmin.detail(id(req));ensure(tx,"NOT_FOUND","Không tìm thấy giao dịch.",404);
+      return {...tx,history:await sepayAdmin.reviews(tx.id)};
+    }));
+    api.post("/admin/sepay/transactions/:id/reprocess",protect,route(async(req,res)=>{
+      role(who(res),["ADMIN"]);const tx=await sepayAdmin.detail(id(req));ensure(tx,"NOT_FOUND","Không tìm thấy giao dịch.",404);
+      z.object({}).strict().parse(req.body??{});
+      await uow.run(async()=>{
+        const changed=await sepayAdmin.reprocess(tx.id);ensure(changed.length===1,"SEPAY_REPROCESS","Chỉ giao dịch ERROR hoặc REVIEW mới được xử lý lại.");
+        await sepayAdmin.review(tx.id,who(res).userId,"REPROCESS","Reprocess requested",null);
+      });
+      return {queued:true};
+    }));
+    api.post("/admin/sepay/transactions/:id/resolve",protect,route(async(req,res)=>{
+      role(who(res),["ADMIN"]);const body=z.object({outcome:z.enum(["confirmed_external","refund_external","unmatched"]),reason:z.string().trim().min(3).max(1000),evidenceReference:z.string().trim().max(256).nullable().optional()}).strict().parse(req.body);
+      const tx=await sepayAdmin.detail(id(req));ensure(tx,"NOT_FOUND","Không tìm thấy giao dịch.",404);
+      await uow.run(()=>sepayAdmin.resolve(tx.id,who(res).userId,body.outcome,body.reason,body.evidenceReference??null));
+      return {recorded:true};
+    }));
+  }
   api.get(
     "/me/notifications",
     protect,
@@ -283,6 +381,7 @@ export function createApplication(config: {
       paymentMode: payments.provider.enabled()
         ? payments.provider.name
         : "disabled",
+      sepayEnabled: Boolean(config.sepay && config.sepayAcceptNewPayments !== false),
     })),
   );
   api.get("/payments/vnpay/ipn", async (req, res) => {
@@ -357,14 +456,13 @@ export function createApplication(config: {
   api.post(
     "/auth/refresh-token",
     route(async (req, res) => {
-      if (req.headers.origin && req.headers.origin !== clientOrigin)
+      if (req.headers.origin && !allowedClientOrigins.has(req.headers.origin))
         console.warn("Rejected refresh-token Origin", {
           receivedOrigin: req.headers.origin,
-          expectedOrigin: clientOrigin,
+          expectedOrigins: [...allowedClientOrigins],
         });
       ensure(
-        !req.headers.origin ||
-          req.headers.origin === clientOrigin,
+        !req.headers.origin || allowedClientOrigins.has(req.headers.origin),
         "ORIGIN",
         "Origin không được phép làm mới phiên đăng nhập.",
         403,
@@ -1109,6 +1207,9 @@ export function createApplication(config: {
     waitQueue,
     payments,
     notifications,
+    sepayWebhook,
+    sepayAdmin,
+    sepayV2,
     uow,
   };
 }
