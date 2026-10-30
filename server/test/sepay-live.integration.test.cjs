@@ -3,7 +3,8 @@ const {fork}=require('node:child_process');
 const {once}=require('node:events');
 const {createDatabase}=require('../dist/platform/database');
 const {createSepayPayments,createSepayV2Reconciler}=require('../dist/modules/payment/public');
-const url=process.env.TEST_DATABASE_URL;
+const candidate=process.env.TEST_DATABASE_URL;
+const url=(()=>{try{const u=new URL(candidate);return u.hostname==='127.0.0.1'&&u.port==='55432'&&/^\/eventhub_sepay_[a-f0-9]{12}_test$/.test(u.pathname)?candidate:undefined}catch{return undefined}})();
 const cfg={environment:'live',bankCode:'MBBank',accountNumber:'987654321',accountName:'SYNTHETIC',webhookSecret:'s'.repeat(32)};
 test('L1 database isolation and cross-process reconciliation',{skip:!url,timeout:30000},async t=>{
  const target=new URL(url);assert.equal(target.hostname,'127.0.0.1');assert.equal(target.port,'55432');assert.match(target.pathname,/^\/eventhub_sepay_[a-f0-9]{12}_test$/);

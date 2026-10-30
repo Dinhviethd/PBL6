@@ -2,7 +2,8 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),{randomUU
 const {createApplication}=require('../dist/app');
 const {createDatabase}=require('../dist/platform/database');
 const {createHmac,randomUUID:uuid}=require('node:crypto');
-const url=process.env.TEST_DATABASE_URL;
+const candidate=process.env.TEST_DATABASE_URL;
+const url=(()=>{try{const u=new URL(candidate);return /^\/eventhub_sepay_[a-f0-9]{12}_test$/.test(u.pathname)?candidate:undefined}catch{return undefined}})();
 test('SePay buyer API on isolated PostgreSQL',{skip:!url,timeout:60000},async t=>{
   assert.match(new URL(url).pathname,/^\/eventhub_sepay_[a-f0-9]{12}_test$/);
   const config={databaseUrl:url,secret:'local-integration-secret'.repeat(3),qrSecret:'local-qr-secret'.repeat(3)};

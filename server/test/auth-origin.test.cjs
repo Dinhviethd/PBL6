@@ -36,7 +36,7 @@ test("web refresh accepts only the configured origin and distinguishes missing c
   assert.equal((await rejected.json()).code, "ORIGIN");
   assert.equal(
     rejected.headers.get("access-control-allow-origin"),
-    "http://localhost:5173",
+    null,
   );
   assert.notEqual(
     rejected.headers.get("access-control-allow-origin"),

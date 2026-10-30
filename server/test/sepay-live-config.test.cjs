@@ -5,9 +5,13 @@ const {createSepayV2Client,createSepayV2Reconciler}=require('../dist/modules/pay
 const {createSepayWorkerTasks}=require('../dist/workflows/sepay-worker');
 const token='synthetic-live-api-token-only';
 test('maintenance accepts only explicit boolean strings',()=>{
- const env={...base,DB_SSL_CA_FILE:require('node:path').resolve(__dirname,'../.local/certs/supabase-ca.crt')};
- assert.equal(loadRuntimeConfig({...env,SEPAY_ACCEPT_NEW_PAYMENTS:'false'}).app.sepayAcceptNewPayments,false);
- assert.throws(()=>loadRuntimeConfig({...env,SEPAY_ACCEPT_NEW_PAYMENTS:'yes'}));
+ const folder=fs.mkdtempSync(path.join(os.tmpdir(),'sepay-ca-')),file=path.join(folder,'ca.pem');
+ fs.writeFileSync(file,require('node:tls').rootCertificates[0]);
+ try {
+  const env={...base,DB_SSL_CA_FILE:file};
+  assert.equal(loadRuntimeConfig({...env,SEPAY_ACCEPT_NEW_PAYMENTS:'false'}).app.sepayAcceptNewPayments,false);
+  assert.throws(()=>loadRuntimeConfig({...env,SEPAY_ACCEPT_NEW_PAYMENTS:'yes'}));
+ } finally {fs.rmSync(folder,{recursive:true,force:true});}
 });
 const base={SEPAY_ENABLED:'true',SEPAY_ENV:'live',SEPAY_CREDENTIAL_ENV:'live',PAYMENT_MODE:'disabled',NODE_ENV:'production',
  DATABASE_URL:'postgresql://synthetic:synthetic@db.example.test:5432/test',SEPAY_DB_TARGET:'db.example.test:5432/test',DB_SSL:'true',
