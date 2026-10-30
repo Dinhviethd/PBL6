@@ -1,6 +1,6 @@
 import { test, expect } from "@playwright/test";
 
-test("SePay checkout creates bank instructions and displays server-confirmed payment state", async ({ page }) => {
+test("SePay checkout redirects to A7 after the server confirms payment", async ({ page }) => {
   let created = false;
   let checks = 0;
   let paid = false;
@@ -39,6 +39,46 @@ test("SePay checkout creates bank instructions and displays server-confirmed pay
       latest_payment: created ? { id: "sepay-payment", provider: "sepay", status: paid ? "SUCCEEDED" : "PENDING", provider_expires_at: instructions.expiresAt } : null,
       items: [],
     };
+    if (path === "/api/me/order-history/order") data = {
+      id: "order",
+      order_code: "EH-TEST",
+      event_title_snapshot: "SePay UI test",
+      status: "PAID",
+      total_amount: "100000",
+      currency: "VND",
+      created_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 900000).toISOString(),
+      total_quantity: 1,
+      group: "paid",
+      items: [],
+      payment: {
+        paid: {
+          id: "sepay-payment",
+          order_id: "order",
+          provider: "sepay",
+          status: "SUCCEEDED",
+          amount: "100000",
+          created_at: new Date().toISOString(),
+          requires_review: false,
+        },
+        active: null,
+        latest: null,
+        unresolvedReview: false,
+      },
+      tickets: {
+        expected: 1,
+        issued: 1,
+        valid: 1,
+        checkedIn: 0,
+        void: 0,
+      },
+      actions: {
+        canCancel: false,
+        canViewTickets: true,
+        canContinueCheckout: false,
+      },
+      ticketList: [],
+    };
     if (path === "/api/sepay/orders/order/payment" && request.method() === "POST") {
       created = true;
       data = instructions;
@@ -65,7 +105,13 @@ test("SePay checkout creates bank instructions and displays server-confirmed pay
   await expect(page.getByText("tkhABC123")).toBeVisible();
   await expect(page.getByText("123456789")).toBeVisible();
   await expect(page.getByText("Đang chờ chuyển khoản")).toBeVisible();
-  await expect.poll(() => checks).toBeGreaterThan(0);
-  await page.locator(".ck-sepay-refresh").click();
-  await expect(page.getByRole("link", { name: "Xem vé QR của bạn" })).toBeVisible();
+  await expect.poll(() => checks, { timeout: 15000 }).toBeGreaterThanOrEqual(2);
+  await expect(page).toHaveURL(/\/payment-status\/order$/);
+  await expect(
+    page.getByRole("heading", { name: "Thanh toán thành công" }),
+  ).toBeVisible();
+  await expect(page.getByText("EH-TEST").first()).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Xem vé của tôi" }),
+  ).toHaveAttribute("href", "/tickets");
 });

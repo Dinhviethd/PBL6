@@ -751,10 +751,10 @@
   margin-top: 14px;
 }
 .ck-sepay-qr {
-  width: 148px;
-  height: 148px;
-  flex: 0 0 148px;
-  padding: 7px;
+  width: 220px;
+  height: 220px;
+  flex: 0 0 220px;
+  padding: 9px;
   border-radius: 8px;
   background: #fff;
   object-fit: contain;
@@ -1411,9 +1411,10 @@
     flex-direction: column;
   }
   .ck-sepay-qr {
-    width: 176px;
-    height: 176px;
-    flex-basis: 176px;
+    width: min(100%, 240px);
+    height: auto;
+    aspect-ratio: 1;
+    flex: 0 1 240px;
   }
   .ck-sepay-fields {
     width: 100%;

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowRight,
   CalendarDays,
@@ -87,6 +87,7 @@ function statusInfo(status: string) {
 
 export function Checkout() {
   const { id = "" } = useParams(),
+    navigate = useNavigate(),
     resource = useLoad<Order>(`/me/orders/${id}`),
     config = useLoad<{ paymentMode: string; sepayEnabled?: boolean }>("/config"),
     user = useAuth((state) => state.user),
@@ -113,6 +114,14 @@ export function Checkout() {
     remaining % 60,
   ).padStart(2, "0")}`;
   const reloadOrder = resource.reload;
+
+  useEffect(() => {
+    if (!resource.loading && o?.id === id && o.status === "PAID") {
+      navigate(`/payment-status/${encodeURIComponent(id)}`, {
+        replace: true,
+      });
+    }
+  }, [id, navigate, o?.id, o?.status, resource.loading]);
 
   useEffect(() => {
     if (!toast) return;

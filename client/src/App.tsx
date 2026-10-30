@@ -17,6 +17,7 @@ import { EventDetail } from "./pages/public/EventDetail";
 import { AuthPage } from "./pages/auth/AuthPage";
 import { AuthFooter, AuthHeader, AuthToast } from "./pages/auth/AuthShell";
 import { Checkout } from "./pages/booking/Checkout";
+import { PaymentStatus } from "./pages/booking/PaymentStatus";
 import { MyOrders } from "./pages/account/MyOrders";
 import { MyTickets } from "./pages/account/MyTickets";
 import { TicketPage } from "./pages/account/TicketPage";
@@ -102,6 +103,7 @@ export function App() {
     location.pathname === "/orders" ||
     isEventDetailPage ||
     isCheckoutPage ||
+    location.pathname.startsWith("/payment-status/") ||
     /^\/tickets(?:\/[^/]+)?\/?$/.test(location.pathname) ||
     isRegisterOrganizerPage;
   return (
@@ -229,6 +231,14 @@ export function App() {
             element={
               <Guard>
                 <Checkout />
+              </Guard>
+            }
+          />
+          <Route
+            path="/payment-status/:orderId"
+            element={
+              <Guard>
+                <PaymentStatus />
               </Guard>
             }
           />

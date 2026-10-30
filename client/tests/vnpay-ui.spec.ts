@@ -36,6 +36,47 @@ test("VNPay checkout opens sandbox, polls confirmation and displays paid tickets
         latest_payment: { ...payment, status: paid ? "SUCCEEDED" : "PENDING" },
         items: [],
       };
+    if (path === "/api/me/order-history/order")
+      data = {
+        id: "order",
+        order_code: "EH-TEST",
+        event_title_snapshot: "VNPay UI test",
+        status: "PAID",
+        total_amount: "100000",
+        currency: "VND",
+        created_at: new Date().toISOString(),
+        expires_at: new Date(Date.now() + 900000).toISOString(),
+        total_quantity: 1,
+        group: "paid",
+        items: [],
+        payment: {
+          paid: {
+            id: "payment",
+            order_id: "order",
+            provider: "vnpay_sandbox",
+            status: "SUCCEEDED",
+            amount: "100000",
+            created_at: new Date().toISOString(),
+            requires_review: false,
+          },
+          active: null,
+          latest: null,
+          unresolvedReview: false,
+        },
+        tickets: {
+          expected: 1,
+          issued: 1,
+          valid: 1,
+          checkedIn: 0,
+          void: 0,
+        },
+        actions: {
+          canCancel: false,
+          canViewTickets: true,
+          canContinueCheckout: false,
+        },
+        ticketList: [],
+      };
     if (path === "/api/orders/order/payments") data = payment;
     await route.fulfill({ json: { success: true, data } });
   });
@@ -61,9 +102,10 @@ test("VNPay checkout opens sandbox, polls confirmation and displays paid tickets
     page.getByText("Đang chờ xác nhận thanh toán.", { exact: false }),
   ).toBeVisible();
   paid = true;
+  await expect(page).toHaveURL(/\/payment-status\/order$/, { timeout: 10000 });
   await expect(
-    page.getByRole("link", { name: "Xem vé QR của bạn" }),
-  ).toBeVisible({ timeout: 10000 });
+    page.getByRole("heading", { name: "Thanh toán thành công" }),
+  ).toBeVisible();
 });
 
 test("VNPay checkout preserves failed/review states and rejects an untrusted checkout URL", async ({
