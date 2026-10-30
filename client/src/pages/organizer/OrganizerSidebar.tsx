@@ -28,9 +28,9 @@ export function OrganizerSidebar({
     "Tạo sự kiện mới": "/organizer/new",
     "Chi tiết & Phê duyệt": base,
     "Quản lý loại vé": base && `${base}/tickets`,
-    "Đơn hàng": base && `${base}/orders`,
+    "Đơn hàng": base ? `${base}/orders` : "/organizer/order-events",
     "Người tham dự": base && `${base}/attendees`,
-    "Quét mã QR": base && `${base}/checkin`,
+    "Quét mã QR": base ? `${base}/checkin` : "/organizer/qr-scan",
     "Thống kê doanh thu": base && `${base}/stats`,
   };
   return (

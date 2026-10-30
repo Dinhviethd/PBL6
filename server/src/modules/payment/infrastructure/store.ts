@@ -6,6 +6,11 @@ export function paymentStore(db: Store) {
     historyPayments: (ids: string[]) => db.query(
       `SELECT id,order_id,provider,status,amount,created_at,succeeded_at,requires_review,review_resolved_at
        FROM payments WHERE order_id=ANY($1::uuid[]) ORDER BY created_at DESC,id DESC`, [ids]),
+    managerPayments: (ids: string[]) => db.query(
+      `SELECT id,order_id,provider,status,amount,created_at,succeeded_at,
+        requires_review,review_resolved_at
+       FROM payments WHERE order_id=ANY($1::uuid[])
+       ORDER BY created_at DESC,id DESC`, [ids]),
     latest: async (order: string) =>
       (
         await db.query(

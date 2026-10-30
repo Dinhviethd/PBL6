@@ -88,6 +88,14 @@ export function createDatabase(url: string, ssl?: DatabaseTls | false) {
       );
     },
   };
+  const snapshot: UnitOfWork = {
+    async run(work) {
+      ensure(!context.getStore(), "SNAPSHOT_NESTED", "Không thể lồng lượt đọc báo cáo.", 500);
+      return source.transaction("REPEATABLE READ", (manager) =>
+        context.run(manager, work),
+      );
+    },
+  };
   // Transaction-level lock is safe with transaction pooling; released on rollback/crash.
   // Queries made by work use this same manager/connection through AsyncLocalStorage.
   const exclusive: ExclusiveWork = async (key, work) => {
@@ -104,6 +112,7 @@ export function createDatabase(url: string, ssl?: DatabaseTls | false) {
     start: () => source.initialize(),
     close: () => source.destroy(),
     uow,
+    snapshot,
     exclusive,
     owner(owner: Owner): Store {
       return {

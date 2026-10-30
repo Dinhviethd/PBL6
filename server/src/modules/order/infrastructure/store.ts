@@ -205,6 +205,27 @@ export function orderStore(db: Store) {
         "SELECT * FROM orders WHERE ($1::uuid IS NULL OR buyer_id=$1) AND ($2::uuid IS NULL OR event_id=$2) AND ($4::text IS NULL OR status=$4) AND (order_code ILIKE $5 OR buyer_name_snapshot ILIKE $5) AND ($6::timestamptz IS NULL OR created_at >= $6) AND ($7::timestamptz IS NULL OR created_at <= $7) ORDER BY created_at DESC,id LIMIT 50 OFFSET $3",
         [user, event, offset, status, `%${q}%`, from, to],
       ),
+    managerScope: (event: string, pattern: string, from: string | null, toExclusive: string | null) =>
+      db.query(
+        `SELECT id,order_code,event_id,event_title_snapshot,buyer_name_snapshot,buyer_email_snapshot,
+          created_at,total_amount,total_quantity,currency,status,paid_payment_id
+         FROM orders WHERE event_id=$1 AND
+          (order_code ILIKE $2 OR buyer_name_snapshot ILIKE $2
+           OR buyer_email_snapshot ILIKE $2)
+          AND ($3::timestamptz IS NULL OR created_at >= $3)
+          AND ($4::timestamptz IS NULL OR created_at < $4)
+         ORDER BY created_at DESC,id DESC`,
+        [event, pattern, from, toExclusive],
+      ),
+    managerTickets: (order: string) =>
+      db.query(
+        `SELECT t.id,t.ticket_code,t.status,t.issued_at,t.qr_token_ciphertext,
+          i.ticket_type_name_snapshot,o.buyer_name_snapshot
+         FROM orders o JOIN order_items i ON i.order_id=o.id
+         JOIN tickets t ON t.order_item_id=i.id WHERE o.id=$1
+         ORDER BY i.id,t.sequence_no LIMIT 10`,
+        [order],
+      ),
     obligations: async (event: string) =>
       (
         await db.query(

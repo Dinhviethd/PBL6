@@ -29,6 +29,9 @@ import { EditorPage } from "./pages/organizer/EditorPage";
 import { CreateEventPage } from "./pages/organizer/CreateEventPage";
 import { CreateTicketsPage } from "./pages/organizer/CreateTicketsPage";
 import { QRScanPage } from "./pages/organizer/QRScanPage";
+import { QRScanEventListPage } from "./pages/organizer/QRScanEventListPage";
+import { OrderManagerPage } from "./pages/organizer/OrderManagerPage";
+import { OrderManagerEventListPage } from "./pages/organizer/OrderManagerEventListPage";
 import { Operations } from "./pages/organizer/Operations";
 import { Admin } from "./pages/admin/Admin";
 import { StaffAssignments } from "./pages/staff/StaffAssignments";
@@ -89,7 +92,7 @@ export function App() {
   const isCheckoutPage = location.pathname.startsWith("/checkout/");
   const isRegisterOrganizerPage =
     location.pathname === "/register-organizer";
-  const isOrganizerDashboard = ["/organizer", "/organizer/new"].includes(location.pathname) || /^\/organizer\/events\/[^/]+\/(tickets|checkin)\/?$/.test(location.pathname);
+  const isOrganizerDashboard = ["/organizer", "/organizer/new", "/organizer/qr-scan", "/organizer/order-events"].includes(location.pathname) || /^\/organizer\/events\/[^/]+\/(tickets|checkin|orders)\/?$/.test(location.pathname);
   const isPublicHome = location.pathname === "/" && isAuthVerified && !user;
   const isUserHome =
     location.pathname === "/" &&
@@ -291,6 +294,18 @@ export function App() {
             }
           />
           <Route
+            path="/organizer/qr-scan"
+            element={
+              <Guard roles={["ORGANIZER", "ADMIN"]}>
+                <QRScanEventListPage />
+              </Guard>
+            }
+          />
+          <Route
+            path="/organizer/order-events"
+            element={<Guard roles={["ORGANIZER", "ADMIN"]}><OrderManagerEventListPage /></Guard>}
+          />
+          <Route
             path="/organizer/events/:id"
             element={
               <Guard roles={["ORGANIZER", "ADMIN"]}>
@@ -309,6 +324,10 @@ export function App() {
                 <QRScanPage />
               </Guard>
             }
+          />
+          <Route
+            path="/organizer/events/:id/orders"
+            element={<Guard roles={["ORGANIZER", "ADMIN"]}><OrderManagerPage /></Guard>}
           />
           <Route
             path="/organizer/events/:id/:tab"

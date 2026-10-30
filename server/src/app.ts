@@ -31,6 +31,7 @@ import { createSepayBooking } from "./workflows/sepay-booking";
 import { createSepayWebhook } from "./workflows/sepay-webhook";
 import { createWaitQueue } from "./workflows/wait-queue";
 import { createOrderHistory } from "./workflows/order-history";
+import { createOrderManager } from "./workflows/order-manager";
 import { ensure, role, type Row, type Principal } from "./contracts/core";
 const uuid = z.string().uuid(),
   text = z.string().trim().min(1),
@@ -175,6 +176,7 @@ export function createApplication(config: {
       uow,
       notifications,
     ),
+    orderManager = createOrderManager(events, orders, payments, db.snapshot),
     app = express(),
     api = express.Router();
   app.disable("x-powered-by");
@@ -933,6 +935,30 @@ export function createApplication(config: {
         query(req, "status") || null,
         query(req, "q"),
       );
+    }),
+  );
+  api.get(
+    "/organizer/events/:eventId/order-manager",
+    protect,
+    route((req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      const filters = z.object({
+        page: z.coerce.number().int().min(0).max(10000).default(0),
+        q: z.string().trim().max(200).default(""),
+        group: z.enum(["all", "paid", "processing", "closed"]).default("all"),
+        fromDate: z.string().optional(),
+        toDate: z.string().optional(),
+      }).strict().parse(req.query);
+      return orderManager.list(who(res), id(req, "eventId"), filters);
+    }),
+  );
+  api.get(
+    "/organizer/events/:eventId/orders/:orderId/tickets",
+    protect,
+    route((req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      z.object({}).strict().parse(req.query);
+      return orderManager.preview(who(res), id(req, "eventId"), id(req, "orderId"));
     }),
   );
   api.get(

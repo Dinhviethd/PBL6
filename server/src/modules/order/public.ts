@@ -263,6 +263,19 @@ export function createOrders(db: Store, qrSecret: string) {
         token: decrypt(t.qr_token_ciphertext),
       };
     },
+    async managerTicketPreview(orderId: string) {
+      return (await r.managerTickets(orderId)).map((ticket) => ({
+        id: ticket.id,
+        code: ticket.ticket_code,
+        typeName: ticket.ticket_type_name_snapshot,
+        buyerName: ticket.buyer_name_snapshot,
+        status: ticket.status,
+        issuedAt: ticket.issued_at,
+        printable: ticket.status === "VALID" || ticket.status === "CHECKED_IN",
+        token: ticket.status === "VALID" || ticket.status === "CHECKED_IN"
+          ? decrypt(ticket.qr_token_ciphertext) : null,
+      }));
+    },
     async scan(p: Principal, event: Row, value: string) {
       ensure(
         !event.checkin_paused &&
