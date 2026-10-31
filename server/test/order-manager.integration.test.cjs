@@ -13,7 +13,8 @@ const url = process.env.TEST_DATABASE_URL;
 test("B6 isolated HTTP: scopes, filters, counts, canonical payment and printable QR", {
   skip: !url, timeout: 120000,
 }, async () => {
-  assert.equal(new URL(url).hostname, "127.0.0.1");
+  assert.ok(["127.0.0.1", "localhost"].includes(new URL(url).hostname),
+    "B6 integration tests require a local database host");
   assert.ok(new URL(url).pathname.endsWith("_test"));
   const migration = new DataSource({ type: "postgres", url, migrations: [
     require("../dist/migrations/InitialMvp1790812800000").InitialMvp1790812800000,
