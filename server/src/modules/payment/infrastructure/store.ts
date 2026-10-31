@@ -3,11 +3,18 @@ import type { Store, Row } from "../../../contracts/core";
 import type { PaymentIntent, VerifiedPayment } from "../provider";
 export function paymentStore(db: Store) {
   return {
+    managerBankAccount: async (orderId: string, paymentId: string) =>
+      (await db.query(
+        `SELECT d.payment_id,d.bank_code,d.account_number,d.account_name
+         FROM payments p JOIN sepay_payment_details d ON d.payment_id=p.id
+         WHERE p.order_id=$1 AND p.id=$2 AND p.provider='sepay'`,
+        [orderId, paymentId],
+      ))[0],
     historyPayments: (ids: string[]) => db.query(
       `SELECT id,order_id,provider,status,amount,created_at,succeeded_at,requires_review,review_resolved_at
        FROM payments WHERE order_id=ANY($1::uuid[]) ORDER BY created_at DESC,id DESC`, [ids]),
     managerPayments: (ids: string[]) => db.query(
-      `SELECT id,order_id,provider,status,amount,created_at,succeeded_at,
+      `SELECT id,order_id,provider,status,amount,created_at,succeeded_at,provider_transaction_id,provider_expires_at,
         requires_review,review_resolved_at
        FROM payments WHERE order_id=ANY($1::uuid[])
        ORDER BY created_at DESC,id DESC`, [ids]),

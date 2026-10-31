@@ -1,0 +1,151 @@
+{
+  "fixtureId": "17d19835-a5f9-4394-b171-c4fa1c49aa68",
+  "results": [
+    {
+      "label": "runtime login",
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200
+    },
+    {
+      "label": "guest rejected",
+      "method": "GET",
+      "path": "/organizer/profile",
+      "status": 401,
+      "code": "UNAUTHORIZED"
+    },
+    {
+      "label": "missing application before fixture",
+      "method": "GET",
+      "path": "/organizer/profile",
+      "status": 200
+    },
+    {
+      "label": "approved TEST application",
+      "method": "GET",
+      "path": "/organizer/profile",
+      "status": 200
+    },
+    {
+      "label": "real Supabase PATCH",
+      "method": "PATCH",
+      "path": "/organizer/profile",
+      "status": 200
+    },
+    {
+      "label": "stale ETag rejected",
+      "method": "PATCH",
+      "path": "/organizer/profile",
+      "status": 409,
+      "code": "VERSION_CONFLICT"
+    },
+    {
+      "label": "direct legal edit rejected",
+      "method": "PATCH",
+      "path": "/organizer/profile",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "label": "removed representative rejected",
+      "method": "PATCH",
+      "path": "/organizer/profile",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "label": "removed public field rejected",
+      "method": "PATCH",
+      "path": "/organizer/profile",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "label": "team requires valid event",
+      "method": "POST",
+      "path": "/organizer/team",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "label": "actual staff aggregate",
+      "method": "GET",
+      "path": "/organizer/team",
+      "status": 200
+    },
+    {
+      "label": "actual KPI",
+      "method": "GET",
+      "path": "/organizer/profile/stats",
+      "status": 200
+    },
+    {
+      "label": "search empty",
+      "method": "GET",
+      "path": "/organizer/search?q=TESTB11NoSuchOrder",
+      "status": 200
+    },
+    {
+      "label": "logo roundtrip through application",
+      "method": "GET",
+      "path": "/organizer/profile",
+      "status": 200
+    },
+    {
+      "label": "real pending request",
+      "method": "GET",
+      "path": "/organizer/profile/legal-requests",
+      "status": 200
+    },
+    {
+      "label": "old legal values retained",
+      "method": "GET",
+      "path": "/organizer/profile",
+      "status": 200
+    },
+    {
+      "label": "duplicate pending rejected",
+      "method": "POST",
+      "path": "/organizer/profile/legal-requests",
+      "status": 409,
+      "code": "REQUEST_PENDING"
+    },
+    {
+      "label": "organizer cannot admin-review",
+      "method": "POST",
+      "path": "/admin/organizer-profile-requests/eb0d035c-d956-4fba-a8e0-afaf59bb9e99/review",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "label": "Chrome live criteria",
+      "result": "PASS",
+      "viewports": [
+        1440,
+        1024,
+        768,
+        390
+      ],
+      "static8000": true,
+      "passwordUnchanged": true,
+      "staffGrantsUnchanged": true
+    },
+    {
+      "label": "fixture cleanup",
+      "cleanup": {
+        "fixtureRemoved": true,
+        "testAuditRowsRemoved": 4
+      },
+      "fingerprintsMatch": true,
+      "assetCleanup": {
+        "assetCleanup": "ok"
+      }
+    },
+    {
+      "label": "missing state restored",
+      "method": "GET",
+      "path": "/organizer/profile",
+      "status": 200
+    }
+  ]
+}

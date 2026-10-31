@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 import type { Store, Row } from "../../../contracts/core";
 export function authStore(db: Store) {
   return {
+    orderBuyerContact: async (id: string) =>
+      (await db.query('SELECT phone FROM users WHERE "idUser"=$1', [id]))[0],
     checkinActorNames: (ids: string[]) =>
       db.query(
         'SELECT "idUser",name FROM users WHERE "idUser"=ANY($1::uuid[])',

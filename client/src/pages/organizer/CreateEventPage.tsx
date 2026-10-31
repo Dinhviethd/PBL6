@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Bell, CalendarDays, CheckCircle2, Eye, ImagePlus, Info, Lightbulb, MapPin, Save, Trash2, UploadCloud } from "lucide-react";
+import { ArrowRight, CalendarDays, CheckCircle2, Eye, ImagePlus, Info, Lightbulb, MapPin, Save, Trash2, UploadCloud } from "lucide-react";
 import api from "@/lib/api";
 import { useAuth } from "@/features/auth/stores/authStore";
 import { message, useLoad } from "@/features/ticketing/data";
 import type { Category, Event } from "@/features/ticketing/types";
 import { OrganizerSidebar } from "./OrganizerSidebar";
+import { OrganizerHeader } from "./OrganizerHeader";
 import { createEventPayload, draftKey, emptyEventForm, eventMapUrl, MAX_BANNER_BYTES, readEventDraft, type CreateEventForm } from "./create-event-data";
 import "./create-event.css";
 
@@ -20,7 +21,6 @@ export function CreateEventPage() {
 }
 
 function CreateEventFormPage({ userId }: { userId: string }) {
-  const user = useAuth((s) => s.user);
   const categories = useLoad<Category[]>("/categories");
   const storageKey = draftKey(userId);
   const [initial] = useState(() => readEventDraft(storageKey));
@@ -133,15 +133,7 @@ function CreateEventFormPage({ userId }: { userId: string }) {
     <div className="ce-page">
       <OrganizerSidebar active="Tạo sự kiện mới" />
       <div className="ce-body">
-        <header className="ce-header">
-          <nav aria-label="Đường dẫn" className="ce-breadcrumb">
-            <Link to="/organizer"><ArrowLeft size={16} /> <span>Ban Tổ Chức</span></Link><span>/</span><span>Tạo sự kiện</span>
-          </nav>
-          <div className="ce-account">
-            <Link to="/notifications" aria-label="Thông báo"><Bell size={20} /></Link>
-            <Link to="/profile" className="ce-identity"><span className="ce-avatar">{user?.name.slice(0, 1).toUpperCase()}</span><span><strong>{user?.name}</strong><small>Ban Tổ Chức</small></span></Link>
-          </div>
-        </header>
+        <OrganizerHeader title="Tạo sự kiện" />
         <div className="ce-content">
               <nav className="ce-steps" aria-label="Các phần thông tin sự kiện">
                 {sections.map(([id, label], index) => <a key={id} href={`#${id}`} className={activeSection === id ? "is-active" : ""} aria-current={activeSection === id ? "step" : undefined} onClick={() => setActiveSection(id)}>

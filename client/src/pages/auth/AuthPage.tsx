@@ -520,19 +520,21 @@ export function AuthPage({
         });
         rememberEmail(remember, form.email);
 
-        const target = safeRedirect();
-        if (target !== "/") {
-          navigate(target, { replace: true });
-        } else if (role === "organizer") {
-          const roles = result.data?.user?.roles ?? [];
-          navigate(
-            roles.some((value) => ["ORGANIZER", "ADMIN"].includes(value))
-              ? "/organizer"
-              : "/",
-            { replace: true },
-          );
+        const roles = result.data?.user?.roles ?? [];
+        if (roles.includes("ORGANIZER")) {
+          navigate("/organizer", { replace: true });
         } else {
-          navigate("/", { replace: true });
+          const target = safeRedirect();
+          if (target !== "/") {
+            navigate(target, { replace: true });
+          } else if (role === "organizer") {
+            navigate(
+              roles.includes("ADMIN") ? "/organizer" : "/",
+              { replace: true },
+            );
+          } else {
+            navigate("/", { replace: true });
+          }
         }
         return;
       }

@@ -4,6 +4,7 @@ import { createHash, createHmac, randomInt, randomUUID } from "node:crypto";
 import nodemailer from "nodemailer";
 import { smtpOptions } from "../../platform/smtp";
 import { authStore } from "./infrastructure/store";
+import { createOrganizerIdentity } from "./organizer";
 import {
   ensure,
   role,
@@ -64,6 +65,7 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
     };
   }
   return {
+    ...createOrganizerIdentity(db, uow),
     profile,
     async waitQueueBuyer(id: string) {
       const user = await repo.user(id);
@@ -304,6 +306,13 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
     publicOrganizer: async (id: string) => {
       const u = await profile(id);
       return { name: u.name, avatarUrl: u.avatarUrl };
+    },
+    // Internal reporting use case; caller must first authorize the order's event.
+    orderBuyerContact: async (p: Principal, buyerId: string) => {
+      role(p, ["ORGANIZER", "ADMIN"]);
+      const contact = await repo.orderBuyerContact(buyerId);
+      const phone = typeof contact?.phone === "string" ? contact.phone.trim() || null : null;
+      return { phone, phoneSource: phone ? "CURRENT_PROFILE" as const : null };
     },
     summary: repo.summary,
   };

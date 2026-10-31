@@ -3,8 +3,8 @@ import { Link } from "react-router-dom";
 import { CalendarDays, ChevronLeft, ChevronRight, Clock3, MapPin, Menu, Plus, ShoppingCart, Ticket, X } from "lucide-react";
 import { useLoad } from "@/features/ticketing/data";
 import type { Event } from "@/features/ticketing/types";
-import { useAuth } from "@/features/auth/stores/authStore";
 import { NotificationLink } from "@/components/ticketing/notification-link";
+import { OrganizerHeader } from "./OrganizerHeader";
 import { OrganizerSidebar } from "./OrganizerSidebar";
 import "./qr-scan.css";
 import "./qr-scan-events.css";
@@ -41,7 +41,6 @@ function OrderEventCard({ event }: { event: Event }) {
 }
 
 export function OrderManagerEventListPage() {
-  const user = useAuth((state) => state.user);
   const [page, setPage] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   const events = useLoad<Event[]>(`/organizer/events?page=${page}&limit=${PAGE_SIZE}`);
@@ -53,34 +52,22 @@ export function OrderManagerEventListPage() {
     <div className={`qs-page${menuOpen ? " qs-menu-open" : ""}`}>
       <div className="qs-sidebar" id="order-navigation"><OrganizerSidebar active="Đơn hàng" hideLiveSync /></div>
       {menuOpen && <button className="qs-backdrop" aria-label="Đóng điều hướng" onClick={() => setMenuOpen(false)} />}
-      <div className="qs-body">
-        <header className="qs-header">
-          <button
-            className="qs-menu-button qs-icon-button"
-            aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
-            aria-expanded={menuOpen}
-            aria-controls="order-navigation"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {menuOpen ? <X /> : <Menu />}
-          </button>
-          <nav aria-label="Đường dẫn">
-            <Link to="/organizer">EventHub Ops</Link>
-            <span>/</span>
-            <span>Đơn hàng</span>
-          </nav>
-          <div className="qs-account">
-            <Link className="qs-button qs-create" to="/organizer/new">
-              <Plus size={16} />
-              Tạo sự kiện
-            </Link>
-            <NotificationLink />
-            <Link to="/profile" className="qs-user">
-              <span>{user?.name.slice(0, 1)}</span>
-              <strong>{user?.name}</strong>
-            </Link>
-          </div>
-        </header>
+      <div className="qs-body qs-shared-header">
+        <OrganizerHeader
+          title="Đơn hàng"
+          menuButton={
+            <button
+              className="qs-menu-button qs-icon-button"
+              aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
+              aria-expanded={menuOpen}
+              aria-controls="order-navigation"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              {menuOpen ? <X /> : <Menu />}
+            </button>
+          }
+          notificationSlot={<NotificationLink />}
+        />
         <main className="qs-content qse-content">
           <section className="qs-hero qse-hero">
             <div><span className="qs-eyebrow"><Ticket size={15} aria-hidden="true" /> QUẢN LÝ GIAO DỊCH</span><h1>Chọn sự kiện để quản lý đơn hàng</h1><p>Chọn một sự kiện để xem đơn hàng, giao dịch và vé đã phát hành.</p></div>

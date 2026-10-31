@@ -2,6 +2,24 @@ import { randomUUID } from "node:crypto";
 import type { Store, Row } from "../../../contracts/core";
 export function eventStore(db: Store) {
   return {
+    organizerStaffPage: (ownerId: string, offset: number) =>
+      db.query(
+        `SELECT s.user_id, max(s.staff_name) AS name,max(s.staff_email) AS email,count(*) AS assignment_count
+       FROM event_checkin_staff s JOIN events e ON e.id=s.event_id
+       WHERE e.organizer_id=$1 GROUP BY s.user_id ORDER BY s.user_id LIMIT 51 OFFSET $2`,
+        [ownerId, offset],
+      ),
+    organizerStaffAssignments: (ownerId: string, userId: string) =>
+      db.query(
+        `SELECT s.id,s.event_id,s.user_id,s.status,s.expires_at,e.title FROM event_checkin_staff s
+       JOIN events e ON e.id=s.event_id WHERE e.organizer_id=$1 AND s.user_id=$2 ORDER BY e.id,s.id`,
+        [ownerId, userId],
+      ),
+    organizerProfileEvents: (ownerId: string) =>
+      db.query(
+        "SELECT id,published_at FROM events WHERE organizer_id=$1 ORDER BY id",
+        [ownerId],
+      ),
     reminderEvents: (after: string | null) =>
       db.query(
         `SELECT id FROM events WHERE status='PUBLISHED' AND starts_at>now()

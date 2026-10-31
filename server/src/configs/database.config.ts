@@ -4,6 +4,7 @@ import { DataSource } from "typeorm";
 import { InitialMvp1790812800000 } from "../migrations/InitialMvp1790812800000";
 import { EventCheckinStaff1791072000000 } from "../migrations/EventCheckinStaff1791072000000";
 import { Notifications1791331200000 } from "../migrations/Notifications1791331200000";
+import { OrganizerApplicationProfile1793437200000 } from "../migrations/OrganizerApplicationProfile1793437200000";
 // CLI-only migration connection. Runtime modules receive owner-scoped stores instead.
 export default new DataSource({
   type: "postgres",
@@ -11,6 +12,7 @@ export default new DataSource({
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: true } : false,
   synchronize: false,
   migrations: [
+    OrganizerApplicationProfile1793437200000,
     InitialMvp1790812800000,
     EventCheckinStaff1791072000000,
     Notifications1791331200000,

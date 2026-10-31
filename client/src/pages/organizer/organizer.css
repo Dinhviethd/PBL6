@@ -136,6 +136,51 @@
   gap: 0.5rem;
   padding-left: 0.75rem;
   border-left: 1px solid rgba(74, 68, 85, 0.3);
+  border-top: 0;
+  border-right: 0;
+  border-bottom: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.org-identity-menu {
+  position: relative;
+}
+.org-identity-dropdown {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 60;
+  min-width: 11rem;
+  padding: 0.35rem;
+  border: 1px solid rgba(149, 141, 161, 0.28);
+  border-radius: 0.5rem;
+  background: #181b2a;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+}
+.org-identity-dropdown a,
+.org-identity-dropdown button {
+  display: block;
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 0;
+  border-radius: 0.35rem;
+  background: transparent;
+  color: #ccc3d8;
+  font: 500 12px/1.5 "Be Vietnam Pro", sans-serif;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.org-identity-dropdown a:hover,
+.org-identity-dropdown button:hover,
+.org-identity-dropdown a:focus-visible,
+.org-identity-dropdown button:focus-visible {
+  outline: none;
+  background: #262939;
+  color: #f8fafc;
 }
 .org-avatar {
   width: 2rem;
@@ -143,12 +188,21 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
+  overflow: hidden;
+  flex-shrink: 0;
   background: #7c3aed;
   color: #ede0ff;
   font-family: "Space Grotesk", sans-serif;
   font-size: 12px;
   font-weight: 600;
   box-shadow: 0 0 0 2px #7c3aed;
+}
+.org-avatar img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
 }
 .org-identity-text {
   display: flex;

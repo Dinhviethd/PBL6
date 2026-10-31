@@ -1,0 +1,12 @@
+{
+  "app.js": "c1bdea2e995d67b042fce96853c9010abe00115e6b6e08f34a405ec723d77e05",
+  "contracts/organizer-profile.js": "7d5859dcb5579843375826ae53d62785ea9a1b5cc5d1b507d6302141d117f7e9",
+  "modules/auth/public.js": "46adb3befb539252913f45c80a123aa23d9d41a89b56d2deff37c0a686f9236e",
+  "modules/auth/organizer.js": "ffc9d9162fe8997fc5b61acd4d14d0eb6c6b74cd03b445790b50cbd292d9f678",
+  "modules/auth/infrastructure/organizer.js": "7f45941c8e8eaca1f90dfd48da670dbabfea3db41d879be082f5a5e986dd4a39",
+  "modules/event/infrastructure/store.js": "a5e40a34b4cb4c662b46885f5f578820ea4d41526d5a83bc6395282e89dada93",
+  "modules/order/infrastructure/store.js": "00a7aa089a35beffe60ac35df85134f6bb8cc857fbead018827fd32d16cee2ac",
+  "modules/audit/infrastructure/store.js": "7369e1a2333403898477ac8045c4041a22d6af569e3d04fca04dfee7273618b4",
+  "workflows/organizer-profile.js": "21cc479083ae16207129235604910a59305f61738e589544106d75106f93a1fa",
+  "migrations/OrganizerApplicationProfile1793437200000.js": "45159635242d75b45eb4133c20b34cc57568b2f37ae1d729a19b6669b8585c0b"
+}

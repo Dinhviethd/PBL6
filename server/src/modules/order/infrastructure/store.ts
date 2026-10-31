@@ -4,6 +4,24 @@ import { waitQueueStore } from "./wait-queue";
 import { orderHistoryStore } from "./history";
 export function orderStore(db: Store) {
   return {
+    organizerProfileTicketCount: async (eventIds: string[]) =>
+      (
+        await db.query(
+          `SELECT count(*) AS served_tickets FROM tickets t
+           JOIN order_items i ON i.id=t.order_item_id
+           JOIN orders o ON o.id=i.order_id
+           WHERE o.event_id=ANY($1::uuid[]) AND o.status='PAID'
+             AND t.status IN ('VALID','CHECKED_IN')`,
+          [eventIds],
+        )
+      )[0],
+    organizerProfileSearch: (eventIds: string[], q: string) => db.query(
+      `SELECT DISTINCT o.id,o.event_id,o.order_code,o.buyer_name_snapshot FROM orders o
+       LEFT JOIN order_items i ON i.order_id=o.id LEFT JOIN tickets t ON t.order_item_id=i.id
+       WHERE o.event_id=ANY($1::uuid[]) AND
+       (o.order_code ILIKE $2 OR o.buyer_name_snapshot ILIKE $2 OR t.ticket_code ILIKE $2)
+       ORDER BY o.id LIMIT 20`, [eventIds, `%${q.replace(/[\\%_]/g, "\\$&")}%`],
+    ),
     ...orderHistoryStore(db),
     ...waitQueueStore(db),
     reminderBuyers: (eventId: string) =>
@@ -216,6 +234,15 @@ export function orderStore(db: Store) {
           AND ($4::timestamptz IS NULL OR created_at < $4)
          ORDER BY created_at DESC,id DESC`,
         [event, pattern, from, toExclusive],
+      ),
+    managerDetailTickets: (order: string) =>
+      db.query(
+        `SELECT t.id,t.ticket_code,t.status,t.issued_at,c.checked_in_at,
+          i.ticket_type_name_snapshot,i.unit_price
+         FROM order_items i JOIN tickets t ON t.order_item_id=i.id
+         LEFT JOIN checkins c ON c.ticket_id=t.id
+         WHERE i.order_id=$1 ORDER BY i.id,t.sequence_no`,
+        [order],
       ),
     managerTickets: (order: string) =>
       db.query(

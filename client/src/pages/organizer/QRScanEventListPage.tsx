@@ -15,8 +15,8 @@ import {
 } from "lucide-react";
 import { useLoad } from "@/features/ticketing/data";
 import type { Event } from "@/features/ticketing/types";
-import { useAuth } from "@/features/auth/stores/authStore";
 import { NotificationLink } from "@/components/ticketing/notification-link";
+import { OrganizerHeader } from "./OrganizerHeader";
 import { OrganizerSidebar } from "./OrganizerSidebar";
 import "./qr-scan.css";
 import "./qr-scan-events.css";
@@ -90,7 +90,6 @@ function ScanEventCard({ event }: { event: Event }) {
 }
 
 export function QRScanEventListPage() {
-  const user = useAuth((state) => state.user);
   const [page, setPage] = useState(0);
   const events = useLoad<Event[]>(
     `/organizer/events?page=${page}&limit=${PAGE_SIZE}`,
@@ -114,34 +113,22 @@ export function QRScanEventListPage() {
           onClick={() => setMenuOpen(false)}
         />
       )}
-      <div className="qs-body">
-        <header className="qs-header">
-          <button
-            className="qs-menu-button qs-icon-button"
-            aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
-            aria-expanded={menuOpen}
-            aria-controls="qr-navigation"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            {menuOpen ? <X /> : <Menu />}
-          </button>
-          <nav aria-label="Đường dẫn">
-            <Link to="/organizer">EventHub Ops</Link>
-            <span>/</span>
-            <span>Quét mã QR</span>
-          </nav>
-          <div className="qs-account">
-            <Link className="qs-button qs-create" to="/organizer/new">
-              <Plus size={16} />
-              Tạo sự kiện
-            </Link>
-            <NotificationLink />
-            <Link to="/profile" className="qs-user">
-              <span>{user?.name.slice(0, 1)}</span>
-              <strong>{user?.name}</strong>
-            </Link>
-          </div>
-        </header>
+      <div className="qs-body qs-shared-header">
+        <OrganizerHeader
+          title="Quét mã QR"
+          menuButton={
+            <button
+              className="qs-menu-button qs-icon-button"
+              aria-label={menuOpen ? "Đóng menu" : "Mở menu"}
+              aria-expanded={menuOpen}
+              aria-controls="qr-navigation"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              {menuOpen ? <X /> : <Menu />}
+            </button>
+          }
+          notificationSlot={<NotificationLink />}
+        />
 
         <main className="qs-content qse-content">
           <section className="qs-hero qse-hero">

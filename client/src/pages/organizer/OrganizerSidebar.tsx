@@ -31,6 +31,7 @@ export function OrganizerSidebar({
     "Đơn hàng": base ? `${base}/orders` : "/organizer/order-events",
     "Người tham dự": base && `${base}/attendees`,
     "Quét mã QR": base ? `${base}/checkin` : "/organizer/qr-scan",
+    "Hồ sơ BTC": "/organizer/profile",
     "Thống kê doanh thu": base && `${base}/stats`,
   };
   return (

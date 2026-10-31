@@ -31,6 +31,8 @@ import { CreateTicketsPage } from "./pages/organizer/CreateTicketsPage";
 import { QRScanPage } from "./pages/organizer/QRScanPage";
 import { QRScanEventListPage } from "./pages/organizer/QRScanEventListPage";
 import { OrderManagerPage } from "./pages/organizer/OrderManagerPage";
+import { OrderDetailsPage } from "./pages/organizer/OrderDetailsPage";
+import { OrganizerProfilePage, OrganizerTeamInvitationsPage } from "./pages/organizer/OrganizerProfilePage";
 import { OrderManagerEventListPage } from "./pages/organizer/OrderManagerEventListPage";
 import { Operations } from "./pages/organizer/Operations";
 import { Admin } from "./pages/admin/Admin";
@@ -92,7 +94,7 @@ export function App() {
   const isCheckoutPage = location.pathname.startsWith("/checkout/");
   const isRegisterOrganizerPage =
     location.pathname === "/register-organizer";
-  const isOrganizerDashboard = ["/organizer", "/organizer/new", "/organizer/qr-scan", "/organizer/order-events"].includes(location.pathname) || /^\/organizer\/events\/[^/]+\/(tickets|checkin|orders)\/?$/.test(location.pathname);
+  const isOrganizerDashboard = ["/organizer", "/organizer/new", "/organizer/qr-scan", "/organizer/order-events", "/organizer/profile", "/organizer/team-invitations"].includes(location.pathname) || /^\/organizer\/events\/[^/]+\/(tickets|checkin|orders(?:\/[^/]+)?)\/?$/.test(location.pathname);
   const isPublicHome = location.pathname === "/" && isAuthVerified && !user;
   const isUserHome =
     location.pathname === "/" &&
@@ -285,6 +287,8 @@ export function App() {
               </Guard>
             }
           />
+          <Route path="/organizer/profile" element={<Guard roles={["ORGANIZER", "ADMIN"]}><OrganizerProfilePage /></Guard>} />
+          <Route path="/organizer/team-invitations" element={<Guard><OrganizerTeamInvitationsPage /></Guard>} />
           <Route
             path="/organizer/new"
             element={
@@ -328,6 +332,10 @@ export function App() {
           <Route
             path="/organizer/events/:id/orders"
             element={<Guard roles={["ORGANIZER", "ADMIN"]}><OrderManagerPage /></Guard>}
+          />
+          <Route
+            path="/organizer/events/:id/orders/:orderId"
+            element={<Guard roles={["ORGANIZER", "ADMIN"]}><OrderDetailsPage /></Guard>}
           />
           <Route
             path="/organizer/events/:id/:tab"

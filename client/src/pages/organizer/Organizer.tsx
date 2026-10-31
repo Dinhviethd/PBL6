@@ -1,21 +1,18 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Bell,
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   MapPin,
   Plus,
-  Search,
   SquarePen,
 } from "lucide-react";
-import { useAuth } from "@/features/auth/stores/authStore";
 import { money, useLoad } from "@/features/ticketing/data";
 import type { Category, Event, StatusCount } from "@/features/ticketing/types";
+import { OrganizerHeader } from "./OrganizerHeader";
 import { OrganizerSidebar } from "./OrganizerSidebar";
 import "./organizer-sidebar.css";
-import "./organizer.css";
 
 const PAGE_SIZE = 5;
 
@@ -39,7 +36,6 @@ function fmtDate(value: string) {
 }
 
 export function Organizer() {
-  const { user } = useAuth();
   const [page, setPage] = useState(0);
   const events = useLoad<Event[]>(
     `/organizer/events?page=${page}&limit=${PAGE_SIZE}`,
@@ -63,46 +59,7 @@ export function Organizer() {
     <>
       <OrganizerSidebar active="Quản lý sự kiện" />
       <div className="org-body">
-        <header className="org-header">
-          <div className="org-header-left">
-            <nav className="org-breadcrumb" aria-label="Đường dẫn">
-              <Link to="/">EventHub</Link>
-              <span className="org-crumb-sep">/</span>
-              <span className="org-crumb-current">Ban Tổ Chức</span>
-            </nav>
-            <label className="org-search">
-              <Search size={18} aria-hidden="true" />
-              <input
-                type="text"
-                placeholder="Tìm vé, đơn hàng, khách..."
-                aria-label="Tìm kiếm"
-              />
-            </label>
-          </div>
-          <div className="org-header-right">
-            <Link className="org-create-btn" to="/organizer/new">
-              <Plus size={16} aria-hidden="true" />
-              Tạo sự kiện
-            </Link>
-            <Link className="org-bell" to="/notifications" aria-label="Thông báo">
-              <Bell size={20} aria-hidden="true" />
-              <span className="org-bell-dot" aria-hidden="true" />
-            </Link>
-            <Link className="org-identity" to="/profile">
-              <span className="org-avatar">
-                {user?.name.slice(0, 1).toUpperCase() ?? "B"}
-              </span>
-              <span className="org-identity-text">
-                <span className="org-identity-name">
-                  {user?.name ?? "Ban Tổ Chức"}
-                </span>
-                <span className="org-identity-role">
-                  {user?.roles.includes("ADMIN") ? "Quản trị viên" : "BTC"}
-                </span>
-              </span>
-            </Link>
-          </div>
-        </header>
+        <OrganizerHeader title="Ban Tổ Chức" />
 
         <div className="org-content">
           <section className="org-subheader" aria-label="Tổng quan sự kiện">

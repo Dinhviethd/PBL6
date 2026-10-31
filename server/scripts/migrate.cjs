@@ -9,6 +9,7 @@ const db = new DataSource({
   url: process.env.DATABASE_URL,
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: true } : false,
   migrations: [
+    require("../dist/migrations/OrganizerApplicationProfile1793437200000").OrganizerApplicationProfile1793437200000,
     require("../dist/migrations/WaitQueue1792627200000").WaitQueue1792627200000,
     InitialMvp1790812800000,
     require("../dist/migrations/EventCheckinStaff1791072000000")

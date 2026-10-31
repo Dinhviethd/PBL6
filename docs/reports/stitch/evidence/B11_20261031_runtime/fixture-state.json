@@ -1,0 +1,10 @@
+{
+  "fixtureId": "17d19835-a5f9-4394-b171-c4fa1c49aa68",
+  "before": {
+    "originalApplicationCount": 2,
+    "applications": "ce468380ebe7fb0d1103564925731d99ab4db125bec542b8513ed489a9721e73",
+    "staff": "24f67e7f5f3f5fc3d16c9bd6a65d8541850515681ba614b3e9981e6b325dbfa6",
+    "account": "e63969468f3d5355e90b74c0246a3f69e5af6f93ffb4f8285f08aec996227312"
+  },
+  "uploadedPublicId": "eventhub/lesx14vqth3u7n7obrpo"
+}

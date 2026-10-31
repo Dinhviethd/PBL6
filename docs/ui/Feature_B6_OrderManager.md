@@ -366,3 +366,7 @@ Nếu KPI/filter/list/QR thuộc phạm vi còn lỗi bắt buộc hoặc thiế
 | Trạng thái rollout | `NOT_DEPLOYED`: chưa restart/recreate API hoặc worker, Vite 5173 vẫn proxy tới 8000 cũ. Stack dùng Supabase/SePay Live nên rollout cần xử lý như thay đổi runtime thanh toán. |
 
 Chi tiết và bằng chứng: [report Docker mới](../reports/stitch/B6_20261031_002721_docker_runtime_review.md). Trạng thái frontend/API cô lập ở mục 14.4 vẫn giữ nguyên; không suy từ image build rằng API đã hoạt động trên container đang chạy.
+
+### 14.7. Điều chỉnh bảng B6 ngày 2026-10-31 13:18:51 UTC+7
+
+Theo yêu cầu mới, giao diện hiển thị tối đa 10 đơn mỗi trang. API tiếp tục trả 50 đơn mỗi lô; frontend chia lô thành 5 trang hiển thị, tự chuyển sang lô API tiếp theo và tính tổng trang từ pagination.total. Các mô tả trước về 50/trang vẫn áp dụng cho hợp đồng API, không còn là số dòng bảng. Build và lint PASS; chưa kiểm browser Live. [Report](../reports/stitch/B6_20261031_131851_ten_orders_per_page.md).

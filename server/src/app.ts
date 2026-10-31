@@ -32,6 +32,8 @@ import { createSepayWebhook } from "./workflows/sepay-webhook";
 import { createWaitQueue } from "./workflows/wait-queue";
 import { createOrderHistory } from "./workflows/order-history";
 import { createOrderManager } from "./workflows/order-manager";
+import { createOrganizerProfileStats, createOrganizerTeamWorkflow } from "./workflows/organizer-profile";
+import { organizerProfilePatch, organizerLegalRequest, organizerLegalReview } from "./contracts/organizer-profile";
 import { ensure, role, type Row, type Principal } from "./contracts/core";
 const uuid = z.string().uuid(),
   text = z.string().trim().min(1),
@@ -176,7 +178,9 @@ export function createApplication(config: {
       uow,
       notifications,
     ),
-    orderManager = createOrderManager(events, orders, payments, db.snapshot),
+    orderManager = createOrderManager(events, orders, payments, db.snapshot, auth),
+    organizerProfileStats = createOrganizerProfileStats(events, orders, db.snapshot),
+    organizerTeam = createOrganizerTeamWorkflow(auth, events, booking, uow),
     app = express(),
     api = express.Router();
   app.disable("x-powered-by");
@@ -633,6 +637,56 @@ export function createApplication(config: {
     protect,
     route((req, res) => auth.applications(who(res), false, page(req))),
   );
+  api.get(
+    "/organizer/profile/stats",
+    protect,
+    route((_req, res) => { res.setHeader("Cache-Control", "no-store"); return organizerProfileStats(who(res)); }),
+  );
+  api.use(["/organizer/profile", "/organizer/team", "/organizer/search", "/admin/organizer-profile-requests"], (_req, res, next) => {
+    res.setHeader("Cache-Control", "no-store"); next();
+  });
+  api.get("/organizer/profile", protect, route((_req, res) => auth.organizerProfile(who(res))));
+  api.patch("/organizer/profile", protect, route((req, res) => uow.run(async () => {
+    const result = await auth.updateOrganizerProfile(who(res), organizerProfilePatch.parse(req.body));
+    await audit.append(who(res), "organizer.profile_updated", "organizer", who(res).userId, { applicationId: result.sourceApplicationId, version: result.version });
+    return result;
+  })));
+  api.get("/organizer/profile/legal-requests", protect, route(async (req, res) => {
+    const pending=await auth.organizerLegalRequests(who(res));
+    const history=await audit.organizerLegalHistory(who(res).userId,page(req)*50);
+    return [...(page(req)===0?pending:[]), ...history.map(row=>row.metadata)];
+  }));
+  api.post("/organizer/profile/legal-requests", protect, route((req, res) => uow.run(async () => {
+    const result = await auth.submitOrganizerLegalRequest(who(res), organizerLegalRequest.parse(req.body));
+    await audit.append(who(res), "organizer.legal_requested", "organizer", who(res).userId, { applicationId: result.applicationId, requestId: result.id });
+    return result;
+  })));
+  api.get("/admin/organizer-profile-requests", protect, route(async (req, res) => {
+    const pending=await auth.adminOrganizerLegalRequests(who(res),page(req));
+    const history=await audit.organizerLegalHistory(null,page(req)*50);
+    return [...pending,...history.map(row=>row.metadata)];
+  }));
+  api.post("/admin/organizer-profile-requests/:id/review", protect, route((req, res) => uow.run(async () => {
+    const d = organizerLegalReview.parse(req.body);
+    const result = await auth.reviewOrganizerLegalRequest(who(res), id(req), d.approve, d.reason);
+    await audit.append(who(res), d.approve ? "organizer.legal_approved" : "organizer.legal_rejected", "organizer", result.owner_id, result);
+    return result;
+  })));
+
+  api.get('/organizer/team',protect,route((req,res)=>organizerTeam.list(who(res),page(req))));
+  api.post('/organizer/team',protect,route((req,res)=>{
+    const d=z.object({eventId:uuid,email}).strict().parse(req.body);
+    return organizerTeam.invite(who(res),d.eventId,d.email);
+  }));
+  api.get('/organizer/team/:id/events',protect,route((req,res)=>organizerTeam.assignments(who(res),id(req))));
+  api.delete('/organizer/team/:id/events/:staffId',protect,route((req,res)=>organizerTeam.revokeAssignment(who(res),id(req),id(req,'staffId'))));
+  api.delete('/organizer/team/:id',protect,route((req,res)=>organizerTeam.revoke(who(res),id(req))));
+  api.get("/organizer/search", protect, route((req, res) => db.snapshot.run(async () => {
+    role(who(res), ["ORGANIZER", "ADMIN"]);
+    const q = z.string().trim().min(2).max(100).parse(req.query.q);
+    const scope = await events.organizerProfileEvents(who(res).userId);
+    return orders.organizerProfileSearch(scope.map((event) => event.id), q);
+  })));
   api.post(
     "/me/organizer-applications",
     protect,
@@ -959,6 +1013,15 @@ export function createApplication(config: {
       res.setHeader("Cache-Control", "no-store");
       z.object({}).strict().parse(req.query);
       return orderManager.preview(who(res), id(req, "eventId"), id(req, "orderId"));
+    }),
+  );
+  api.get(
+    "/organizer/events/:id/orders/:orderId",
+    protect,
+    route((req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      z.object({}).strict().parse(req.query);
+      return orderManager.detail(who(res), id(req), id(req, "orderId"));
     }),
   );
   api.get(

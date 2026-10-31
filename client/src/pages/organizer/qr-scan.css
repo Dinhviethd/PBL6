@@ -29,6 +29,9 @@
 .qs-body {
   margin-left: 16rem;
 }
+.qs-body.qs-shared-header {
+  padding-top: 4rem;
+}
 .qs-header {
   min-height: 64px;
   display: flex;
