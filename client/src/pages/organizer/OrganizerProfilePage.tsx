@@ -154,11 +154,41 @@ function EventPicker({
   disabled: boolean;
 }) {
   const [page, setPage] = useState(0);
-  const events = useLoad<EventChoice[]>(
-    `/organizer/events?page=${page}&limit=6`,
-  );
+  const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => setDebouncedSearch(search.trim()),
+      300,
+    );
+    return () => window.clearTimeout(timer);
+  }, [search]);
+  const searchPending = search.trim() !== debouncedSearch;
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: "6",
+    status: "PUBLISHED",
+  });
+  if (debouncedSearch) params.set("q", debouncedSearch);
+  const events = useLoad<EventChoice[]>(`/organizer/events?${params}`);
+  const total = Number(events.data?.[0]?.total_results ?? 0);
+  const loading = searchPending || events.loading;
   return (
     <>
+      <label htmlFor="b11-event-search">Tìm sự kiện đã xuất bản</label>
+      <input
+        id="b11-event-search"
+        type="search"
+        value={search}
+        placeholder="Nhập tên sự kiện"
+        autoComplete="off"
+        disabled={disabled}
+        onChange={(e) => {
+          setSearch(e.target.value);
+          setPage(0);
+          onChange("");
+        }}
+      />
       <label htmlFor="b11-event-choice">
         Chọn sự kiện để gửi lời mời check-in
       </label>
@@ -174,22 +204,32 @@ function EventPicker({
         id="b11-event-choice"
         value={value}
         required
-        disabled={disabled || events.loading}
+        disabled={disabled || loading || Boolean(events.error)}
         onChange={(e) => onChange(e.target.value)}
       >
         <option value="">Chọn sự kiện</option>
-        {events.data
-          ?.filter((e) => !["CANCELLED", "ARCHIVED"].includes(e.status))
-          .map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.title}
-            </option>
-          ))}
+        {events.data?.map((e) => (
+          <option key={e.id} value={e.id}>
+            {e.title}
+          </option>
+        ))}
       </select>
+      {loading && (
+        <p className="b11-muted" role="status">
+          Đang tải sự kiện…
+        </p>
+      )}
+      {!loading && !events.error && events.data?.length === 0 && (
+        <p className="b11-muted" role="status">
+          {debouncedSearch
+            ? "Không tìm thấy sự kiện đã xuất bản phù hợp."
+            : "Bạn chưa có sự kiện nào đã xuất bản."}
+        </p>
+      )}
       <div className="b11-pages">
         <button
           type="button"
-          disabled={page === 0 || disabled}
+          disabled={page === 0 || disabled || loading || Boolean(events.error)}
           onClick={() => {
             setPage(page - 1);
             onChange("");
@@ -202,7 +242,9 @@ function EventPicker({
           type="button"
           disabled={
             disabled ||
-            (page + 1) * 6 >= Number(events.data?.[0]?.total_results ?? 0)
+            loading ||
+            Boolean(events.error) ||
+            (page + 1) * 6 >= total
           }
           onClick={() => {
             setPage(page + 1);

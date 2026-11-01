@@ -58,6 +58,20 @@ export function eventStore(db: Store) {
         WHERE s.user_id=$1 ORDER BY s.invited_at DESC,s.id LIMIT 50 OFFSET $2`,
         [userId, offset],
       ),
+    staffAssignmentsPage: (userId: string, offset: number) =>
+      db.query(
+        `SELECT assignments.*, totals.total
+         FROM (SELECT count(*) AS total FROM event_checkin_staff s
+           JOIN events e ON e.id=s.event_id WHERE s.user_id=$1) totals
+         LEFT JOIN (SELECT s.id,s.event_id,s.status,s.invited_at,s.expires_at,
+           e.title,e.venue_name,e.starts_at,e.ends_at,e.checkin_opens_at,
+           e.checkin_closes_at,e.status AS event_status,e.cover_image_url AS image_url
+           FROM event_checkin_staff s JOIN events e ON e.id=s.event_id
+           WHERE s.user_id=$1 ORDER BY s.invited_at DESC,s.id LIMIT 50 OFFSET $2
+         ) assignments ON true
+         ORDER BY assignments.invited_at DESC,assignments.id`,
+        [userId, offset],
+      ),
     inviteStaff: async (eventId: string, actor: string, user: Row) =>
       (
         await db.query(

@@ -12,6 +12,14 @@ export function createEvents(db: Store) {
   };
   return {
     ...r,
+    async assignmentPage(userId: string, page: number) {
+      const rows = await r.staffAssignmentsPage(userId, page * 50);
+      const total = Number(rows[0]?.total ?? 0);
+      return {
+        data: rows.filter((row) => row.id).map(({ total: _total, ...item }) => item),
+        pagination: { page, pageSize: 50, total, totalPages: Math.ceil(total / 50) },
+      };
+    },
     async checkinGuard(id: string, p: Principal) {
       // Shared event lock is held through the scan transaction. Revocation takes
       // an exclusive lock, so a completed revocation rejects every later scan.

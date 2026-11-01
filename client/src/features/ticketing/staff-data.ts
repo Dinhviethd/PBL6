@@ -13,8 +13,16 @@ export type Assignment = {
   checkin_closes_at: string;
   event_status: string;
 };
-export const status = (s: Assignment) =>
-  s.status === "PENDING" && new Date(s.expires_at) <= new Date()
+export type AssignedEvent = Omit<Assignment, "staff_name" | "staff_email"> & {
+  invited_at: string;
+  image_url: string | null;
+};
+export type AssignmentPage = {
+  data: AssignedEvent[];
+  pagination: { page: number; pageSize: number; total: number; totalPages: number };
+};
+export const status = (s: Pick<Assignment, "status" | "expires_at">, now = Date.now()) =>
+  s.status === "PENDING" && new Date(s.expires_at).getTime() <= now
     ? "EXPIRED"
     : s.status;
 export const labels: Record<string, string> = {

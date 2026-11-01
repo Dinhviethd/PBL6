@@ -106,6 +106,7 @@ test("all notification and recipient queries pass runtime ownership validation",
     items: [],
     hasNext: false,
     unreadCount: 0,
+    pagination: { page: 1, pageSize: 10, total: 0, totalPages: 0 },
   });
   await assert.rejects(n.markRead(p, "foreign-id"), (e) => e.status === 404);
   await n.markAllRead(p);
@@ -114,7 +115,7 @@ test("all notification and recipient queries pass runtime ownership validation",
       .filter((q) => q.sql.startsWith("UPDATE"))
       .every((q) => q.args[0] === p.userId && q.sql.includes("user_id=$1")),
   );
-  assert.ok(queries.some((q) => q.args[1] === 50 && q.args[2] === true));
+  assert.ok(queries.some((q) => q.args[1] === 10 && q.args[2] === true));
   const events = createEvents(store("event"));
   await events.reminderEvents(null);
   await events.notificationStaff("event", true);

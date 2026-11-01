@@ -719,6 +719,8 @@ export function createApplication(config: {
       const limit = pageSize(req);
       const rows = await events.list({
         owner: who(res).userId,
+        status: query(req, "status") || null,
+        q: query(req, "q"),
         limit,
         offset: page(req) * limit,
       });
@@ -1076,9 +1078,11 @@ export function createApplication(config: {
   api.get(
     "/me/checkin-assignments",
     protect,
-    route((req, res) =>
-      events.staffAssignments(who(res).userId, page(req) * 50),
-    ),
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      const result = await events.assignmentPage(who(res).userId, page(req));
+      res.json({ success: true, ...result });
+    }),
   );
   api.post(
     "/me/checkin-invitations/:id/respond",

@@ -83,9 +83,9 @@ for (const width of [1280, 390]) {
     ).toBeVisible();
     await page.getByRole("button", { name: "Tất cả", exact: true }).click();
     await page
-      .getByRole("button", { name: "Xem đơn hàng →", exact: true })
+      .getByRole("button", { name: "Xem đơn hàng", exact: true })
       .click();
-    await expect(page).toHaveURL(new RegExp(`/checkout/${order.id}$`));
+    await expect(page).toHaveURL(new RegExp(`/payment-status/${order.id}$`));
     await page.goto("/notifications");
     await expect(
       page.getByRole("button", { name: "Đánh dấu tất cả đã đọc" }),

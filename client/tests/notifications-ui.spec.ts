@@ -71,6 +71,11 @@ for (const width of [1280, 390]) {
               : items,
           unreadCount: items.filter((n) => !n.read_at).length,
           hasNext: false,
+          pagination: {
+            page: 0, pageSize: 10,
+            total: items.filter((n) => url.searchParams.get("unread") !== "true" || !n.read_at).length,
+            totalPages: items.some((n) => url.searchParams.get("unread") !== "true" || !n.read_at) ? 1 : 0,
+          },
         };
       } else if (path === "/api/me/notifications/read-all")
         items.forEach((n) => {
@@ -127,8 +132,17 @@ for (const width of [1280, 390]) {
     fail = false;
     await page.getByRole("button", { name: "Làm mới", exact: true }).click();
     await expect(page.getByRole("article")).toHaveCount(3);
+    const orderRequests: string[] = [];
+    page.on("request", (request) => {
+      if (request.url().includes("/api/me/orders/")) orderRequests.push(request.url());
+    });
+    await page.getByRole("button", { name: "Xem đơn hàng", exact: true }).click();
+    await expect(page).toHaveURL(/\/payment-status\/order$/);
+    expect(orderRequests).toEqual([]);
+    await page.goto("/notifications");
+    await expect(page.getByRole("article")).toHaveCount(3);
     await page
-      .getByRole("button", { name: "Xem phân công →", exact: true })
+      .getByRole("button", { name: "Xem phân công", exact: true })
       .click();
     await expect(page).toHaveURL(/\/checkin$/);
     expect(failures).toEqual([]);

@@ -106,6 +106,9 @@ export function App() {
     isUserHome ||
     location.pathname === "/explore" ||
     location.pathname === "/orders" ||
+    location.pathname === "/notifications" ||
+    location.pathname === "/checkin" ||
+    /^\/checkin\/events\/[^/]+\/?$/.test(location.pathname) ||
     isEventDetailPage ||
     isCheckoutPage ||
     location.pathname.startsWith("/payment-status/") ||
@@ -212,7 +215,7 @@ export function App() {
             path="/checkin"
             element={
               <Guard>
-                <StaffAssignments />
+                <StaffAssignments key={user?.idUser} />
               </Guard>
             }
           />

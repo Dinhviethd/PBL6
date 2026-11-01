@@ -1,33 +1,17 @@
-import { Link, useParams } from "react-router-dom";
-import { Scanner } from "@/components/ticketing/scanner";
-import { Loading, Notice, PageHead } from "@/components/ticketing/shared";
-import { useLoad, when } from "@/features/ticketing/data";
-import type { Assignment } from "@/features/ticketing/staff-data";
+import { useParams } from "react-router-dom";
+import { CheckinStation } from "@/components/ticketing/checkin-station";
+import { useAuth } from "@/features/auth/stores/authStore";
 
 export function StaffCheckin() {
-  const { id } = useParams(),
-    r = useLoad<Assignment>(`/checkin/events/${id}`);
+  const { id = "" } = useParams();
+  const revision = useAuth((state) => state.revision);
   return (
-    <>
-      <Link className="back" to="/checkin">
-        ← Sự kiện được phân công
-      </Link>
-      {r.loading ? (
-        <Loading />
-      ) : r.error ? (
-        <Notice error={r.error} />
-      ) : (
-        r.data && (
-          <>
-            <PageHead eyebrow="CHECK-IN SỰ KIỆN" title={r.data.title} />
-            <p>
-              {r.data.venue_name} · Check-in: {when(r.data.checkin_opens_at)} –{" "}
-              {when(r.data.checkin_closes_at)}
-            </p>
-            <Scanner key={id} eventId={id!} />
-          </>
-        )
-      )}
-    </>
+    <CheckinStation
+      key={`${revision}:${id}`}
+      eventId={id}
+      backTo="/checkin"
+      backLabel="Sự kiện được phân công"
+      staff
+    />
   );
 }

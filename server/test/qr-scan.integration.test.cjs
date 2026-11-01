@@ -27,7 +27,7 @@ async function verify(serve = false) {
     secret: "b9-test-secret".repeat(5),
     qrSecret: "b9-qr-secret".repeat(5),
     demo: true,
-    clientUrl: "http://localhost:5173",
+    clientUrl: process.env.CHECKIN_UI ? "http://localhost:5185" : "http://localhost:5173",
   });
   let server;
   try {
@@ -46,6 +46,11 @@ async function verify(serve = false) {
     });
     const buyer = await app.auth.register({
       name: "Nguyễn Minh Anh",
+      email: `${randomUUID()}@example.test`,
+      password,
+    });
+    const staff = await app.auth.register({
+      name: "Nhân viên kiểm thử trạm quét",
       email: `${randomUUID()}@example.test`,
       password,
     });
@@ -102,6 +107,10 @@ async function verify(serve = false) {
       ...payload,
       title: "Sự kiện khác",
     });
+    await db.query(`INSERT INTO event_checkin_staff
+      (id,event_id,user_id,invited_by,staff_name,staff_email,status,expires_at)
+      VALUES($1,$2,$3,$4,$5,$6,'ACTIVE',now()+interval '1 day')`,
+      [randomUUID(), event.id, staff.user.idUser, owner.user.idUser, staff.user.name, staff.user.email]);
     const type = await call(
       "POST",
       `/organizer/events/${event.id}/ticket-types`,
@@ -174,6 +183,17 @@ async function verify(serve = false) {
     assert.equal(duplicate.duplicate, true);
     assert.equal(duplicate.checked_in_at, first.checked_in_at);
     assert.equal(duplicate.buyer_name, first.buyer_name);
+    const metadata = await call("GET", `/checkin/events/${event.id}`, undefined, 200, staff.accessToken);
+    assert.equal(metadata.id, event.id);
+    const staffDuplicate = await call("POST", scan, { code: cards[0].code }, 200, staff.accessToken);
+    for (const field of ["buyer_name", "ticket_type_name", "ticket_code", "checked_in_at"])
+      assert.equal(staffDuplicate[field], first[field]);
+    await call("GET", `/checkin/events/${second.id}`, undefined, 403, staff.accessToken);
+    await call("GET", `/checkin/events/${event.id}`, undefined, 401, null);
+    await db.query("UPDATE event_checkin_staff SET status='REVOKED' WHERE event_id=$1 AND user_id=$2", [event.id, staff.user.idUser]);
+    await call("POST", scan, { code: cards[3].code }, 403, staff.accessToken);
+    await call("GET", `/checkin/events/${event.id}`, undefined, 403, staff.accessToken);
+    await db.query("UPDATE event_checkin_staff SET status='ACTIVE' WHERE event_id=$1 AND user_id=$2", [event.id, staff.user.idUser]);
     assert.equal(
       (await call("POST", scan, { code: "invalid-code" }, 400)).code,
       "INVALID_QR",
@@ -227,6 +247,11 @@ async function verify(serve = false) {
         eventId: event.id,
       }),
     );
+    if (process.env.CHECKIN_UI) {
+      await require("./helpers/checkin-station-browser.cjs")({
+        base, owner, staff, buyer, password, event, second, cards, db,
+      });
+    }
     if (serve) {
       require("fs").writeFileSync(
         ".local/b9-fixture.json",

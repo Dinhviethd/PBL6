@@ -35,9 +35,16 @@ export function notificationStore(db: Store) {
       ),
     list: (user: string, offset: number, unread: boolean) =>
       db.query(
-        `SELECT id,kind,title,message,target,target_id,created_at,read_at FROM notifications
-       WHERE user_id=$1 AND ($3::boolean=false OR read_at IS NULL)
-       ORDER BY created_at DESC,id DESC LIMIT 51 OFFSET $2`,
+        `SELECT n.*, totals.total, counts.unread_count
+         FROM (SELECT count(*) AS total FROM notifications
+           WHERE user_id=$1 AND ($3::boolean=false OR read_at IS NULL)) totals
+         CROSS JOIN (SELECT count(*) AS unread_count FROM notifications
+           WHERE user_id=$1 AND read_at IS NULL) counts
+         LEFT JOIN (SELECT id,kind,title,message,target,target_id,created_at,read_at
+           FROM notifications
+           WHERE user_id=$1 AND ($3::boolean=false OR read_at IS NULL)
+           ORDER BY created_at DESC,id DESC LIMIT 10 OFFSET $2) n ON true
+         ORDER BY n.created_at DESC,n.id DESC`,
         [user, offset, unread],
       ),
     unreadCount: async (user: string) =>

@@ -17,6 +17,12 @@ export type NotificationInbox = {
   items: InboxNotification[];
   unreadCount: number;
   hasNext: boolean;
+  pagination: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
 };
 export const notificationLabels = {
   WAIT_QUEUE_OFFER: "Đến lượt mua vé",

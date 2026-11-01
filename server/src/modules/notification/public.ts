@@ -11,11 +11,15 @@ export function createNotifications(db: Store) {
       return (await repo.insert(input)).length;
     },
     async inbox(p: Principal, page: number, unread: boolean) {
-      const rows = await repo.list(p.userId, page * 50, unread);
+      // One statement keeps the page, filtered total and inbox count on one snapshot.
+      const pageSize = 10;
+      const rows = await repo.list(p.userId, page * pageSize, unread);
+      const total = Number(rows[0]?.total ?? 0);
       return {
-        items: rows.slice(0, 50),
-        hasNext: rows.length > 50,
-        unreadCount: await repo.unreadCount(p.userId),
+        items: rows.filter((row) => row.id).map(({ total: _total, unread_count: _unread, ...item }) => item),
+        hasNext: (page + 1) * pageSize < total,
+        unreadCount: Number(rows[0]?.unread_count ?? 0),
+        pagination: { page, pageSize, total, totalPages: Math.ceil(total / pageSize) },
       };
     },
     async count(p: Principal) {
