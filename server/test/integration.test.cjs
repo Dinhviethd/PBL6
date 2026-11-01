@@ -444,25 +444,25 @@ if (!url) {
     );
     for (let i = 0; i < 51; i++)
       await app.notifications.send({ ...payload, dedupeKey: randomUUID() });
-    const firstPage = await ok(
-      "GET",
-      "/me/notifications",
-      undefined,
-      customer.accessToken,
-    );
-    const secondPage = await ok(
-      "GET",
-      "/me/notifications?page=1",
-      undefined,
-      customer.accessToken,
-    );
-    assert.equal(firstPage.items.length, 50);
-    assert.equal(firstPage.hasNext, true);
-    assert.equal(secondPage.hasNext, false);
-    assert.equal(
-      new Set([...firstPage.items, ...secondPage.items].map((v) => v.id)).size,
-      53,
-    );
+    const pages = [];
+    for (let page = 0; page < 6; page++) {
+      const inbox = await ok(
+        "GET",
+        `/me/notifications?page=${page}`,
+        undefined,
+        customer.accessToken,
+      );
+      assert.deepEqual(inbox.pagination, {
+        page,
+        pageSize: 10,
+        total: 53,
+        totalPages: 6,
+      });
+      assert.equal(inbox.items.length, Math.min(10, 53 - page * 10));
+      assert.equal(inbox.hasNext, page < 5);
+      pages.push(...inbox.items);
+    }
+    assert.equal(new Set(pages.map((v) => v.id)).size, 53);
   });
   test("three-role workflow, concurrent inventory, repeated payment, QR and isolation", async () => {
     assert.equal(
