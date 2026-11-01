@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const { randomUUID } = require("node:crypto");
 const { DataSource } = require("typeorm");
 const sharp = require("sharp");
-const { RGBLuminanceSource, BinaryBitmap, HybridBinarizer, QRCodeReader } = require("@zxing/library");
+const { RGBLuminanceSource, BinaryBitmap, HybridBinarizer, QRCodeReader, DecodeHintType } = require("@zxing/library");
 const { createApplication } = require("../dist/app");
 const { createDatabase } = require("../dist/platform/database");
 
@@ -139,7 +139,8 @@ test("B7 isolated HTTP: detail ownership, states, safe metadata and canonical pa
         .greyscale().raw().toBuffer({ resolveWithObject: true });
       try {
         decoded = new QRCodeReader().decode(new BinaryBitmap(new HybridBinarizer(
-          new RGBLuminanceSource(new Uint8ClampedArray(pixels.data), pixels.info.width, pixels.info.height)))).getText();
+          new RGBLuminanceSource(new Uint8ClampedArray(pixels.data), pixels.info.width, pixels.info.height))),
+          new Map([[DecodeHintType.PURE_BARCODE, true]])).getText();
         break;
       } catch { /* Try another QR sampling resolution, as in the B6 decoder test. */ }
     }

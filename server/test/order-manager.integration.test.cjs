@@ -3,7 +3,7 @@ const assert = require("node:assert/strict");
 const { randomUUID } = require("node:crypto");
 const { DataSource } = require("typeorm");
 const sharp = require("sharp");
-const { RGBLuminanceSource, BinaryBitmap, HybridBinarizer, QRCodeReader } = require("@zxing/library");
+const { RGBLuminanceSource, BinaryBitmap, HybridBinarizer, QRCodeReader, DecodeHintType } = require("@zxing/library");
 const { createApplication } = require("../dist/app");
 const { createDatabase } = require("../dist/platform/database");
 const { vietnamDay } = require("../dist/workflows/order-manager");
@@ -147,7 +147,8 @@ test("B6 isolated HTTP: scopes, filters, counts, canonical payment and printable
         qrPixels.info.width, qrPixels.info.height);
       try {
         decodedToken = new QRCodeReader().decode(
-          new BinaryBitmap(new HybridBinarizer(luminance))).getText();
+          new BinaryBitmap(new HybridBinarizer(luminance)),
+          new Map([[DecodeHintType.PURE_BARCODE, true]])).getText();
         break;
       } catch { /* Try another sampling resolution. */ }
     }
