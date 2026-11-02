@@ -278,6 +278,35 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
       if (admin) role(p, ["ADMIN"]);
       return repo.applications(admin ? null : p.userId, page * 50);
     },
+    adminApplications: async (
+      p: Principal,
+      q: string,
+      status: string | null,
+      page: number,
+      limit: number,
+    ) => {
+      role(p, ["ADMIN"]);
+      const [rows, count, stats] = await Promise.all([
+        repo.adminApplications(q, status, limit, page * limit),
+        repo.adminApplicationsCount(q, status),
+        repo.organizerStats(),
+      ]);
+      const total = Number(count.total);
+      return {
+        rows,
+        pagination: {
+          page,
+          pageSize: limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        stats: {
+          total: Number(stats.total),
+          active: Number(stats.active),
+          pending: Number(stats.pending),
+        },
+      };
+    },
     review: (p: Principal, id: string, approve: boolean, reason: string) =>
       uow.run(async () => {
         role(p, ["ADMIN"]);
@@ -291,10 +320,35 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
         await repo.review(id, p.userId, approve, reason);
         if (approve) await repo.grant(app.user_id, "ORGANIZER");
       }),
-    users: (p: Principal, q: string, page: number) => {
+    users: async (p: Principal, q: string, status: string | null, page: number, limit: number) => {
       role(p, ["ADMIN"]);
-      return repo.users(q, page * 50);
+      const [data, count] = await Promise.all([
+        repo.users(q, status, limit, page * limit),
+        repo.usersCount(q, status),
+      ]);
+      const total = Number(count.total);
+      return { data, pagination: { page, pageSize: limit, total, totalPages: Math.ceil(total / limit) } };
     },
+    userCounts: async (p: Principal, q: string) => {
+      role(p, ["ADMIN"]);
+      const counts = await repo.userCounts(q);
+      return Object.fromEntries(Object.entries(counts).map(([key, value]) => [key, Number(value)]));
+    },
+    customer: (p: Principal, id: string) => {
+      role(p, ["ADMIN"]);
+      return repo.customer(id);
+    },
+    bulkLock: (p: Principal, ids: string[], reason: string) =>
+      uow.run(async () => {
+        role(p, ["ADMIN"]);
+        ensure(!ids.includes(p.userId), "SELF_LOCK", "Không thể khóa chính mình.", 400);
+        const customers = await repo.lockCustomers(ids);
+        ensure(customers.length === ids.length, "INVALID_CUSTOMER", "Danh sách có tài khoản không tồn tại hoặc không thuộc khách hàng.", 400);
+        const alreadyLocked = customers.filter((user) => user.locked_at !== null).map((user) => user.idUser);
+        const updated = await repo.bulkLock(ids, reason);
+        for (const user of updated) await repo.revokeAll(user.idUser);
+        return { updated: updated.length, skipped: alreadyLocked.length, updatedIds: updated.map((user) => user.idUser) };
+      }),
     status: (p: Principal, id: string, d: Row) =>
       uow.run(async () => {
         role(p, ["ADMIN"]);

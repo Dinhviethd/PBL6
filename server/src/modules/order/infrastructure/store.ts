@@ -5,6 +5,15 @@ import { orderHistoryStore } from "./history";
 import { orderAnalyticsStore } from "./analytics";
 export function orderStore(db: Store) {
   return {
+    customerTotals: (ids: string[]) => db.query(
+      `SELECT buyer_id AS "idUser",count(*)::int AS "orderCount",
+         coalesce(sum(total_amount) FILTER (WHERE status='PAID'),0)::text AS "totalSpend"
+       FROM orders WHERE buyer_id=ANY($1::uuid[]) GROUP BY buyer_id`, [ids]),
+    paidRevenueByEventIds: (eventIds: string[]) => db.query(
+      `SELECT event_id, coalesce(sum(total_amount),0)::text AS revenue
+       FROM orders WHERE event_id=ANY($1::uuid[]) AND status='PAID' GROUP BY event_id`,
+      [eventIds],
+    ),
     ...orderAnalyticsStore(db),
     async attendeePage(eventId: string, filters: {
       page: number;

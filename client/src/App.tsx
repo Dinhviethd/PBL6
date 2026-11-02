@@ -40,6 +40,7 @@ import { OrderManagerEventListPage } from "./pages/organizer/OrderManagerEventLi
 import { Operations } from "./pages/organizer/Operations";
 import { ReportPage } from "./pages/organizer/ReportPage";
 import { Admin } from "./pages/admin/Admin";
+import { C6Approve } from "./pages/admin/C6Approve";
 import { StaffAssignments } from "./pages/staff/StaffAssignments";
 import { StaffCheckin } from "./pages/staff/StaffCheckin";
 import { Loading, Notice } from "./components/ticketing/shared";
@@ -93,6 +94,12 @@ export function App() {
     window.scrollTo(0, 0);
   }, [location.pathname]);
   const isAuthPage = location.pathname.startsWith("/auth/");
+  const isAdminConsolePage =
+    location.pathname === "/admin/users" ||
+    location.pathname === "/admin/categories" ||
+    location.pathname === "/admin/applications" ||
+    location.pathname === "/admin/applications/review";
+  const isAdminHome = location.pathname === "/admin/stats";
   const isProfilePage = location.pathname === "/profile";
   const isEventDetailPage = /^\/events\/[^/]+\/?$/.test(location.pathname);
   const isCheckoutPage = location.pathname.startsWith("/checkout/");
@@ -103,8 +110,7 @@ export function App() {
   const isUserHome =
     location.pathname === "/" &&
     isAuthVerified &&
-    Boolean(user) &&
-    !user?.roles.includes("ADMIN");
+    Boolean(user);
   const usesSharedHomeShell =
     isPublicHome ||
     isUserHome ||
@@ -118,13 +124,14 @@ export function App() {
     location.pathname.startsWith("/payment-status/") ||
     /^\/tickets(?:\/[^/]+)?\/?$/.test(location.pathname) ||
     isRegisterOrganizerPage;
+  const usesSharedAdminHomeShell = isAdminHome && isAuthVerified && Boolean(user);
   return (
     <div
       className={`eventhub${isProfilePage ? " profile-route" : ""}${
         isRegisterOrganizerPage ? " register-organizer-route" : ""
       }`}
     >
-      {usesSharedHomeShell ? (
+      {usesSharedHomeShell || usesSharedAdminHomeShell ? (
         <AuthHeader
           mode="login"
           user={user}
@@ -137,7 +144,7 @@ export function App() {
             navigate(query ? `/explore?q=${encodeURIComponent(query)}` : "/explore");
           }}
         />
-      ) : !isAuthPage &&
+      ) : !isAuthPage && !isAdminConsolePage &&
         !isProfilePage &&
         !isOrganizerDashboard && <header className="site-header">
         <Link className="brand" to="/">
@@ -190,14 +197,16 @@ export function App() {
           )}
         </div>
       </header>}
-      {!isAuthPage && !isProfilePage && config.data?.paymentMode === "demo" && (
+      {!isAuthPage && !isProfilePage && !isAdminConsolePage && config.data?.paymentMode === "demo" && (
         <div className="demo-banner">
           Bản trải nghiệm MVP · Thanh toán demo, không thu tiền thật
         </div>
       )}
       <main
         className={
-          isAuthPage
+          isAdminConsolePage
+            ? "admin-c2-main"
+            : isAuthPage
             ? "site-main auth-main"
             : isOrganizerDashboard
               ? "organizer-main"
@@ -205,7 +214,7 @@ export function App() {
         }
         key={revision}
       >
-        {!isAuthPage && sessionNotice && <Notice error={sessionNotice} />}
+        {!isAuthPage && !isAdminConsolePage && sessionNotice && <Notice error={sessionNotice} />}
         <Routes>
           <Route
             path="/notifications"
@@ -378,6 +387,14 @@ export function App() {
             }
           />
           <Route
+            path="/admin/applications/review"
+            element={
+              <Guard roles={["ADMIN"]}>
+                <C6Approve />
+              </Guard>
+            }
+          />
+          <Route
             path="/admin/:tab"
             element={
               <Guard roles={["ADMIN"]}>
@@ -398,7 +415,7 @@ export function App() {
           />
         </Routes>
       </main>
-      {usesSharedHomeShell ? (
+      {usesSharedHomeShell || usesSharedAdminHomeShell ? (
         <>
           <AuthFooter onNotice={setHomeNotice} />
           {homeNotice && (
@@ -408,7 +425,7 @@ export function App() {
             />
           )}
         </>
-      ) : !isAuthPage &&
+      ) : !isAuthPage && !isAdminConsolePage &&
         !isProfilePage &&
         !isOrganizerDashboard && <footer className="site-footer">
         <Link className="brand" to="/">

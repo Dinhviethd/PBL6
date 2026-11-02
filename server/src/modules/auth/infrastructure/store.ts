@@ -80,10 +80,57 @@ export function authStore(db: Store) {
         'UPDATE users SET password=$2,"resetOTP"=NULL,"resetOTPExpires"=NULL,updated_at=now() WHERE "idUser"=$1',
         [id, hash],
       ),
-    users: (search: string, offset: number) =>
+    users: (search: string, status: string | null, limit: number, offset: number) =>
       db.query(
-        'SELECT "idUser",name,email,status,locked_at,"createdAt" FROM users WHERE name ILIKE $1 OR email ILIKE $1 ORDER BY "createdAt" DESC,"idUser" LIMIT 50 OFFSET $2',
-        [`%${search}%`, offset],
+        `SELECT u."idUser",u.name,u.email,u.phone,u."emailVerified",u.status,u.locked_at,u.lock_reason,u."createdAt",array_agg(r.code ORDER BY r.code) AS roles
+         FROM users u JOIN users_roles ur ON ur."idUser"=u."idUser" JOIN roles r ON r."idRole"=ur."idRole"
+         WHERE r.code='USER'
+           AND NOT EXISTS (SELECT 1 FROM users_roles x JOIN roles xr ON xr."idRole"=x."idRole" WHERE x."idUser"=u."idUser" AND xr.code IN ('ADMIN','ORGANIZER'))
+           AND ($1::text='' OR u.name ILIKE $2 OR u.email ILIKE $2 OR coalesce(u.phone,'') ILIKE $2)
+           AND ($3::text IS NULL OR CASE WHEN $3='LOCKED' THEN u.locked_at IS NOT NULL ELSE u.status=$3 AND u.locked_at IS NULL END)
+         GROUP BY u."idUser" ORDER BY u."createdAt" DESC,u."idUser" LIMIT $4 OFFSET $5`,
+        [search, `%${search}%`, status, limit, offset],
+      ),
+    usersCount: async (search: string, status: string | null) =>
+      (await db.query(
+        `SELECT count(*)::int AS total FROM users u
+         WHERE EXISTS (SELECT 1 FROM users_roles ur JOIN roles r ON r."idRole"=ur."idRole" WHERE ur."idUser"=u."idUser" AND r.code='USER')
+           AND NOT EXISTS (SELECT 1 FROM users_roles ur JOIN roles r ON r."idRole"=ur."idRole" WHERE ur."idUser"=u."idUser" AND r.code IN ('ADMIN','ORGANIZER'))
+           AND ($1::text='' OR u.name ILIKE $2 OR u.email ILIKE $2 OR coalesce(u.phone,'') ILIKE $2)
+           AND ($3::text IS NULL OR CASE WHEN $3='LOCKED' THEN u.locked_at IS NOT NULL ELSE u.status=$3 AND u.locked_at IS NULL END)`,
+        [search, `%${search}%`, status],
+      ))[0],
+    userCounts: async (search: string) =>
+      (await db.query(
+        `SELECT count(*)::int AS total,
+           count(*) FILTER (WHERE u.locked_at IS NULL AND u.status='ACTIVE')::int AS active,
+           count(*) FILTER (WHERE u.locked_at IS NULL AND u.status='INACTIVE')::int AS inactive,
+           count(*) FILTER (WHERE u.locked_at IS NOT NULL)::int AS locked
+         FROM users u WHERE EXISTS (SELECT 1 FROM users_roles ur JOIN roles r ON r."idRole"=ur."idRole" WHERE ur."idUser"=u."idUser" AND r.code='USER')
+           AND NOT EXISTS (SELECT 1 FROM users_roles ur JOIN roles r ON r."idRole"=ur."idRole" WHERE ur."idUser"=u."idUser" AND r.code IN ('ADMIN','ORGANIZER'))
+           AND ($1::text='' OR u.name ILIKE $2 OR u.email ILIKE $2 OR coalesce(u.phone,'') ILIKE $2)`,
+        [search, `%${search}%`],
+      ))[0],
+    customer: async (id: string) =>
+      (await db.query(
+        `SELECT u."idUser",u.name,u.email,u.phone,u."emailVerified",u.status,u.locked_at,u.lock_reason,u."createdAt",array_agg(r.code ORDER BY r.code) AS roles
+         FROM users u JOIN users_roles ur ON ur."idUser"=u."idUser" JOIN roles r ON r."idRole"=ur."idRole"
+         WHERE u."idUser"=$1 AND r.code='USER'
+           AND NOT EXISTS (SELECT 1 FROM users_roles x JOIN roles xr ON xr."idRole"=x."idRole" WHERE x."idUser"=u."idUser" AND xr.code IN ('ADMIN','ORGANIZER'))
+         GROUP BY u."idUser"`, [id],
+      ))[0],
+    lockCustomers: (ids: string[]) =>
+      db.query(
+        `SELECT u."idUser",u.locked_at FROM users u
+         WHERE u."idUser"=ANY($1::uuid[])
+           AND EXISTS (SELECT 1 FROM users_roles ur JOIN roles r ON r."idRole"=ur."idRole" WHERE ur."idUser"=u."idUser" AND r.code='USER')
+           AND NOT EXISTS (SELECT 1 FROM users_roles ur JOIN roles r ON r."idRole"=ur."idRole" WHERE ur."idUser"=u."idUser" AND r.code IN ('ADMIN','ORGANIZER'))
+         ORDER BY u."idUser" FOR UPDATE`, [ids],
+      ),
+    bulkLock: (ids: string[], reason: string) =>
+      db.query(
+        `UPDATE users SET status='INACTIVE',locked_at=now(),lock_reason=$2,updated_at=now()
+         WHERE "idUser"=ANY($1::uuid[]) AND locked_at IS NULL RETURNING "idUser"`, [ids, reason],
       ),
     status: (id: string, status: string, locked: boolean, reason: string) =>
       db.query(
@@ -102,6 +149,36 @@ export function authStore(db: Store) {
         "SELECT * FROM organizer_applications WHERE ($1::uuid IS NULL OR user_id=$1) ORDER BY created_at DESC,id LIMIT 50 OFFSET $2",
         [user, offset],
       ),
+    adminApplications: (q: string, status: string | null, limit: number, offset: number) =>
+      db.query(
+        `SELECT * FROM organizer_applications
+         WHERE ($1::text='' OR organization_name ILIKE $2 OR contact_name ILIKE $2
+           OR contact_email ILIKE $2 OR coalesce(business_name,'') ILIKE $2
+           OR coalesce(tax_id_or_business_license,'') ILIKE $2)
+           AND ($3::text IS NULL OR status=$3)
+         ORDER BY created_at DESC,id LIMIT $4 OFFSET $5`,
+        [q, `%${q.replace(/[\\%_]/g, "\\$&")}%`, status, limit, offset],
+      ),
+    adminApplicationsCount: async (q: string, status: string | null) =>
+      (
+        await db.query(
+          `SELECT count(*) AS total FROM organizer_applications
+           WHERE ($1::text='' OR organization_name ILIKE $2 OR contact_name ILIKE $2
+             OR contact_email ILIKE $2 OR coalesce(business_name,'') ILIKE $2
+             OR coalesce(tax_id_or_business_license,'') ILIKE $2)
+             AND ($3::text IS NULL OR status=$3)`,
+          [q, `%${q.replace(/[\\%_]/g, "\\$&")}%`, status],
+        )
+      )[0],
+    organizerStats: async () =>
+      (
+        await db.query(
+          `SELECT count(*)::int AS total,
+             count(*) FILTER (WHERE status='APPROVED')::int AS active,
+             count(*) FILTER (WHERE status='PENDING')::int AS pending
+           FROM organizer_applications`,
+        )
+      )[0],
     apply: (id: string, d: Row) =>
       db.query(
         "INSERT INTO organizer_applications(id,user_id,organization_name,contact_name,contact_email,contact_phone,description,business_name,tax_id_or_business_license,website_or_social,head_office_address,main_event_category,expected_event_scale) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *",

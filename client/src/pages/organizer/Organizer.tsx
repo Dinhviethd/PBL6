@@ -149,17 +149,7 @@ export function Organizer() {
                         };
                         const sold = e.sold_quantity ?? 0;
                         const capacity = e.capacity ?? 0;
-                        const fillPct = Math.min(
-                          100,
-                          Math.max(
-                            0,
-                            Math.round(
-                              (e.fill_rate ??
-                                (capacity > 0 ? sold / capacity : 0)) *
-                                100,
-                            ),
-                          ),
-                        );
+                        const fillPct = Math.round((e.fill_rate ?? 0) * 100);
                         const cat = categoryName(e.category_id);
                         return (
                           <tr key={e.id}>

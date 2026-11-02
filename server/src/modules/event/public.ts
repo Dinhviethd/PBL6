@@ -10,8 +10,15 @@ export function createEvents(db: Store) {
     for (let i = 2; await r.bySlug(slug); i++) slug = `${base}-${i}`;
     return slug;
   };
+  const uniqueCategorySlug = async (name: string) => {
+    const base = slugify(name);
+    let slug = base;
+    for (let i = 2; await r.categoryBySlug(slug); i++) slug = `${base}-${i}`;
+    return slug;
+  };
   return {
     ...r,
+    uniqueCategorySlug,
     async assignmentPage(userId: string, page: number) {
       const rows = await r.staffAssignmentsPage(userId, page * 50);
       const total = Number(rows[0]?.total ?? 0);

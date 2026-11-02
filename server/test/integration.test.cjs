@@ -29,7 +29,8 @@ if (!url) {
     other,
     buyer,
     eventId,
-    typeId;
+    typeId,
+    categoryId;
   const password = "Integration2026!";
   const call = async (method, path, body, token, headers = {}) => {
     const r = await fetch(base + "/api" + path, {
@@ -113,6 +114,7 @@ if (!url) {
       { name: "Integration", slug: randomUUID() },
       admin.accessToken,
     );
+    categoryId = cat.id;
     const start = new Date(Date.now() + 3600000).toISOString(),
       end = new Date(Date.now() + 86400000).toISOString();
     const event = await ok(
@@ -164,6 +166,90 @@ if (!url) {
     if (server) await new Promise((resolve) => server.close(resolve));
     if (app) await app.close();
     if (fixture) await fixture.close();
+  });
+  test("admin categories auto-generate slug, expose event_count/stats and keep slug on rename", async () => {
+    const suffix = randomUUID().slice(0, 8);
+    const created = await ok(
+      "POST",
+      "/admin/categories",
+      { name: `Âm nhạc ${suffix}`, description: "Thể loại âm nhạc" },
+      admin.accessToken,
+    );
+    assert.equal(created.slug, `am-nhac-${suffix}`);
+    assert.equal(created.description, "Thể loại âm nhạc");
+
+    const duplicate = await ok(
+      "POST",
+      "/admin/categories",
+      { name: `Âm nhạc ${suffix}` },
+      admin.accessToken,
+    );
+    assert.equal(duplicate.slug, `am-nhac-${suffix}-2`);
+
+    const renamed = await ok(
+      "PATCH",
+      `/admin/categories/${created.id}`,
+      { name: `Âm nhạc mới ${suffix}`, description: "Mô tả mới" },
+      admin.accessToken,
+    );
+    assert.equal(renamed.slug, created.slug);
+    assert.equal(renamed.description, "Mô tả mới");
+
+    const listed = await ok(
+      "GET",
+      `/admin/categories?q=${suffix}&archived=false&page=0&limit=10`,
+      undefined,
+      admin.accessToken,
+    );
+    const row = listed.data.find((item) => item.id === created.id);
+    assert.ok(row);
+    assert.equal(row.event_count, 0);
+    assert.ok(listed.pagination.total >= 1);
+    assert.equal(typeof listed.stats.total, "number");
+    assert.equal(typeof listed.stats.total_events, "number");
+
+    const linked = await ok(
+      "GET",
+      "/admin/categories?q=Integration&archived=false&limit=50",
+      undefined,
+      admin.accessToken,
+    );
+    assert.equal(
+      linked.data.find((item) => item.id === categoryId).event_count,
+      1,
+    );
+
+    const paged = await ok(
+      "GET",
+      "/admin/categories?page=0&limit=1",
+      undefined,
+      admin.accessToken,
+    );
+    assert.equal(paged.data.length, 1);
+    assert.ok(paged.pagination.totalPages >= 1);
+
+    await ok(
+      "DELETE",
+      `/admin/categories/${created.id}`,
+      undefined,
+      admin.accessToken,
+    );
+    const archived = await ok(
+      "GET",
+      `/admin/categories?q=${suffix}&archived=true`,
+      undefined,
+      admin.accessToken,
+    );
+    assert.ok(
+      archived.data.some((item) => item.id === created.id && item.archived_at),
+    );
+
+    await ok(
+      "DELETE",
+      `/admin/categories/${duplicate.id}`,
+      undefined,
+      admin.accessToken,
+    );
   });
   test("notification inbox isolation, transactional delivery, reminders and retry deduplication", async () => {
     const account = async (name) =>

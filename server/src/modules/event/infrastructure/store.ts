@@ -25,6 +25,11 @@ export function eventStore(db: Store) {
         "SELECT id,published_at FROM events WHERE organizer_id=$1 ORDER BY id",
         [ownerId],
       ),
+    eventIdsByOrganizers: (userIds: string[]) =>
+      db.query(
+        "SELECT id,organizer_id FROM events WHERE organizer_id=ANY($1::uuid[])",
+        [userIds],
+      ),
     reminderEvents: (after: string | null) =>
       db.query(
         `SELECT id FROM events WHERE status='PUBLISHED' AND starts_at>now()
@@ -107,15 +112,43 @@ export function eventStore(db: Store) {
       ),
     category: async (id: string) =>
       (await db.query("SELECT * FROM categories WHERE id=$1", [id]))[0],
+    categoryBySlug: async (slug: string) =>
+      (await db.query("SELECT * FROM categories WHERE slug=$1", [slug]))[0],
+    categoryPage: (
+      q: string,
+      archived: boolean | null,
+      limit: number,
+      offset: number,
+    ) =>
+      db.query(
+        `SELECT c.id,c.name,c.slug,c.description,c.archived_at,c.created_at,c.updated_at,
+           count(e.id)::int AS event_count,count(*) OVER()::int AS total
+         FROM categories c
+         LEFT JOIN events e ON e.category_id=c.id AND e.archived_at IS NULL
+         WHERE ($1='' OR c.name ILIKE '%'||$1||'%' OR c.slug ILIKE '%'||$1||'%')
+           AND ($2::boolean IS NULL OR (c.archived_at IS NOT NULL)=$2)
+         GROUP BY c.id
+         ORDER BY c.archived_at NULLS FIRST,c.name,c.id
+         LIMIT $3 OFFSET $4`,
+        [q, archived, limit, offset],
+      ),
+    categoryStats: () =>
+      db.query(
+        `SELECT
+           (SELECT count(*)::int FROM categories WHERE archived_at IS NULL) AS total,
+           (SELECT count(*)::int FROM categories WHERE archived_at IS NOT NULL) AS archived,
+           (SELECT count(*)::int FROM events e JOIN categories c ON c.id=e.category_id
+             WHERE e.archived_at IS NULL AND c.archived_at IS NULL) AS total_events`,
+      ),
     saveCategory: (d: Row, id?: string) =>
       id
         ? db.query(
-            "UPDATE categories SET name=$2,slug=$3,updated_at=now() WHERE id=$1 RETURNING *",
-            [id, d.name, d.slug],
+            "UPDATE categories SET name=$2,slug=$3,description=$4,updated_at=now() WHERE id=$1 RETURNING *",
+            [id, d.name, d.slug, d.description ?? null],
           )
         : db.query(
-            "INSERT INTO categories(id,name,slug) VALUES($1,$2,$3) RETURNING *",
-            [randomUUID(), d.name, d.slug],
+            "INSERT INTO categories(id,name,slug,description) VALUES($1,$2,$3,$4) RETURNING *",
+            [randomUUID(), d.name, d.slug, d.description ?? null],
           ),
     archiveCategory: (id: string) =>
       db.query("UPDATE categories SET archived_at=now() WHERE id=$1", [id]),

@@ -1181,10 +1181,68 @@ export function createApplication(config: {
     "/admin/stats",
     route((_q, res) => booking.overview(who(res))),
   );
+  const customerQuery = z.object({
+    role: z.literal("USER").default("USER"),
+    status: z.enum(["ACTIVE", "INACTIVE", "LOCKED"]).optional(),
+    page: z.coerce.number().int().min(0).max(10000).default(0),
+    limit: z.coerce.number().int().min(1).max(100).default(10),
+    q: z.string().trim().max(200).default(""),
+  });
+  const attachCustomerTotals = async (principal: Principal, rows: Row[]) => {
+    const totals = await orders.customerOrderTotals(principal, rows.map((row) => row.idUser));
+    const byUser = new Map(totals.map((item: Row) => [item.idUser, item]));
+    return rows.map((row) => ({ ...row, orderCount: Number(byUser.get(row.idUser)?.orderCount ?? 0), totalSpend: String(byUser.get(row.idUser)?.totalSpend ?? "0") }));
+  };
+  api.get("/admin/users/stats", route((req, res) => {
+    const input = customerQuery.pick({ role: true, q: true }).parse(req.query);
+    return db.snapshot.run(() => auth.userCounts(who(res), input.q));
+  }));
+  api.get("/admin/users/export", async (req, res, next) => {
+    try {
+      const input = customerQuery.pick({ role: true, status: true, q: true }).parse(req.query);
+      const csv = await db.snapshot.run(async () => {
+        const first = await auth.users(who(res), input.q, input.status ?? null, 0, 100);
+        ensure(first.pagination.total <= 10000, "EXPORT_TOO_LARGE", "Kết quả vượt giới hạn 10.000 khách hàng; hãy lọc thêm.", 413);
+        const data: Row[] = [];
+        for (let pageIndex = 0; pageIndex < first.pagination.totalPages; pageIndex++) {
+          const result = pageIndex === 0 ? first : await auth.users(who(res), input.q, input.status ?? null, pageIndex, 100);
+          data.push(...await attachCustomerTotals(who(res), result.data));
+        }
+        const fields = ["idUser", "name", "email", "phone", "emailVerified", "roles", "status", "locked_at", "lock_reason", "createdAt", "orderCount", "totalSpend"];
+        const cell = (value: unknown) => {
+          let text = Array.isArray(value) ? value.join("|") : value == null ? "" : String(value);
+          if (/^[\s]*[=+@-]/.test(text)) text = `'${text}`;
+          return `"${text.replace(/"/g, '""')}"`;
+        };
+        return "\uFEFF" + [fields.join(","), ...data.map((row: Row) => fields.map((field) => cell(row[field])).join(","))].join("\r\n");
+      });
+      res.status(200).type("text/csv").set("Content-Disposition", `attachment; filename="eventhub-customers-${new Date().toISOString().slice(0, 10)}.csv"`).send(csv);
+    } catch (error) { next(error); }
+  });
   api.get(
     "/admin/users",
-    route((req, res) => auth.users(who(res), query(req, "q"), page(req))),
+    route(async (req, res) => {
+      const input = customerQuery.parse(req.query);
+      return db.snapshot.run(async () => {
+        const result = await auth.users(who(res), input.q, input.status ?? null, input.page, input.limit);
+        return { ...result, data: await attachCustomerTotals(who(res), result.data) };
+      });
+    }),
   );
+  api.get("/admin/users/:id", route(async (req, res) => {
+    return db.snapshot.run(async () => {
+      const user = await auth.customer(who(res), id(req));
+      ensure(user, "NOT_FOUND", "Không tìm thấy khách hàng.", 404);
+      return (await attachCustomerTotals(who(res), [user]))[0];
+    });
+  }));
+  api.patch("/admin/users/bulk-status", route((req, res) => uow.run(async () => {
+    const body = z.object({ ids: z.array(uuid).min(1).max(50), status: z.literal("INACTIVE"), locked: z.literal(true), reason: z.string().trim().min(1).max(2000) }).parse(req.body);
+    ensure(new Set(body.ids).size === body.ids.length, "DUPLICATE_IDS", "Danh sách có ID trùng lặp.", 400);
+    const result = await auth.bulkLock(who(res), body.ids, body.reason);
+    for (const userId of result.updatedIds) await audit.append(who(res), "user.status", "user", userId);
+    return { updated: result.updated, skipped: result.skipped };
+  })));
   api.patch(
     "/admin/users/:id",
     route((req, res) =>
@@ -1204,9 +1262,52 @@ export function createApplication(config: {
       }),
     ),
   );
+  const organizerQuery = z.object({
+    q: z.string().trim().max(200).default(""),
+    status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
+    page: z.coerce.number().int().min(0).max(10000).default(0),
+    limit: z.coerce.number().int().min(1).max(100).default(10),
+  });
+  const organizerGmv = async (principal: Principal, rows: Row[]) => {
+    if (!rows.length) return [];
+    const users = [...new Set(rows.map((row) => String(row.user_id)))];
+    const eventRows = await events.eventIdsByOrganizers(users);
+    const ownerByEvent = new Map(
+      eventRows.map((row): [string, string] => [String(row.id), String(row.organizer_id)]),
+    );
+    const revenue = await orders.paidRevenueByEventIds(
+      principal,
+      eventRows.map((row) => String(row.id)),
+    );
+    const totals = new Map<string, bigint>();
+    for (const item of revenue) {
+      const owner = ownerByEvent.get(String(item.event_id));
+      if (owner) totals.set(owner, (totals.get(owner) ?? 0n) + BigInt(item.revenue));
+    }
+    return rows.map((row) => ({
+      ...row,
+      gmv: (totals.get(String(row.user_id)) ?? 0n).toString(),
+    }));
+  };
   api.get(
     "/admin/organizer-applications",
-    route((req, res) => auth.applications(who(res), true, page(req))),
+    route(async (req, res) => {
+      const input = organizerQuery.parse(req.query);
+      return db.snapshot.run(async () => {
+        const result = await auth.adminApplications(
+          who(res),
+          input.q,
+          input.status ?? null,
+          input.page,
+          input.limit,
+        );
+        return {
+          items: await organizerGmv(who(res), result.rows),
+          pagination: result.pagination,
+          stats: result.stats,
+        };
+      });
+    }),
   );
   api.post(
     "/admin/organizer-applications/:id/review",
@@ -1242,21 +1343,68 @@ export function createApplication(config: {
   );
   const categorySchema = z.object({
     name: text.max(100),
-    slug: text.regex(/^[a-z0-9-]+$/).max(120),
+    slug: z.string().trim().max(120).regex(/^[a-z0-9-]*$/).optional(),
+    description: z.string().trim().max(500).optional(),
   });
+  const saveCategory = async (body: unknown, categoryId?: string) => {
+    const d = categorySchema.parse(body);
+    const current = categoryId ? await events.category(categoryId) : null;
+    ensure(!categoryId || current, "NOT_FOUND", "Không tìm thấy danh mục.", 404);
+    const slug =
+      d.slug || current?.slug || (await events.uniqueCategorySlug(d.name));
+    if (d.slug && d.slug !== current?.slug)
+      ensure(
+        !(await events.categoryBySlug(d.slug)),
+        "SLUG_EXISTS",
+        "Slug đã được sử dụng.",
+        409,
+      );
+    return (await events.saveCategory({ ...d, slug }, categoryId))[0];
+  };
+  api.get(
+    "/admin/categories",
+    route(async (req) => {
+      const input = z
+        .object({
+          q: z.string().trim().max(200).default(""),
+          archived: z.enum(["true", "false"]).optional(),
+          page: z.coerce.number().int().min(0).max(10000).default(0),
+          limit: z.coerce.number().int().min(1).max(100).default(10),
+        })
+        .parse(req.query);
+      const archived =
+        input.archived === undefined ? null : input.archived === "true";
+      const rows = await events.categoryPage(
+        input.q,
+        archived,
+        input.limit,
+        input.page * input.limit,
+      );
+      const total = Number(rows[0]?.total ?? 0);
+      const stats = (await events.categoryStats())[0] ?? {
+        total: 0,
+        archived: 0,
+        total_events: 0,
+      };
+      return {
+        data: rows.map(({ total: _total, ...row }) => row),
+        pagination: {
+          page: input.page,
+          pageSize: input.limit,
+          total,
+          totalPages: Math.ceil(total / input.limit),
+        },
+        stats,
+      };
+    }),
+  );
   api.post(
     "/admin/categories",
-    route(
-      async (req) =>
-        (await events.saveCategory(categorySchema.parse(req.body)))[0],
-    ),
+    route((req) => saveCategory(req.body)),
   );
   api.patch(
     "/admin/categories/:id",
-    route(
-      async (req) =>
-        (await events.saveCategory(categorySchema.parse(req.body), id(req)))[0],
-    ),
+    route((req) => saveCategory(req.body, id(req))),
   );
   api.delete(
     "/admin/categories/:id",

@@ -54,6 +54,7 @@ export function assertOwned(owner: Owner, sql: string) {
           "now",
           "count",
           "sum",
+          "array_agg",
           "coalesce",
           "lower",
           "upper",

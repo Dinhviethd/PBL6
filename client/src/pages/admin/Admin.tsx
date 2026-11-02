@@ -7,9 +7,15 @@ import api from "@/lib/api";
 import { iso } from "@/features/ticketing/dates";
 import { useLoad, message, money, when } from "@/features/ticketing/data";
 import type { Account, Application, Category, Event, Payment, Stats } from "@/features/ticketing/types";
+import { C2ManagerAccount } from "./C2ManagerAccount";
+import { C4ManagerOrganizer } from "./C4ManagerOrganizer";
+import { C7CategoryManager } from "./C7CategoryManager";
 
 export function Admin() {
   const { tab = "stats" } = useParams();
+  if (tab === "users") return <C2ManagerAccount />;
+  if (tab === "applications") return <C4ManagerOrganizer />;
+  if (tab === "categories") return <C7CategoryManager />;
   return (
     <>
       <PageHead eyebrow="QUẢN TRỊ HỆ THỐNG" title="Trung tâm quản trị" />

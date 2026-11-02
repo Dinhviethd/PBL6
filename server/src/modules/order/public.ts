@@ -52,7 +52,17 @@ export function createOrders(db: Store, qrSecret: string) {
     await r.waitFinish(order.id, status);
   }
   return {
+    async customerOrderTotals(p: Principal, ids: string[]) {
+      ensure(p.roles.includes("ADMIN"), "FORBIDDEN", "Bạn không có quyền thực hiện thao tác này.", 403);
+      if (!ids.length) return [];
+      return r.customerTotals(ids);
+    },
     ...r,
+    async paidRevenueByEventIds(p: Principal, eventIds: string[]) {
+      ensure(p.roles.includes("ADMIN"), "FORBIDDEN", "Bạn không có quyền thực hiện thao tác này.", 403);
+      if (!eventIds.length) return [];
+      return r.paidRevenueByEventIds(eventIds);
+    },
     lockInventory,
     release,
     async createOrder(
