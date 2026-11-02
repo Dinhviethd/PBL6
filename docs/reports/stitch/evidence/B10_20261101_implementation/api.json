@@ -1,0 +1,249 @@
+{
+  "result": "PASS",
+  "orders": 60,
+  "revenue": "7770000",
+  "snapshotConsistency": "PASS",
+  "httpChecks": 37,
+  "sample": {
+    "eventId": "a655a5aa-44d1-438c-bf0b-86895b5df9d1",
+    "eventTitle": "B10 Festival",
+    "asOf": "2026-11-01T16:16:36.961Z",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "range": {
+      "fromDate": "2026-10-30",
+      "toDate": "2026-11-02"
+    },
+    "totals": {
+      "revenue": "7770000",
+      "sold": "60",
+      "paidOrders": 60
+    },
+    "dailySeries": [
+      {
+        "date": "2026-10-30",
+        "revenue": "2570000",
+        "sold": "20"
+      },
+      {
+        "date": "2026-10-31",
+        "revenue": "2590000",
+        "sold": "20"
+      },
+      {
+        "date": "2026-11-01",
+        "revenue": "2610000",
+        "sold": "20"
+      },
+      {
+        "date": "2026-11-02",
+        "revenue": "0",
+        "sold": "0"
+      }
+    ],
+    "ticketTypes": [
+      {
+        "id": "72bd55ff-5c26-4898-8a59-297dec59da32",
+        "name": "=VIP,\"Đặc biệt\"\nHạng A",
+        "capacity": 500,
+        "archived": true,
+        "sold": "30",
+        "revenue": "3900000"
+      },
+      {
+        "id": "c16483df-716c-4230-8514-cbb652d308f0",
+        "name": "Vé thường",
+        "capacity": 500,
+        "archived": false,
+        "sold": "30",
+        "revenue": "3870000"
+      }
+    ]
+  },
+  "evidence": [
+    {
+      "method": "POST",
+      "route": "/organizer/events",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/ticket-types",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/ticket-types",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics?fromDate=2026-10-30&toDate=2026-11-02",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics?fromDate=2026-10-31&toDate=2026-10-31",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics/export.csv?fromDate=2026-10-30&toDate=2026-11-02",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics?fromDate=2099-01-01&toDate=2099-01-02",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/361139f8-4719-4388-816d-8b2931eef386/analytics",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics?fromDate=bad",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics/export.csv?fromDate=bad",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics?fromDate=2026-02-30",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics/export.csv?fromDate=2026-02-30",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics?fromDate=2026-11-02&toDate=2026-11-01",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics/export.csv?fromDate=2026-11-02&toDate=2026-11-01",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics?fromDate=2025-01-01&toDate=2026-11-01",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics/export.csv?fromDate=2025-01-01&toDate=2026-11-01",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics?unknown=1",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics/export.csv?unknown=1",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics?fromDate=2026-10-31&fromDate=2026-11-01",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics/export.csv?fromDate=2026-10-31&fromDate=2026-11-01",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/not-a-uuid/analytics",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/79a757d3-aa54-4c2f-ab2f-762d56b5534f/analytics",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics/export.csv",
+      "status": 401
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics/export.csv",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics/export.csv",
+      "status": 403
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics/export.csv",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/not-a-uuid/analytics/export.csv",
+      "status": 400
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/eb831709-165c-4ab1-8850-2d4bdfa7c7d3/analytics/export.csv",
+      "status": 404
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/stats",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events?page=0&limit=6",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/a655a5aa-44d1-438c-bf0b-86895b5df9d1/analytics?fromDate=2026-10-30&toDate=2026-11-02",
+      "status": 409
+    }
+  ]
+}

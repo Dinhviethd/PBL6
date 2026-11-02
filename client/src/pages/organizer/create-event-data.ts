@@ -38,11 +38,11 @@ export function eventInstant(value: string) {
   return date.toISOString();
 }
 
-export function createEventPayload(values: CreateEventForm) {
-  const startsAt = eventInstant(`${values.startsDate}T${values.startsTime}`);
-  const endsAt = eventInstant(`${values.endsDate}T${values.endsTime}`);
-  const checkinOpensAt = eventInstant(values.checkinOpensAt);
-  const checkinClosesAt = eventInstant(values.checkinClosesAt);
+export function createEventPayload(values: CreateEventForm, preservedTimes: Partial<Record<"startsAt" | "endsAt" | "checkinOpensAt" | "checkinClosesAt", string>> = {}) {
+  const startsAt = preservedTimes.startsAt ?? eventInstant(`${values.startsDate}T${values.startsTime}`);
+  const endsAt = preservedTimes.endsAt ?? eventInstant(`${values.endsDate}T${values.endsTime}`);
+  const checkinOpensAt = preservedTimes.checkinOpensAt ?? eventInstant(values.checkinOpensAt);
+  const checkinClosesAt = preservedTimes.checkinClosesAt ?? eventInstant(values.checkinClosesAt);
   if (startsAt >= endsAt) throw new Error("Thời gian kết thúc phải sau thời gian bắt đầu sự kiện.");
   if (checkinOpensAt >= checkinClosesAt) throw new Error("Thời gian đóng check-in phải sau thời gian mở check-in.");
   if (checkinClosesAt > endsAt) throw new Error("Check-in phải đóng trước hoặc cùng lúc sự kiện kết thúc.");

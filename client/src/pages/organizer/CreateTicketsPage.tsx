@@ -114,7 +114,8 @@ function TicketEditor({ id }: { id: string }) {
         {error && <p className="ct-error" role="alert">{error}</p>}
         {notice && <p className="ct-notice" role="status">{notice}</p>}
         {event && <>
-          <div className="ct-event"><button className="ct-event-selector" onClick={developing} aria-label="Chọn sự kiện"><span><small>SỰ KIỆN ĐANG CẤU HÌNH</small><strong>{event.title}</strong></span><ChevronDown size={18} /></button><button className="ct-button" onClick={developing} aria-label="Xuất báo cáo vé"><Download size={18} /></button><Status value={event.status} /></div>
+          <div className="ct-event"><Link className="ct-event-selector" to="/organizer/events/tickets" aria-label="Chọn sự kiện" onClick={e => { if ((dirty || busy) && !window.confirm('Bỏ nội dung chưa lưu và chọn sự kiện khác?')) e.preventDefault(); }}><span><small>SỰ KIỆN ĐANG CẤU HÌNH</small><strong>{event.title}</strong></span><ChevronDown size={18} /></Link><button className="ct-button" onClick={developing} aria-label="Xuất báo cáo vé"><Download size={18} /></button><Status value={event.status} /></div>
+          <Link className="ct-button" to={`/organizer/events/${encodeURIComponent(id)}`} onClick={e => { if ((dirty || busy) && !window.confirm('Bỏ nội dung chưa lưu và trở về chỉnh sửa sự kiện?')) e.preventDefault(); }}><ArrowLeft size={16} />Chỉnh sửa thông tin sự kiện</Link>
           {!editable && <p className="ct-notice">Chỉ được chỉnh sửa loại vé khi sự kiện ở bản nháp hoặc bị từ chối.</p>}
           <div className="ct-grid">
             <section className="ct-card">

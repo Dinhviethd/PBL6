@@ -5,7 +5,7 @@ const menuItems = [
   "Tổng quan (Dashboard)",
   "Quản lý sự kiện",
   "Tạo sự kiện mới",
-  "Chi tiết & Phê duyệt",
+  "Chỉnh sửa sự kiện",
   "Quản lý loại vé",
   "Đơn hàng",
   "Người tham dự",
@@ -24,15 +24,16 @@ export function OrganizerSidebar({
   const { id } = useParams();
   const base = id ? `/organizer/events/${encodeURIComponent(id)}` : null;
   const routes: Record<string, string | null> = {
+    "Tổng quan (Dashboard)": "/organizer/dashboard",
     "Quản lý sự kiện": "/organizer",
     "Tạo sự kiện mới": "/organizer/new",
-    "Chi tiết & Phê duyệt": base,
-    "Quản lý loại vé": base && `${base}/tickets`,
+    "Chỉnh sửa sự kiện": base ?? "/organizer/events",
+    "Quản lý loại vé": base ? `${base}/tickets` : "/organizer/events/tickets",
     "Đơn hàng": base ? `${base}/orders` : "/organizer/order-events",
-    "Người tham dự": base && `${base}/attendees`,
+    "Người tham dự": base ? `${base}/attendees` : "/organizer/events/attendees",
     "Quét mã QR": base ? `${base}/checkin` : "/organizer/qr-scan",
     "Hồ sơ BTC": "/organizer/profile",
-    "Thống kê doanh thu": base && `${base}/stats`,
+    "Thống kê doanh thu": base ? `${base}/stats` : "/organizer/events/stats",
   };
   return (
     <aside className="osb-sidebar" aria-label="Điều hướng Ban Tổ Chức">

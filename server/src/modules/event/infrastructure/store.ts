@@ -2,6 +2,11 @@ import { randomUUID } from "node:crypto";
 import type { Store, Row } from "../../../contracts/core";
 export function eventStore(db: Store) {
   return {
+    dashboardEvents: (ownerId: string, eventId?: string) => db.query(
+      `SELECT id,title,cover_image_url,venue_name,starts_at,ends_at,status,sales_paused,archived_at,cancelled_at
+       FROM events WHERE organizer_id=$1 AND ($2::uuid IS NULL OR id=$2) ORDER BY starts_at,id`,
+      [ownerId, eventId ?? null],
+    ),
     organizerStaffPage: (ownerId: string, offset: number) =>
       db.query(
         `SELECT s.user_id, max(s.staff_name) AS name,max(s.staff_email) AS email,count(*) AS assignment_count

@@ -24,17 +24,21 @@ import { TicketPage } from "./pages/account/TicketPage";
 import { Profile } from "./pages/account/Profile";
 import { Notifications } from "./pages/account/Notifications";
 import { Organizer } from "./pages/organizer/Organizer";
+import { DashboardPage } from "./pages/organizer/DashboardPage";
 import { RegisterOrganizer } from "./pages/organizer/RegisterOrganizer";
 import { EditorPage } from "./pages/organizer/EditorPage";
 import { CreateEventPage } from "./pages/organizer/CreateEventPage";
 import { CreateTicketsPage } from "./pages/organizer/CreateTicketsPage";
 import { QRScanPage } from "./pages/organizer/QRScanPage";
 import { QRScanEventListPage } from "./pages/organizer/QRScanEventListPage";
+import { OrganizerEventListPage } from "./pages/organizer/OrganizerEventListPage";
+import { AttendeeManagerPage } from "./pages/organizer/AttendeeManagerPage";
 import { OrderManagerPage } from "./pages/organizer/OrderManagerPage";
 import { OrderDetailsPage } from "./pages/organizer/OrderDetailsPage";
 import { OrganizerProfilePage, OrganizerTeamInvitationsPage } from "./pages/organizer/OrganizerProfilePage";
 import { OrderManagerEventListPage } from "./pages/organizer/OrderManagerEventListPage";
 import { Operations } from "./pages/organizer/Operations";
+import { ReportPage } from "./pages/organizer/ReportPage";
 import { Admin } from "./pages/admin/Admin";
 import { StaffAssignments } from "./pages/staff/StaffAssignments";
 import { StaffCheckin } from "./pages/staff/StaffCheckin";
@@ -94,13 +98,13 @@ export function App() {
   const isCheckoutPage = location.pathname.startsWith("/checkout/");
   const isRegisterOrganizerPage =
     location.pathname === "/register-organizer";
-  const isOrganizerDashboard = ["/organizer", "/organizer/new", "/organizer/qr-scan", "/organizer/order-events", "/organizer/profile", "/organizer/team-invitations"].includes(location.pathname) || /^\/organizer\/events\/[^/]+\/(tickets|checkin|orders(?:\/[^/]+)?)\/?$/.test(location.pathname);
+  const isOrganizerDashboard = ["/organizer/dashboard", "/organizer", "/organizer/events", "/organizer/events/tickets", "/organizer/events/attendees", "/organizer/events/stats", "/organizer/new", "/organizer/qr-scan", "/organizer/order-events", "/organizer/profile", "/organizer/team-invitations"].includes(location.pathname) || /^\/organizer\/events\/[^/]+(?:\/(tickets|attendees|checkin|stats|orders(?:\/[^/]+)?))?\/?$/.test(location.pathname);
   const isPublicHome = location.pathname === "/" && isAuthVerified && !user;
   const isUserHome =
     location.pathname === "/" &&
     isAuthVerified &&
     Boolean(user) &&
-    !user?.roles.some((role) => ["ORGANIZER", "ADMIN"].includes(role));
+    !user?.roles.includes("ADMIN");
   const usesSharedHomeShell =
     isPublicHome ||
     isUserHome ||
@@ -290,6 +294,7 @@ export function App() {
               </Guard>
             }
           />
+          <Route path="/organizer/dashboard" element={<Guard roles={["ORGANIZER", "ADMIN"]}><DashboardPage /></Guard>} />
           <Route path="/organizer/profile" element={<Guard roles={["ORGANIZER", "ADMIN"]}><OrganizerProfilePage /></Guard>} />
           <Route path="/organizer/team-invitations" element={<Guard><OrganizerTeamInvitationsPage /></Guard>} />
           <Route
@@ -311,6 +316,30 @@ export function App() {
           <Route
             path="/organizer/order-events"
             element={<Guard roles={["ORGANIZER", "ADMIN"]}><OrderManagerEventListPage /></Guard>}
+          />
+          <Route
+            path="/organizer/events"
+            element={<Guard roles={["ORGANIZER", "ADMIN"]}><OrganizerEventListPage key="edit" purpose="edit" /></Guard>}
+          />
+          <Route
+            path="/organizer/events/tickets"
+            element={<Guard roles={["ORGANIZER", "ADMIN"]}><OrganizerEventListPage key="tickets" purpose="tickets" /></Guard>}
+          />
+          <Route
+            path="/organizer/events/attendees"
+            element={<Guard roles={["ORGANIZER", "ADMIN"]}><OrganizerEventListPage key="attendees" purpose="attendees" /></Guard>}
+          />
+          <Route
+            path="/organizer/events/stats"
+            element={<Guard roles={["ORGANIZER", "ADMIN"]}><OrganizerEventListPage key="stats" purpose="stats" /></Guard>}
+          />
+          <Route
+            path="/organizer/events/:id/stats"
+            element={<Guard roles={["ORGANIZER", "ADMIN"]}><ReportPage /></Guard>}
+          />
+          <Route
+            path="/organizer/events/:id/attendees"
+            element={<Guard roles={["ORGANIZER", "ADMIN"]}><AttendeeManagerPage /></Guard>}
           />
           <Route
             path="/organizer/events/:id"

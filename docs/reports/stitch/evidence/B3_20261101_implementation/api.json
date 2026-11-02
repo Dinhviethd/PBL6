@@ -1,0 +1,177 @@
+{
+  "result": "PASS",
+  "checkpoints": 32,
+  "evidence": [
+    {
+      "method": "POST",
+      "route": "/organizer/events",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "PATCH",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 401,
+      "code": "UNAUTHORIZED"
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6/submit",
+      "status": 400,
+      "code": "MISSING_TICKETS"
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6/ticket-types",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6/submit",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 409,
+      "code": "EVENT_LOCKED"
+    },
+    {
+      "method": "PATCH",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6/ticket-types/5c014289-f89c-410a-9586-866d1cccc222",
+      "status": 409,
+      "code": "EVENT_LOCKED"
+    },
+    {
+      "method": "POST",
+      "route": "/admin/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6/review",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6/submit",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/admin/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6/review",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6/pause",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6/pause",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/orders",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 409,
+      "code": "ACTIVE_ORDERS"
+    },
+    {
+      "method": "POST",
+      "route": "/orders/d91d4a8f-ea63-49fb-a297-5be8f769421d/payments",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/payments/b04d61ca-c42e-4a0e-b801-0f66f0216d24/demo",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 409,
+      "code": "SOLD_EVENT"
+    },
+    {
+      "method": "PATCH",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events/0bfc0a2f-aaa5-4fd3-b57b-71eb96c94ab6/cancel",
+      "status": 409,
+      "code": "PAID_ORDERS"
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events/a0179bcf-c11c-40ef-b49f-a1ad8208102d/cancel",
+      "status": 200
+    },
+    {
+      "method": "PATCH",
+      "route": "/organizer/events/a0179bcf-c11c-40ef-b49f-a1ad8208102d",
+      "status": 409,
+      "code": "EVENT_LOCKED"
+    },
+    {
+      "method": "PATCH",
+      "route": "/organizer/events/a0179bcf-c11c-40ef-b49f-a1ad8208102d",
+      "status": 409,
+      "code": "EVENT_LOCKED"
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events",
+      "status": 200
+    },
+    {
+      "method": "POST",
+      "route": "/organizer/events/1bdaec49-a6c9-4184-bf5d-ffb93de4c5c6/ticket-types",
+      "status": 200
+    }
+  ]
+}

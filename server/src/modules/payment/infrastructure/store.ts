@@ -3,6 +3,9 @@ import type { Store, Row } from "../../../contracts/core";
 import type { PaymentIntent, VerifiedPayment } from "../provider";
 export function paymentStore(db: Store) {
   return {
+    analyticsOutcomes: (ids: string[]) => db.query(
+      `SELECT id,order_id,status,succeeded_at FROM payments WHERE id=ANY($1::uuid[])`, [ids],
+    ),
     managerBankAccount: async (orderId: string, paymentId: string) =>
       (await db.query(
         `SELECT d.payment_id,d.bank_code,d.account_number,d.account_name

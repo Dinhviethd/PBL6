@@ -1,0 +1,227 @@
+{
+  "result": "PASS",
+  "httpChecks": 28,
+  "snapshotConsistency": "PASS",
+  "sample": {
+    "asOf": "2026-11-02T00:33:36.962Z",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "range": {
+      "fromDate": "2026-10-30",
+      "toDate": "2026-11-02"
+    },
+    "scope": {
+      "eventId": null
+    },
+    "totals": {
+      "revenue": "6200000",
+      "sold": "61",
+      "paidOrders": 61
+    },
+    "currentEventCounts": {
+      "onSale": 49
+    },
+    "dailySeries": [
+      {
+        "date": "2026-10-30",
+        "revenue": "2000000",
+        "sold": "20"
+      },
+      {
+        "date": "2026-10-31",
+        "revenue": "2200000",
+        "sold": "21"
+      },
+      {
+        "date": "2026-11-01",
+        "revenue": "2000000",
+        "sold": "20"
+      },
+      {
+        "date": "2026-11-02",
+        "revenue": "0",
+        "sold": "0"
+      }
+    ],
+    "upcomingEvents": [
+      {
+        "id": "b2e863bc-200f-4550-88ce-0d6cc1804fe7",
+        "title": "B1 Event 0",
+        "coverImageUrl": null,
+        "venueName": "Test Arena",
+        "startsAt": "2026-11-01T22:33:34.972Z",
+        "endsAt": "2026-11-02T02:33:34.974Z",
+        "temporalStatus": "ONGOING",
+        "capacity": "1000",
+        "sold": "60",
+        "checkedIn": "1",
+        "eligibleTickets": "2"
+      },
+      {
+        "id": "1405f934-0a54-4c31-adfc-d236c6917aaf",
+        "title": "B1 Event 1",
+        "coverImageUrl": null,
+        "venueName": "Test Arena",
+        "startsAt": "2026-11-01T23:33:34.992Z",
+        "endsAt": "2026-11-02T03:33:34.992Z",
+        "temporalStatus": "ONGOING",
+        "capacity": "1000",
+        "sold": "0",
+        "checkedIn": "0",
+        "eligibleTickets": "0"
+      },
+      {
+        "id": "d3195f6d-2fe2-45ca-b1ee-07e1a54206f9",
+        "title": "B1 Event 2",
+        "coverImageUrl": null,
+        "venueName": "Test Arena",
+        "startsAt": "2026-11-02T10:33:35.002Z",
+        "endsAt": "2026-11-02T14:33:35.002Z",
+        "temporalStatus": "UPCOMING",
+        "capacity": "1000",
+        "sold": "0",
+        "checkedIn": "0",
+        "eligibleTickets": "0"
+      },
+      {
+        "id": "6faf0693-acf5-4f34-ab82-67818532bf4f",
+        "title": "B1 Event 3",
+        "coverImageUrl": null,
+        "venueName": "Test Arena",
+        "startsAt": "2026-11-02T15:33:35.016Z",
+        "endsAt": "2026-11-02T19:33:35.016Z",
+        "temporalStatus": "UPCOMING",
+        "capacity": "1000",
+        "sold": "0",
+        "checkedIn": "0",
+        "eligibleTickets": "0"
+      },
+      {
+        "id": "05905dad-cd1c-4e13-81b1-91653dac947d",
+        "title": "B1 Event 4",
+        "coverImageUrl": null,
+        "venueName": "Test Arena",
+        "startsAt": "2026-11-02T20:33:35.026Z",
+        "endsAt": "2026-11-03T00:33:35.026Z",
+        "temporalStatus": "UPCOMING",
+        "capacity": "1000",
+        "sold": "0",
+        "checkedIn": "0",
+        "eligibleTickets": "0"
+      }
+    ]
+  },
+  "evidence": [
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02&eventId=5b773550-edb6-42c1-b6a7-c4abd1988843",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02&eventId=d3195f6d-2fe2-45ca-b1ee-07e1a54206f9",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02&eventId=6faf0693-acf5-4f34-ab82-67818532bf4f",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02&eventId=05905dad-cd1c-4e13-81b1-91653dac947d",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02&eventId=3021d4ca-cd3a-476e-bb20-0ed534653819",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02&eventId=94bdad50-bf16-464c-b734-ecdf3f1909ad",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02&eventId=13610e4e-20c4-482e-963a-6344a0a3e69e",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02&eventId=b2e863bc-200f-4550-88ce-0d6cc1804fe7",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02&eventId=1405f934-0a54-4c31-adfc-d236c6917aaf",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02&eventId=68c020a4-a829-4389-b326-39bcae12f644",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-31&toDate=2026-10-31",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2099-01-01&toDate=2099-01-02",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard",
+      "status": 200
+    },
+    {
+      "route": "/organizer/dashboard",
+      "status": 401
+    },
+    {
+      "route": "/organizer/dashboard",
+      "status": 403
+    },
+    {
+      "route": "/organizer/dashboard?eventId=7dd5ef0b-79ad-4470-8463-ac0cd3764a00",
+      "status": 404
+    },
+    {
+      "route": "/organizer/dashboard?eventId=b2e863bc-200f-4550-88ce-0d6cc1804fe7",
+      "status": 404
+    },
+    {
+      "route": "/organizer/dashboard?eventId=0d58b4ae-2a1c-488d-8fa2-5a07d27a2ae4",
+      "status": 404
+    },
+    {
+      "route": "/organizer/dashboard?eventId=all",
+      "status": 400
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=bad",
+      "status": 400
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-02-30",
+      "status": 400
+    },
+    {
+      "route": "/organizer/dashboard?unknown=1",
+      "status": 400
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-11-02&toDate=2026-11-01",
+      "status": 400
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2025-01-01&toDate=2026-11-02",
+      "status": 400
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-31&fromDate=2026-11-01",
+      "status": 400
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02",
+      "status": 409
+    },
+    {
+      "route": "/organizer/dashboard?fromDate=2026-10-30&toDate=2026-11-02",
+      "status": 200
+    }
+  ]
+}

@@ -2,8 +2,42 @@ import { randomUUID } from "node:crypto";
 import type { Store, Row } from "../../../contracts/core";
 import { waitQueueStore } from "./wait-queue";
 import { orderHistoryStore } from "./history";
+import { orderAnalyticsStore } from "./analytics";
 export function orderStore(db: Store) {
   return {
+    ...orderAnalyticsStore(db),
+    async attendeePage(eventId: string, filters: {
+      page: number;
+      limit: number;
+      q: string;
+      status?: "VALID" | "CHECKED_IN";
+      ticketTypeId?: string;
+    }) {
+      const from = `FROM tickets t
+        JOIN order_items i ON i.id=t.order_item_id
+        JOIN orders o ON o.id=i.order_id
+        LEFT JOIN checkins c ON c.ticket_id=t.id
+        WHERE t.event_id=$1
+          AND ($2::text IS NULL OR t.status=$2)
+          AND ($3::uuid IS NULL OR i.ticket_type_id=$3)
+          AND (t.ticket_code ILIKE $4 OR o.buyer_name_snapshot ILIKE $4
+            OR o.buyer_email_snapshot ILIKE $4)`;
+      const args = [eventId, filters.status ?? null, filters.ticketTypeId ?? null,
+        `%${filters.q.replace(/[\\%_]/g, "\\$&")}%`];
+      const [count] = await db.query(`SELECT count(*) AS total ${from}`, args);
+      const data = await db.query(
+        `SELECT t.id,t.event_id,t.ticket_code,t.status,t.issued_at,
+          i.ticket_type_name_snapshot,o.event_title_snapshot,
+          o.buyer_name_snapshot,o.buyer_email_snapshot,c.checked_in_at
+          ${from} ORDER BY t.issued_at DESC,t.id LIMIT $5 OFFSET $6`,
+        [...args, filters.limit, filters.page * filters.limit],
+      );
+      const total = Number(count.total);
+      return { data, pagination: {
+        page: filters.page, pageSize: filters.limit, total,
+        totalPages: Math.ceil(total / filters.limit),
+      } };
+    },
     organizerProfileTicketCount: async (eventIds: string[]) =>
       (
         await db.query(

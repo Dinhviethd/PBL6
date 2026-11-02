@@ -1,0 +1,19 @@
+.ee-event-title { color:#aaa6bd; line-height:1.7; overflow-wrap:anywhere; }
+.ee-notice { padding:14px 18px; border:1px solid #5de6ff40; background:#5de6ff08; color:#ccc3d8; border-radius:10px; line-height:1.8; font-size:12px; }
+.ee-page .ce-content>.ce-error { margin-bottom:18px; }
+.ee-review { display:flex; flex-direction:column; gap:14px; overflow-wrap:anywhere; }
+.ee-review>h2 { margin-bottom:4px; }
+.ee-review p { color:#aaa6bd; font-size:12px; line-height:1.8; margin:0; white-space:pre-wrap; }
+.ee-review>.status { align-self:flex-start; }
+.ee-review .ce-button { width:100%; }
+.ee-reviews { border-top:1px solid #958da130; padding-top:18px; }
+.ee-reviews h3 { margin:0 0 12px; font-size:13px; }
+.ee-reviews article { padding:14px 0; border-bottom:1px solid #958da120; }
+.ee-reviews time { display:block; margin:9px 0; color:#958da1; font-size:10px; }
+.ee-cancel { border-top:1px solid #fb718540; padding-top:16px; }
+.ee-cancel summary { color:#fda4af; cursor:pointer; font-size:12px; }
+.ee-cancel p { margin-top:12px; }
+.ee-cancel textarea { min-height:95px; }
+.ee-cancel button { margin-top:14px; }
+.ee-page .ce-preview-status { max-width:48%; letter-spacing:0; }
+.ee-page .ce-preview-status .status { font-size:9px; white-space:normal; }

@@ -24,7 +24,7 @@
 }
 .qse-event-count strong {
   color: #f8fafc;
-  font: 700 24px "Syne", sans-serif;
+  font: 700 24px "Be Vietnam Pro", sans-serif;
 }
 .qse-event-count span {
   color: #ccc3d8;
@@ -40,7 +40,7 @@
 .qse-list-heading h2 {
   margin: 0;
   color: #f8fafc;
-  font: 600 20px "Syne", sans-serif;
+  font: 600 20px "Be Vietnam Pro", sans-serif;
 }
 .qse-list-heading p {
   margin: 6px 0 0;
@@ -97,7 +97,7 @@
     radial-gradient(ellipse at 30% 20%, #7c3aed55, transparent 58%),
     radial-gradient(ellipse at 80% 90%, #22d3ee22, transparent 50%),
     #0a0d1c;
-  font: 600 12px "Syne", sans-serif;
+  font: 600 12px "Be Vietnam Pro", sans-serif;
   letter-spacing: 0.08em;
 }
 .qse-status {
@@ -123,9 +123,9 @@
   overflow: hidden;
   margin: 0;
   color: #f8fafc;
-  font: 600 16px/1.45 "Syne", sans-serif;
+  font: 600 16px/1.45 "Be Vietnam Pro", sans-serif;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  /* -webkit-line-clamp: 2; */
   overflow-wrap: anywhere;
 }
 .qse-meta {
@@ -146,7 +146,7 @@
   display: -webkit-box;
   overflow: hidden;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  /* -webkit-line-clamp: 2; */
 }
 .qse-scan-button,
 .qse-page-button {
@@ -201,7 +201,7 @@
 .qse-empty h2 {
   margin: 0;
   color: #f8fafc;
-  font: 600 18px "Syne", sans-serif;
+  font: 600 18px "Be Vietnam Pro", sans-serif;
 }
 .qse-empty p {
   margin: 0 0 8px;

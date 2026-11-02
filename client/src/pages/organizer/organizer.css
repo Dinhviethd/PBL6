@@ -554,6 +554,7 @@
   overflow: hidden;
 }
 .org-fill-bar-fill {
+  display: block;
   height: 100%;
   border-radius: 9999px;
   background: linear-gradient(90deg, #7c3aed, #5de6ff);

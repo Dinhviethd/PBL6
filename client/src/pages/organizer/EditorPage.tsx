@@ -1,327 +1,154 @@
-import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { ActionForm } from "@/components/ticketing/action-form";
-import { Field, ImageField, Loading, Notice, PageHead, Status } from "@/components/ticketing/shared";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { Link, useBlocker, useParams } from "react-router-dom";
+import { Save } from "lucide-react";
 import api from "@/lib/api";
-import { local, iso, eventTime } from "@/features/ticketing/dates";
-import { useLoad, message, money } from "@/features/ticketing/data";
+import { useAuth } from "@/features/auth/stores/authStore";
+import { get, message, useLoad } from "@/features/ticketing/data";
 import type { Category, Event } from "@/features/ticketing/types";
+import { OrganizerSidebar } from "./OrganizerSidebar";
+import { OrganizerHeader } from "./OrganizerHeader";
+import { EventFormFields, EventPreview } from "./EventFormSections";
+import { EventReviewPanel } from "./EventReviewPanel";
+import { MAX_BANNER_BYTES, type CreateEventForm } from "./create-event-data";
+import { editEventForm, editEventPayload } from "./edit-event-data";
+import "./create-event.css";
+import "./edit-event.css";
+
+const sections = [["ce-basic", "Thông tin chung"], ["ce-description", "Mô tả sự kiện"], ["ce-schedule", "Lịch trình & Địa điểm"], ["ce-banner", "Hình ảnh"]] as const;
 
 export function EditorPage() {
-  const { id } = useParams();
-  return id ? <ExistingEditor id={id} /> : <EditorForm />;
+  const { id = "" } = useParams();
+  const userId = useAuth(s => s.user?.idUser);
+  return <ExistingEditor key={`${userId}:${id}`} id={id} userId={userId} />;
 }
-function ExistingEditor({ id }: { id: string }) {
-  const r = useLoad<Event>(`/organizer/events/${id}`);
-  if (r.loading) return <Loading />;
-  if (!r.data) return <Notice error={r.error} />;
-  return <EditorForm event={r.data} reload={r.reload} />;
+
+function ExistingEditor({ id, userId }: { id: string; userId?: string }) {
+  const result = useLoad<Event>(`/organizer/events/${encodeURIComponent(id)}`);
+  if (result.loading || result.error || !result.data) return <div className="ce-page">
+    <OrganizerSidebar active="Chỉnh sửa sự kiện" /><div className="ce-body"><OrganizerHeader title="Chỉnh sửa sự kiện" />
+      <div className="ce-content">{result.loading ? <p role="status">Đang tải sự kiện…</p> : <div className="ce-error" role="alert">{result.error || "Không tìm thấy sự kiện."}<button onClick={result.reload}>Thử tải lại</button><Link to="/organizer">Về danh sách sự kiện</Link></div>}</div>
+    </div>
+  </div>;
+  return <EventEditor initial={result.data} userId={userId} />;
 }
-function EditorForm({
-  event: e,
-  reload = () => {},
-}: {
-  event?: Event;
-  reload?: () => void;
-}) {
-  const categories = useLoad<Category[]>("/categories"),
-    navigate = useNavigate(),
-    [error, setError] = useState("");
-  const command = async (path: string, body = {}) => {
-    try {
-      setError("");
-      await api.post(`/organizer/events/${e?.id}/${path}`, body);
-      reload();
-    } catch (e) {
-      setError(message(e));
+
+function EventEditor({ initial, userId }: { initial: Event; userId?: string }) {
+  const categories = useLoad<Category[]>("/categories");
+  const [event, setEvent] = useState(initial);
+  const [values, setValues] = useState(() => editEventForm(initial));
+  const [activeSection, setActiveSection] = useState("ce-basic");
+  const [busy, setBusy] = useState(false), [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(""), [uploadError, setUploadError] = useState("");
+  const [notice, setNotice] = useState(""), [outOfSync, setOutOfSync] = useState(false);
+  const lock = useRef(false), alive = useRef(true);
+  const alertBox = useRef<HTMLDivElement>(null);
+  const dirty = JSON.stringify(values) !== JSON.stringify(editEventForm(event));
+  const dirtyRef = useRef(dirty);
+  dirtyRef.current = dirty;
+  const url = `/organizer/events/${encodeURIComponent(event.id)}`;
+  const editable = !["PENDING_REVIEW", "CANCELLED", "ARCHIVED"].includes(event.status);
+  const disabled = busy || uploading || !editable || outOfSync;
+  const blocker = useBlocker(({ currentLocation, nextLocation }) =>
+    (dirty || busy || uploading) && (currentLocation.pathname !== nextLocation.pathname || currentLocation.search !== nextLocation.search));
+  useEffect(() => {
+    if (blocker.state !== "blocked") return;
+    if (window.confirm("Rời trang và bỏ các thay đổi chưa lưu?")) blocker.proceed();
+    else blocker.reset();
+  }, [blocker]);
+  useEffect(() => { alive.current = true; return () => { alive.current = false; }; }, []);
+  useEffect(() => { if (error) alertBox.current?.focus(); }, [error]);
+  useEffect(() => {
+    function beforeUnload(e: BeforeUnloadEvent) {
+      if (dirtyRef.current || lock.current) { e.preventDefault(); e.returnValue = ""; }
     }
-  };
-  // Mount the form once its saved category has a matching select option.
-  if (categories.loading) return <Loading />;
-  if (categories.error) return <Notice error={categories.error} />;
-  return (
-    <>
-      <Link className="back" to="/organizer">
-        ← Sự kiện của bạn
-      </Link>
-      <PageHead
-        eyebrow="THIẾT KẾ TRẢI NGHIỆM"
-        title={e ? "Chỉnh sửa sự kiện" : "Tạo sự kiện mới"}
-        actions={e ? <Status value={e.status} /> : undefined}
-      />
-      <Notice error={error} />
-      <div className="editor-grid">
-        <section className="panel">
-          <h2>Thông tin sự kiện</h2>
-          <ActionForm
-            label="Lưu bản nháp"
-            onSubmit={async (d) => {
-              const payload = {
-                ...d,
-                coverImageUrl: d.coverImageUrl || undefined,
-                startsAt: eventTime(d.startsAt, e?.starts_at),
-                endsAt: eventTime(d.endsAt, e?.ends_at),
-                checkinOpensAt: eventTime(
-                  d.checkinOpensAt,
-                  e?.checkin_opens_at,
-                ),
-                checkinClosesAt: eventTime(
-                  d.checkinClosesAt,
-                  e?.checkin_closes_at,
-                ),
-              };
-              const result = e
-                ? await api.patch(`/organizer/events/${e.id}`, payload)
-                : await api.post("/organizer/events", payload);
-              if (!e) navigate(`/organizer/events/${result.data.data.id}`);
-              else reload();
-            }}
-          >
-            <Field label="Tên sự kiện" name="title" value={e?.title} />
-            <div className="form-grid">
-              {e && (
-                <Field
-                  label="Đường dẫn (tự động)"
-                  name="slug"
-                  value={e.slug}
-                  disabled
-                  required={false}
-                />
-              )}
-              <Field
-                label="Danh mục"
-                name="categoryId"
-                value={e?.category_id}
-                options={[
-                  { value: "", label: "Chọn danh mục" },
-                  ...(categories.data ?? []).map((c) => ({
-                    value: c.id,
-                    label: c.name,
-                  })),
-                ]}
-              />
-            </div>
-            <Field
-              label="Giới thiệu sự kiện"
-              name="description"
-              type="textarea"
-              value={e?.description}
-            />
-            <ImageField
-              label="Ảnh bìa"
-              name="coverImageUrl"
-              value={e?.cover_image_url}
-            />
-            <div className="form-grid">
-              <Field label="Địa điểm" name="venueName" value={e?.venue_name} />
-              <Field label="Thành phố" name="cityCode" value={e?.city_code} />
-            </div>
-            <Field label="Địa chỉ" name="address" value={e?.address} />
-            <div className="form-grid">
-              <Field
-                label="Bắt đầu"
-                name="startsAt"
-                type="datetime-local"
-                value={local(e?.starts_at)}
-              />
-              <Field
-                label="Kết thúc"
-                name="endsAt"
-                type="datetime-local"
-                value={local(e?.ends_at)}
-              />
-              <Field
-                label="Mở check-in"
-                name="checkinOpensAt"
-                type="datetime-local"
-                value={local(e?.checkin_opens_at)}
-              />
-              <Field
-                label="Đóng check-in"
-                name="checkinClosesAt"
-                type="datetime-local"
-                value={local(e?.checkin_closes_at)}
-              />
-            </div>
-          </ActionForm>
-        </section>
-        <aside>
-          <section className="panel">
-            <h2>Trạng thái & xét duyệt</h2>
-            {e ? (
-              <>
-                <Status value={e.status} />
-                <p className="muted">
-                  Hoàn tất thông tin và loại vé trước khi gửi duyệt.
-                </p>
-                {["DRAFT", "REJECTED"].includes(e.status) && (
-                  <button
-                    className="btn primary full"
-                    onClick={() => void command("submit")}
-                  >
-                    Gửi Admin phê duyệt
-                  </button>
-                )}
-                {e.status === "PUBLISHED" && (
-                  <>
-                    <Link className="btn ghost full" to={`/events/${e.slug}`}>
-                      Xem trang công khai
-                    </Link>
-                    <button
-                      className="btn ghost full"
-                      onClick={() =>
-                        void command("pause", { paused: !e.sales_paused })
-                      }
-                    >
-                      {e.sales_paused ? "Mở bán trở lại" : "Tạm ngừng bán"}
-                    </button>
-                  </>
-                )}
-                {e.reviews?.map((r, n) => (
-                  <div className="notice" key={n}>
-                    <Status value={r.decision} />
-                    <p>{r.reason || "Sự kiện đã được duyệt."}</p>
-                  </div>
-                ))}
-                {!["CANCELLED", "ARCHIVED"].includes(e.status) && (
-                  <details>
-                    <summary>Hủy sự kiện</summary>
-                    <ActionForm
-                      label="Hủy sự kiện chưa bán vé"
-                      onSubmit={async (d) => {
-                        await api.post(`/organizer/events/${e.id}/cancel`, d);
-                        reload();
-                      }}
-                    >
-                      <Field label="Lý do" name="reason" />
-                    </ActionForm>
-                  </details>
-                )}
-              </>
-            ) : (
-              <p>Lưu thông tin trước, sau đó thêm loại vé.</p>
-            )}
-          </section>
-          {e && (
-            <section className="panel section-gap">
-              <h2>Loại vé</h2>
-              {e.ticketTypes?.map((t) => (
-                <div className="ticket-option" key={t.id}>
-                  <div>
-                    <strong>{t.name}</strong>
-                    <p>
-                      {money(t.price_amount)} · {t.capacity} chỗ
-                    </p>
-                    <small>
-                      Đã bán {t.sold_quantity} · Đang giữ {t.reserved_quantity}
-                    </small>
-                  </div>
-                  {["DRAFT", "REJECTED"].includes(e.status) &&
-                    !t.archived_at && (
-                      <div>
-                        <details>
-                          <summary>Chỉnh sửa</summary>
-                          <ActionForm
-                            label="Lưu loại vé"
-                            onSubmit={async (d) => {
-                              await api.patch(
-                                `/organizer/events/${e.id}/ticket-types/${t.id}`,
-                                {
-                                  ...d,
-                                  capacity: Number(d.capacity),
-                                  saleStartsAt: iso(d.saleStartsAt),
-                                  saleEndsAt: iso(d.saleEndsAt),
-                                },
-                              );
-                              reload();
-                            }}
-                          >
-                            <Field
-                              label="Tên loại vé"
-                              name="name"
-                              value={t.name}
-                            />
-                            <Field
-                              label="Giá (đ)"
-                              name="price"
-                              type="number"
-                              value={t.price_amount}
-                            />
-                            <Field
-                              label="Sức chứa"
-                              name="capacity"
-                              type="number"
-                              value={t.capacity}
-                            />
-                            <Field
-                              label="Mở bán"
-                              name="saleStartsAt"
-                              type="datetime-local"
-                              value={local(t.sale_starts_at)}
-                            />
-                            <Field
-                              label="Kết thúc bán"
-                              name="saleEndsAt"
-                              type="datetime-local"
-                              value={local(t.sale_ends_at)}
-                            />
-                          </ActionForm>
-                        </details>
-                        <button
-                          className="btn ghost"
-                          onClick={async () => {
-                            try {
-                              await api.delete(
-                                `/organizer/events/${e.id}/ticket-types/${t.id}`,
-                              );
-                              reload();
-                            } catch (e) {
-                              setError(message(e));
-                            }
-                          }}
-                        >
-                          Ngừng dùng
-                        </button>
-                      </div>
-                    )}
-                </div>
-              ))}
-              {["DRAFT", "REJECTED"].includes(e.status) && (
-                <ActionForm
-                  label="Thêm loại vé"
-                  onSubmit={async (d) => {
-                    await api.post(`/organizer/events/${e.id}/ticket-types`, {
-                      ...d,
-                      capacity: Number(d.capacity),
-                      saleStartsAt: iso(d.saleStartsAt),
-                      saleEndsAt: iso(d.saleEndsAt),
-                    });
-                    reload();
-                  }}
-                >
-                  <Field label="Tên loại vé" name="name" />
-                  <div className="form-grid">
-                    <Field label="Giá vé (đ)" name="price" type="number" />
-                    <Field label="Số lượng" name="capacity" type="number" />
-                  </div>
-                  <Field
-                    label="Mở bán"
-                    name="saleStartsAt"
-                    type="datetime-local"
-                    value={local(new Date().toISOString())}
-                  />
-                  <Field
-                    label="Kết thúc bán"
-                    name="saleEndsAt"
-                    type="datetime-local"
-                    value={local(e.starts_at)}
-                  />
-                </ActionForm>
-              )}
-            </section>
-          )}
-        </aside>
+    window.addEventListener("beforeunload", beforeUnload);
+    return () => window.removeEventListener("beforeunload", beforeUnload);
+  }, []);
+
+  const sameSession = () => alive.current && useAuth.getState().user?.idUser === userId;
+  function update(name: keyof CreateEventForm, value: string) {
+    if (disabled || lock.current) return;
+    setValues(v => ({ ...v, [name]: value })); setError(""); setNotice("");
+  }
+  async function sync(resetForm: boolean) {
+    const latest = await get<Event>(url);
+    if (!sameSession()) return;
+    setEvent(latest);
+    if (resetForm) { setValues(editEventForm(latest)); dirtyRef.current = false; }
+    setOutOfSync(false);
+  }
+  async function refresh() {
+    if (lock.current) return;
+    if (dirty && !window.confirm("Tải lại sẽ bỏ các thay đổi chưa lưu. Tiếp tục?")) return;
+    lock.current = true; setBusy(true); setError("");
+    try { await sync(true); } catch (failure) { if (sameSession()) setError(message(failure)); }
+    finally { lock.current = false; if (alive.current) setBusy(false); }
+  }
+  async function save(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (disabled || lock.current || !dirty) return;
+    setError(""); setNotice("");
+    try {
+      if (!categories.data?.some(c => c.id === values.categoryId)) throw new Error("Vui lòng chọn một danh mục đang khả dụng.");
+      const payload = editEventPayload(values, event);
+      if (event.status === "PUBLISHED" && !window.confirm("Lưu thay đổi sẽ đưa sự kiện về bản nháp và ngừng công khai cho tới khi được duyệt lại. Tiếp tục?")) return;
+      lock.current = true; setBusy(true);
+      const saved = (await api.patch<{ data: Event }>(url, payload)).data.data;
+      if (!sameSession()) return;
+      // PATCH returns the saved event without ticketTypes/reviews. Keep them until GET completes.
+      setEvent({ ...event, ...saved }); setValues(editEventForm(saved)); dirtyRef.current = false;
+      setNotice("Đã lưu thay đổi. Sự kiện ở bản nháp; gửi duyệt khi đã hoàn tất.");
+      try { await sync(true); } catch { if (sameSession()) { setOutOfSync(true); setError("Đã lưu thay đổi nhưng chưa tải lại được dữ liệu. Hãy tải lại trước khi tiếp tục."); } }
+    } catch (failure) { if (sameSession()) setError(message(failure)); }
+    finally { lock.current = false; if (alive.current) setBusy(false); }
+  }
+  async function command(action: "submit" | "pause" | "cancel", body: object = {}) {
+    if (lock.current || uploading || busy || dirty || outOfSync || (action === "submit" && !editable)) return;
+    lock.current = true; setBusy(true); setError(""); setNotice("");
+    try {
+      await api.post(`${url}/${action}`, body);
+      if (!sameSession()) return;
+      setNotice(action === "submit" ? "Đã gửi sự kiện cho Admin phê duyệt." : action === "cancel" ? "Đã hủy sự kiện." : "Đã cập nhật trạng thái bán vé.");
+      // Prevent stale state actions until a fresh server snapshot has arrived.
+      setOutOfSync(true);
+      try { await sync(true); } catch { if (sameSession()) setError("Thao tác đã thành công nhưng chưa tải lại được dữ liệu. Hãy tải lại trước khi tiếp tục."); }
+    } catch (failure) { if (sameSession()) setError(message(failure)); }
+    finally { lock.current = false; if (alive.current) setBusy(false); }
+  }
+  async function upload(file?: File) {
+    if (!file || disabled || lock.current) return;
+    setUploadError("");
+    if (file.size > MAX_BANNER_BYTES) { setUploadError("Ảnh tối đa 5 MB."); return; }
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) { setUploadError("Vui lòng chọn ảnh JPG, PNG hoặc WEBP."); return; }
+    lock.current = true; setUploading(true);
+    try {
+      const data = new FormData(); data.append("image", file);
+      const uploaded = (await api.post<{ data: { url: string } }>("/media", data)).data.data.url;
+      if (sameSession()) { setValues(v => ({ ...v, coverImageUrl: uploaded })); setNotice(""); }
+    } catch (failure) { if (sameSession()) setUploadError(message(failure)); }
+    finally { lock.current = false; if (alive.current) setUploading(false); }
+  }
+  return <div className="ce-page ee-page">
+    <OrganizerSidebar active="Chỉnh sửa sự kiện" />
+    <div className="ce-body"><OrganizerHeader title="Chỉnh sửa sự kiện" />
+      <div className="ce-content">
+        <nav className="ce-steps" aria-label="Các phần thông tin sự kiện">{sections.map(([id, label], index) => <a key={id} href={`#${id}`} className={activeSection === id ? "is-active" : ""} aria-current={activeSection === id ? "step" : undefined} onClick={() => setActiveSection(id)}><span className="ce-step-number">0{index + 1}</span><span><small>Thông tin sự kiện</small><strong>{index + 1}. {label}</strong></span></a>)}</nav>
+        <div className="ce-heading"><div><span className="ce-kicker">SOẠN THẢO SỰ KIỆN</span><h1>Chỉnh sửa sự kiện</h1><p className="ee-event-title">{event.title}</p></div><span className="ce-draft-note" role="status"><Save size={15} />{busy ? "Đang xử lý…" : dirty ? "Có thay đổi chưa lưu" : "Thông tin đã lưu trên hệ thống"}</span></div>
+        {notice && <p className="ee-notice" role="status">{notice}</p>}
+        {error && <div className="ce-error" role="alert" ref={alertBox} tabIndex={-1}>{error}</div>}
+        {outOfSync && <div className="ce-error"><button disabled={busy} onClick={() => void refresh()}>Tải lại dữ liệu sự kiện</button></div>}
+        {!editable && <p className="ee-notice">Thông tin chỉ có thể xem ở trạng thái hiện tại.</p>}
+        {event.status === "PUBLISHED" && <p className="ee-notice">Lưu thay đổi sẽ chuyển sự kiện về bản nháp và cần gửi duyệt lại. Khi đã có vé thanh toán, không thể đổi thời gian tổ chức hoặc địa điểm. Khi còn đơn giữ vé, chưa thể lưu thay đổi.</p>}
+        <div className="ce-grid">
+          <form className="ce-form" aria-label="Chỉnh sửa sự kiện" aria-busy={busy || uploading} onSubmit={e => void save(e)}>
+            <EventFormFields values={values} update={update} categories={categories} disabled={disabled} uploading={uploading} uploadError={uploadError} upload={upload} setActiveSection={setActiveSection} slug={event.slug} />
+            <div className="ce-actions ce-card"><p>Loại vé được quản lý tại trang riêng. Lưu thay đổi trước khi gửi duyệt.</p><div><Link className="ce-back" to="/organizer/events">Quay lại danh sách</Link><Link className="ce-button ce-secondary" to={`${url}/tickets`}>Quản lý loại vé</Link><button className="ce-button ce-primary" disabled={disabled || !dirty || categories.loading || !!categories.error}>{busy ? "Đang lưu…" : "Lưu thay đổi"}</button></div></div>
+          </form>
+          <EventPreview values={values} categoryName={categories.data?.find(c => c.id === values.categoryId)?.name} status={event.status}>
+            <EventReviewPanel event={event} busy={busy || uploading || outOfSync} dirty={dirty} onCommand={command} />
+          </EventPreview>
+        </div>
       </div>
-    </>
-  );
+    </div>
+  </div>;
 }

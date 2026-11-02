@@ -43,6 +43,7 @@ const labels: Record<string, string> = {
   PAID: "Đã thanh toán",
   EXPIRED: "Hết hạn",
   CANCELLED: "Đã hủy",
+  ARCHIVED: "Đã lưu trữ",
   VALID: "Chưa sử dụng",
   CHECKED_IN: "Đã check-in",
   VOID: "Vé đã hủy",

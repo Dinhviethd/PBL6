@@ -89,6 +89,9 @@ export function AuthHeader({
               <Link to="/tickets">Vé của tôi</Link>
               <Link to="/orders">Lịch sử đơn hàng</Link>
               <Link to="/checkin">Nhân viên check-in</Link>
+              {user.roles.some((role) => ["ORGANIZER", "ADMIN"].includes(role)) && (
+                <Link to="/organizer">Organizer</Link>
+              )}
             </>
           ) : (
             <Link

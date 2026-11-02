@@ -32,6 +32,8 @@ import { createSepayWebhook } from "./workflows/sepay-webhook";
 import { createWaitQueue } from "./workflows/wait-queue";
 import { createOrderHistory } from "./workflows/order-history";
 import { createOrderManager } from "./workflows/order-manager";
+import { createEventAnalytics, analyticsCsv } from "./workflows/event-analytics";
+import { createOrganizerDashboard } from "./workflows/organizer-dashboard";
 import { createOrganizerProfileStats, createOrganizerTeamWorkflow } from "./workflows/organizer-profile";
 import { organizerProfilePatch, organizerLegalRequest, organizerLegalReview } from "./contracts/organizer-profile";
 import { ensure, role, type Row, type Principal } from "./contracts/core";
@@ -179,6 +181,8 @@ export function createApplication(config: {
       notifications,
     ),
     orderManager = createOrderManager(events, orders, payments, db.snapshot, auth),
+    eventAnalytics = createEventAnalytics(events, orders, payments, db.snapshot),
+    organizerDashboard = createOrganizerDashboard(events, orders, payments, db.snapshot),
     organizerProfileStats = createOrganizerProfileStats(events, orders, db.snapshot),
     organizerTeam = createOrganizerTeamWorkflow(auth, events, booking, uow),
     app = express(),
@@ -711,6 +715,12 @@ export function createApplication(config: {
       ),
     ),
   );
+  api.get("/organizer/dashboard", protect, route((req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    const filters = z.object({ eventId: uuid.optional(), fromDate: z.string().optional(), toDate: z.string().optional() })
+      .strict().parse(req.query);
+    return organizerDashboard.report(who(res), filters);
+  }));
   api.get(
     "/organizer/events",
     protect,
@@ -1030,8 +1040,49 @@ export function createApplication(config: {
     "/organizer/events/:id/attendees",
     protect,
     route(async (req, res) => {
-      await events.guard(id(req), who(res));
-      return orders.tickets("", id(req), page(req) * 50, query(req, "q"));
+      res.setHeader("Cache-Control", "no-store");
+      const eventId = id(req);
+      if (req.query.paginated === undefined) {
+        await events.guard(eventId, who(res));
+        return orders.tickets("", eventId, page(req) * 50, query(req, "q"));
+      }
+      const filters = z.object({
+        paginated: z.literal("true"),
+        page: z.coerce.number().int().min(0).max(10000).default(0),
+        limit: z.coerce.number().int().min(1).max(50).default(5),
+        q: z.string().trim().max(200).default(""),
+        status: z.enum(["VALID", "CHECKED_IN"]).optional(),
+        ticketTypeId: uuid.optional(),
+      }).strict().parse(req.query);
+      const result = await db.snapshot.run(async () => {
+        await events.guard(eventId, who(res));
+        if (filters.ticketTypeId) {
+          const types = await orders.types(eventId);
+          ensure(types.some(type => type.id === filters.ticketTypeId),
+            "INVALID_TICKET_TYPE", "Loại vé không thuộc sự kiện này.", 400);
+        }
+        return orders.attendeePage(eventId, filters);
+      });
+      res.json({ success: true, ...result });
+    }),
+  );
+  const analyticsQuery = z.object({ fromDate: z.string().optional(), toDate: z.string().optional() }).strict();
+  api.get(
+    "/organizer/events/:id/analytics",
+    protect,
+    route((req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      return eventAnalytics.report(who(res), id(req), analyticsQuery.parse(req.query));
+    }),
+  );
+  api.get(
+    "/organizer/events/:id/analytics/export.csv",
+    protect,
+    route(async (req, res) => {
+      const report = await eventAnalytics.report(who(res), id(req), analyticsQuery.parse(req.query));
+      res.setHeader("Cache-Control", "no-store");
+      res.setHeader("Content-Disposition", `attachment; filename="event-${report.eventId}-${report.range.fromDate}-${report.range.toDate}.csv"`);
+      res.type("text/csv").send(analyticsCsv(report));
     }),
   );
   api.get(
