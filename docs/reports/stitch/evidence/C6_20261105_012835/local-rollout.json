@@ -1,0 +1,32 @@
+{
+  "container": "pbl6-api-1",
+  "id": "9ad28c805b6b7b49653826f6ad11017f9004d795e2588e2bc6bbcc7ffafe5cda",
+  "sameImageAndContainer": true,
+  "health": 200,
+  "login": 200,
+  "file": "modules/auth/infrastructure/store.js",
+  "sha256": "05d598dd1bfcf9039633084edd8f1560912a3776cab81e3ed7df7541ac84abf7",
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications?status=PENDING_OR_REJECTED&page=0&limit=10",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/b5bfa8be-521a-4bd7-9831-6389eaa2c376",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/72dcd71b-9053-4e9f-98f6-beb46836094c",
+      "status": 200
+    }
+  ],
+  "statuses": [
+    "PENDING",
+    "REJECTED"
+  ],
+  "businessWrites": 0,
+  "note": "In-place JS only; no migration/config/worker/static update; rebuild image for persistence"
+}

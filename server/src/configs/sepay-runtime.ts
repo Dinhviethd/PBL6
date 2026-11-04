@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { X509Certificate } from "node:crypto";
 import type { DatabaseTls } from "../platform/database";
 import { ensure } from "../contracts/core";
-import { paymentProviderFromEnv, validateSepayConfig, type SepayConfig } from "../modules/payment/public";
+import { paymentProviderFromEnv, paymentDisplayFromEnv, validateSepayConfig, type SepayConfig } from "../modules/payment/public";
 
 type Env = Record<string, string | undefined>;
 const required = (env: Env, key: string, min = 1) => {
@@ -40,6 +40,7 @@ export function loadRuntimeConfig(env: Env = process.env) {
     databaseUrl: env.DATABASE_URL ?? "", secret: env.JWT_ACCESS_SECRET ?? "",
     qrSecret: env.QR_SECRET ?? "", demo: env.PAYMENT_MODE === "demo",
     paymentProvider: paymentProviderFromEnv(env), clientUrl: env.CLIENT_URL,
+    paymentDisplay: paymentDisplayFromEnv(env),
     clientOrigins: additionalClientOrigins(env.CLIENT_EXTRA_ORIGINS),
   };
   if (enabled === "false") return { app: base, worker: null };

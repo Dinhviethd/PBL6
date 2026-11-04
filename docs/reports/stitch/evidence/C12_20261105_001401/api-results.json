@@ -1,0 +1,323 @@
+{
+  "environment": "loopback isolated C12 test database",
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/settings/payment-information",
+      "status": 401,
+      "code": "UNAUTHORIZED"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/settings/payment-information",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/settings/payment-information",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators",
+      "status": 401,
+      "code": "UNAUTHORIZED"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/catalog",
+      "status": 401,
+      "code": "UNAUTHORIZED"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/catalog",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/catalog",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/settings/payment-information",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/catalog",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/catalog",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators?limit=1&page=0",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators?limit=1&page=1",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators?q=customer.60bf5e33%40example.test",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators?page=-1",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators?limit=101",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/administrators",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/administrators",
+      "status": 404,
+      "code": "NOT_FOUND"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/administrators",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/administrators",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "status": 401,
+      "code": "INVALID_SESSION"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/administrators",
+      "status": 409,
+      "code": "ALREADY_ADMIN"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/admin/administrators",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "status": 401,
+      "code": "INVALID_SESSION"
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 409,
+      "code": "ADMIN_CONFLICT"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/ff811f0c-a10c-4574-a78e-f273885c21c1",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/administrators/ff811f0c-a10c-4574-a78e-f273885c21c1",
+      "status": 400,
+      "code": "SELF_ADMIN_CHANGE"
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/users/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 400,
+      "code": "INVALID_CUSTOMER"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 403,
+      "code": "ACCOUNT_DISABLED"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/ff811f0c-a10c-4574-a78e-f273885c21c1",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/administrators/ff811f0c-a10c-4574-a78e-f273885c21c1",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "PATCH",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/administrators/38a3713f-799f-46f8-aac8-698aabe63be7",
+      "status": 404,
+      "code": "NOT_FOUND"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/admin/administrators",
+      "status": 500,
+      "code": "P0001"
+    },
+    {
+      "method": "GET",
+      "path": "/auth/me",
+      "status": 200,
+      "code": null
+    }
+  ]
+}

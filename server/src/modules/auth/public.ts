@@ -5,6 +5,7 @@ import nodemailer from "nodemailer";
 import { smtpOptions } from "../../platform/smtp";
 import { authStore } from "./infrastructure/store";
 import { createOrganizerIdentity } from "./organizer";
+import { createAdministrators } from "./administrators";
 import {
   ensure,
   role,
@@ -66,6 +67,7 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
   }
   return {
     ...createOrganizerIdentity(db, uow),
+    ...createAdministrators(db, uow),
     profile,
     async waitQueueBuyer(id: string) {
       const user = await repo.user(id);
@@ -278,6 +280,12 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
       if (admin) role(p, ["ADMIN"]);
       return repo.applications(admin ? null : p.userId, page * 50);
     },
+    adminApplication: async (p: Principal, id: string) => {
+      role(p, ["ADMIN"]);
+      const application = await repo.adminApplication(id);
+      ensure(application, "NOT_FOUND", "Không tìm thấy hồ sơ ban tổ chức.", 404);
+      return application;
+    },
     adminApplications: async (
       p: Principal,
       q: string,
@@ -306,6 +314,14 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
           pending: Number(stats.pending),
         },
       };
+    },
+    adminOrganizerSummaries: (p: Principal, ids: string[]) => {
+      role(p, ["ADMIN"]);
+      return ids.length ? repo.adminOrganizerSummaries(ids) : Promise.resolve([]);
+    },
+    adminOrganizerIdsMatchingQuery: (p: Principal, q: string) => {
+      role(p, ["ADMIN"]);
+      return q ? repo.adminOrganizerIdsMatchingQuery(q) : Promise.resolve([]);
     },
     review: (p: Principal, id: string, approve: boolean, reason: string) =>
       uow.run(async () => {
@@ -354,6 +370,7 @@ export function createAuth(db: Store, uow: UnitOfWork, secret: string) {
         role(p, ["ADMIN"]);
         ensure(id !== p.userId, "SELF_LOCK", "Không thể khóa chính mình.", 400);
         await repo.lockUser(id);
+        ensure(await repo.customer(id), "INVALID_CUSTOMER", "Chỉ được cập nhật trạng thái khách hàng tại đây.", 400);
         await repo.status(id, d.status, d.locked, d.reason);
         if (d.status === "INACTIVE" || d.locked) await repo.revokeAll(id);
       }),

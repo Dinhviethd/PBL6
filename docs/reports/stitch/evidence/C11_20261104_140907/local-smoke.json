@@ -1,0 +1,11 @@
+{
+  "base": "http://localhost:5173",
+  "pendingCount": 1,
+  "viewports": [
+    1440,
+    390
+  ],
+  "detail": "PASS",
+  "eventWrites": 0,
+  "pageErrors": []
+}

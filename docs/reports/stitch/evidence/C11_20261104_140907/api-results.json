@@ -1,0 +1,29 @@
+{
+  "database": "isolated eventhub_c11_test",
+  "checkpoints": [
+    "guest list 401",
+    "USER list 403",
+    "draft review 409",
+    "USER review 403",
+    "ORGANIZER review 403",
+    "guest review 401",
+    "empty rejection 400",
+    "long rejection 400",
+    "invalid event id 400",
+    "missing event 404",
+    "approve -> PUBLISHED",
+    "reject -> REJECTED",
+    "rejection history saved once",
+    "repeat review 409",
+    "two ADMIN decisions -> 200/409",
+    "race history exactly once",
+    "pending page has six of nine",
+    "pending excludes reviewed/draft",
+    "second page three records no overlap",
+    "unicode search/category whole dataset",
+    "empty filter total=0",
+    "detail has submitted_at and ticket types",
+    "organizer summary maps owner id"
+  ],
+  "count": 23
+}

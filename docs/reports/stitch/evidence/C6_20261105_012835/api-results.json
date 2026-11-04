@@ -1,0 +1,191 @@
+{
+  "environment": "isolated loopback PostgreSQL",
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/e2b30245-a0cf-46d3-b9b7-868a51d98302",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/50c20521-36d6-451d-a832-aade0453d339",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c",
+      "status": 401,
+      "code": "UNAUTHORIZED"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c/review",
+      "status": 401,
+      "code": "UNAUTHORIZED"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c/review",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c/review",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c/review",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c/review",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c/review",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/76363cd8-0bd7-4f96-b562-c44258cf9e26/review",
+      "status": 404,
+      "code": "NOT_FOUND"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/bad-id/review",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c/review",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/d5fa42b2-fe2c-4257-b24e-a16c1684897c/review",
+      "status": 409,
+      "code": "ALREADY_REVIEWED"
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/d2e398b5-51ba-4d6c-af6a-cc81455e3585/review",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/d2e398b5-51ba-4d6c-af6a-cc81455e3585",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/d2e398b5-51ba-4d6c-af6a-cc81455e3585/review",
+      "status": 409,
+      "code": "ALREADY_REVIEWED"
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/7ea8b430-f45c-48e1-8ea1-fc3c8cdd47f2/review",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/7ea8b430-f45c-48e1-8ea1-fc3c8cdd47f2/review",
+      "status": 409,
+      "code": "ALREADY_REVIEWED"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/7ea8b430-f45c-48e1-8ea1-fc3c8cdd47f2",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/admin/organizer-applications/d397571d-ff30-4cc8-828d-0ce9e8faca6d/review",
+      "status": 500,
+      "code": "P0001"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/d397571d-ff30-4cc8-828d-0ce9e8faca6d",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications?status=PENDING_OR_REJECTED&limit=100",
+      "status": 200,
+      "code": null
+    }
+  ]
+}

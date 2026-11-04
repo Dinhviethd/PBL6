@@ -1,0 +1,35 @@
+{
+  "api": [
+    {
+      "path": "/admin/payments?page=0",
+      "status": 200,
+      "count": 24
+    },
+    {
+      "path": "/admin/sepay/transactions?page=0",
+      "status": 200,
+      "count": 9
+    },
+    {
+      "path": "/admin/stats",
+      "status": 200
+    },
+    {
+      "path": "/admin/stats/revenue-daily?fromDate=2026-11-04&toDate=2026-11-04",
+      "status": 200
+    },
+    {
+      "path": "/admin/sepay/transactions/<existing>",
+      "status": 200
+    }
+  ],
+  "paymentRows": 24,
+  "widths": [
+    1440,
+    1024,
+    768,
+    390
+  ],
+  "businessWrites": 0,
+  "pageErrors": []
+}

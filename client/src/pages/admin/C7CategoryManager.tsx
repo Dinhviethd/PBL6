@@ -6,6 +6,7 @@ import {
   EyeOff,
   Pencil,
   Plus,
+  RefreshCw,
   Search,
   Tags,
   X,
@@ -214,7 +215,7 @@ export function C7CategoryManager() {
         <header className="c7-hero">
           <div>
             <span className="c7-eyebrow">
-              <Tags size={14} /> PHÂN HỆ C7 · DANH MỤC
+              <Tags size={14} />DANH MỤC
             </span>
             <h1>Quản lý danh mục sự kiện</h1>
             <p>
@@ -262,9 +263,11 @@ export function C7CategoryManager() {
           <button
             className="c7-refresh"
             type="button"
+            aria-label="Làm mới danh sách danh mục"
+            title="Làm mới"
             onClick={() => setRefresh((value) => value + 1)}
           >
-            Làm mới
+            <RefreshCw size={17} className={loading ? "is-spinning" : ""}/>
           </button>
         </section>
         <section className="c7-filters">
@@ -629,7 +632,7 @@ const styles = `
 .c7-status-tabs button span{padding:1px 6px;border-radius:10px;background:#ffffff0b;color:#aaa6bc;font:600 10px 'Space Grotesk',sans-serif}
 .c7-status-tabs button.active{border-color:#7c3aed70;background:#7c3aed20;color:#e7ddff}
 .c7-status-tabs button.active span{background:#7c3aed;color:white}
-.c7-refresh{border:0;background:none;color:var(--cyan);font:600 12px 'Be Vietnam Pro',sans-serif;cursor:pointer}
+.c7-refresh{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border:1px solid var(--line);border-radius:7px;background:#ffffff04;color:var(--cyan);cursor:pointer}.c7-refresh:hover{border-color:#22d3ee66;background:#22d3ee0b}.c7-refresh svg.is-spinning{animation:c7-refresh-spin .8s linear infinite}@keyframes c7-refresh-spin{to{transform:rotate(360deg)}}
 .c7-filters{display:flex;align-items:center;gap:12px;margin-bottom:13px}
 .c7-search{display:flex;align-items:center;gap:9px;flex:1;max-width:620px;padding:0 12px;height:42px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--dim)}
 .c7-search input{flex:1;min-width:0;border:0;outline:0;background:none;color:var(--ink);font:13px 'Be Vietnam Pro',sans-serif}

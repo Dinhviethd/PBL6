@@ -1,0 +1,25 @@
+{
+  "count": 19,
+  "checks": [
+    "shared admin shell / five KPI / removed features absent",
+    "responsive 1440px no horizontal overflow and usable chart/menu",
+    "responsive 1024px no horizontal overflow and usable chart/menu",
+    "responsive 768px no horizontal overflow and usable chart/menu",
+    "responsive 390px no horizontal overflow and usable chart/menu",
+    "date filter and accessible table preserve exact large integer",
+    "future empty period is zero and old data cleared",
+    "invalid reversed period is rejected without losing current report",
+    "chart API failure and retry",
+    "366 day range supported in chart",
+    "changing range discards a delayed previous response",
+    "refresh preserves selected range and reloads queues",
+    "view correct BTC profile inline without writing",
+    "cancel confirmation does not write and returns keyboard focus",
+    "event approval conflict requires explicit recheck",
+    "event approval writes once and reloads pending list",
+    "lost response after commit does not permit duplicate approval",
+    "BTC approval and empty pending application state",
+    "event detail navigation uses correct UUID"
+  ],
+  "pageErrors": []
+}

@@ -10,12 +10,20 @@ import type { Account, Application, Category, Event, Payment, Stats } from "@/fe
 import { C2ManagerAccount } from "./C2ManagerAccount";
 import { C4ManagerOrganizer } from "./C4ManagerOrganizer";
 import { C7CategoryManager } from "./C7CategoryManager";
+import { C8TotalEvent } from "./C8TotalEvent";
+import { C1DashboardAdmin } from "./C1DashboardAdmin";
+import { C10PaymentAdmin } from "./C10PaymentAdmin";
+import { C12Setting } from "./C12Setting";
 
 export function Admin() {
   const { tab = "stats" } = useParams();
+  if (tab === "stats") return <C1DashboardAdmin />;
+  if (tab === "payments") return <C10PaymentAdmin />;
+  if (tab === "settings") return <C12Setting />;
   if (tab === "users") return <C2ManagerAccount />;
   if (tab === "applications") return <C4ManagerOrganizer />;
   if (tab === "categories") return <C7CategoryManager />;
+  if (tab === "events") return <C8TotalEvent />;
   return (
     <>
       <PageHead eyebrow="QUẢN TRỊ HỆ THỐNG" title="Trung tâm quản trị" />

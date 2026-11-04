@@ -23,6 +23,8 @@ import {
   createSepayReconciliation,
   createSepayV2Reconciler,
   type SepayConfig,
+  paymentConfigurationInfo,
+  type PaymentDisplay,
 } from "./modules/payment/public";
 import { createAudit } from "./modules/audit/public";
 import { createNotifications } from "./modules/notification/public";
@@ -34,6 +36,7 @@ import { createOrderHistory } from "./workflows/order-history";
 import { createOrderManager } from "./workflows/order-manager";
 import { createEventAnalytics, analyticsCsv } from "./workflows/event-analytics";
 import { createOrganizerDashboard } from "./workflows/organizer-dashboard";
+import { createAdminRevenue } from "./workflows/admin-revenue";
 import { createOrganizerProfileStats, createOrganizerTeamWorkflow } from "./workflows/organizer-profile";
 import { organizerProfilePatch, organizerLegalRequest, organizerLegalReview } from "./contracts/organizer-profile";
 import { ensure, role, type Row, type Principal } from "./contracts/core";
@@ -111,6 +114,25 @@ const decision = z
     reason: z.string().trim().max(2000).default(""),
   })
   .refine((d) => d.approve || d.reason.length > 0, "Cần nhập lý do từ chối.");
+const adminEventFiltersSchema = z.object({
+  q: z.string().trim().max(200).default(""),
+  organizerId: uuid.optional(),
+  status: z.enum(["DRAFT", "PENDING_REVIEW", "REJECTED", "PUBLISHED", "CANCELLED", "ARCHIVED"]).optional(),
+  categoryId: uuid.optional(),
+  cityCode: z.string().trim().max(32).optional(),
+  startsFrom: date.optional(),
+  startsTo: date.optional(),
+  ticketScale: z.enum(["SMALL", "MEDIUM", "LARGE"]).optional(),
+  page: z.coerce.number().int().min(0).max(10000).default(0),
+  limit: z.coerce.number().int().min(1).max(100).default(10),
+}).strict().refine(
+  (filters) => !filters.startsFrom || !filters.startsTo || new Date(filters.startsFrom) <= new Date(filters.startsTo),
+  "Khoảng ngày không hợp lệ.",
+);
+const adminBatchIdsSchema = z.array(uuid).min(1).max(100).refine(
+  (ids) => new Set(ids).size === ids.length,
+  "Danh sách ID không được trùng.",
+);
 const page = (r: Request) =>
   z.coerce.number().int().min(0).max(10000).default(0).parse(r.query.page);
 const pageSize = (r: Request) =>
@@ -133,6 +155,7 @@ export function createApplication(config: {
   sepayApiV2Token?: string;
   sepayAcceptNewPayments?: boolean;
   databaseSsl?: import("./platform/database").DatabaseTls | false;
+  paymentDisplay?: PaymentDisplay;
 }) {
   const clientOrigin = config.clientUrl ?? "http://localhost:5173";
   const allowedClientOrigins = new Set([clientOrigin, ...(config.clientOrigins ?? [])]);
@@ -183,6 +206,7 @@ export function createApplication(config: {
     orderManager = createOrderManager(events, orders, payments, db.snapshot, auth),
     eventAnalytics = createEventAnalytics(events, orders, payments, db.snapshot),
     organizerDashboard = createOrganizerDashboard(events, orders, payments, db.snapshot),
+    adminRevenue = createAdminRevenue(orders, payments, db.snapshot),
     organizerProfileStats = createOrganizerProfileStats(events, orders, db.snapshot),
     organizerTeam = createOrganizerTeamWorkflow(auth, events, booking, uow),
     app = express(),
@@ -1177,10 +1201,61 @@ export function createApplication(config: {
       next(e);
     }
   });
+  api.use(["/admin/settings", "/admin/administrators"], (_req, res, next) => {
+    res.setHeader("Cache-Control", "no-store");
+    next();
+  });
+  api.get("/admin/settings/payment-information", route(() =>
+    paymentConfigurationInfo(config.sepay, config.sepayAcceptNewPayments, payments.provider, config.paymentDisplay),
+  ));
+  api.get("/admin/administrators/catalog", route((_req, res) => auth.administratorCatalog(who(res))));
+  api.get("/admin/administrators", route((req, res) => {
+    const input = z.object({
+      q: z.string().trim().max(200).default(""),
+      page: z.coerce.number().int().min(0).max(10000).default(0),
+      limit: z.coerce.number().int().min(1).max(100).default(10),
+    }).strict().parse(req.query);
+    return db.snapshot.run(() => auth.administrators(who(res), input.q, input.page, input.limit));
+  }));
+  api.get("/admin/administrators/:id", route((req, res) =>
+    db.snapshot.run(() => auth.administratorDetail(who(res), id(req))),
+  ));
+  api.post("/admin/administrators", route((req, res) => {
+    const input = z.object({
+      email: z.string().trim().email().max(254).transform(value => value.toLowerCase()),
+      manager: z.boolean(),
+    }).strict().parse(req.body);
+    return uow.run(async () => {
+      const result = await auth.grantAdministrator(who(res), input.email, input.manager);
+      await audit.append(who(res), "administrator.granted", "user", result.id, { manager: input.manager });
+      return result;
+    });
+  }));
+  api.patch("/admin/administrators/:id", route((req, res) => {
+    const input = z.object({
+      version: z.string().regex(/^[a-f0-9]{64}$/),
+      admin: z.boolean(), manager: z.boolean(), locked: z.boolean(),
+      reason: z.string().trim().min(3).max(1000),
+    }).strict().parse(req.body);
+    return uow.run(async () => {
+      const result = await auth.updateAdministrator(who(res), id(req), input);
+      await audit.append(who(res), "administrator.updated", "user", result.id,
+        { admin: result.admin, manager: result.manager, locked: result.locked, reason: input.reason });
+      return result;
+    });
+  }));
   api.get(
     "/admin/stats",
     route((_q, res) => booking.overview(who(res))),
   );
+  api.get("/admin/stats/revenue-daily", route((req, res) => {
+    const query = z.object({
+      fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      toDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    }).strict().parse(req.query);
+    res.setHeader("Cache-Control", "no-store");
+    return adminRevenue.report(who(res), query);
+  }));
   const customerQuery = z.object({
     role: z.literal("USER").default("USER"),
     status: z.enum(["ACTIVE", "INACTIVE", "LOCKED"]).optional(),
@@ -1264,7 +1339,7 @@ export function createApplication(config: {
   );
   const organizerQuery = z.object({
     q: z.string().trim().max(200).default(""),
-    status: z.enum(["PENDING", "APPROVED", "REJECTED"]).optional(),
+    status: z.enum(["PENDING", "APPROVED", "REJECTED", "PENDING_OR_REJECTED"]).optional(),
     page: z.coerce.number().int().min(0).max(10000).default(0),
     limit: z.coerce.number().int().min(1).max(100).default(10),
   });
@@ -1309,6 +1384,14 @@ export function createApplication(config: {
       });
     }),
   );
+  api.get(
+    "/admin/organizer-applications/:id",
+    route((req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      z.object({}).strict().parse(req.query);
+      return auth.adminApplication(who(res), id(req));
+    }),
+  );
   api.post(
     "/admin/organizer-applications/:id/review",
     route((req, res) =>
@@ -1325,14 +1408,90 @@ export function createApplication(config: {
       }),
     ),
   );
+  const adminEventFilters = async (req: Request, principal: Principal) => {
+    const parsed = adminEventFiltersSchema.parse(req.query);
+    const [organizerRows, scaleRows] = await Promise.all([
+      parsed.q ? auth.adminOrganizerIdsMatchingQuery(principal, parsed.q) : Promise.resolve([]),
+      parsed.ticketScale ? orders.adminEventIdsByTicketScale(principal, parsed.ticketScale) : Promise.resolve(null),
+    ]);
+    return {
+      status: parsed.status ?? null,
+      q: parsed.q,
+      organizerIds: parsed.q ? organizerRows.map((row) => row.id) : null,
+      organizerId: parsed.organizerId ?? null,
+      categoryId: parsed.categoryId ?? null,
+      cityCode: parsed.cityCode ?? null,
+      startsFrom: parsed.startsFrom ?? null,
+      startsTo: parsed.startsTo ?? null,
+      eventIds: scaleRows ? scaleRows.map((row) => row.event_id) : null,
+      page: parsed.page,
+      limit: parsed.limit,
+      offset: parsed.page * parsed.limit,
+    };
+  };
+  api.get(
+    "/admin/events/filter-options",
+    route(() => events.adminFilterOptions()),
+  );
+  api.get(
+    "/admin/events/kpis",
+    route(async (req, res) => {
+      const filters = await adminEventFilters(req, who(res));
+      return db.snapshot.run(() => events.adminKpis(filters));
+    }),
+  );
+  api.get(
+    "/admin/events/metrics",
+    route(async (req, res) => {
+      const querySchema = z.object({ eventIds: z.union([z.string(), z.array(z.string())]) }).strict();
+      const raw = querySchema.parse(req.query).eventIds;
+      const ids = adminBatchIdsSchema.parse((Array.isArray(raw) ? raw : raw.split(",")).map((value) => value.trim()));
+      const rows = await db.snapshot.run(() => orders.adminEventMetrics(who(res), ids));
+      return rows.map((row) => {
+        const issued = BigInt(row.tickets_issued);
+        const checkedIn = BigInt(row.checkins);
+        return {
+          eventId: row.event_id,
+          ticketCapacity: row.ticket_capacity,
+          ticketsIssued: row.tickets_issued,
+          ticketsSold: row.tickets_sold,
+          gmv: row.gmv,
+          revenue: row.revenue,
+          checkins: row.checkins,
+          checkinRate: issued === 0n ? 0 : Number((checkedIn * 10000n) / issued) / 100,
+        };
+      });
+    }),
+  );
+  api.get(
+    "/admin/organizers/summaries",
+    route((req, res) => {
+      const querySchema = z.object({ ids: z.union([z.string(), z.array(z.string())]) }).strict();
+      const raw = querySchema.parse(req.query).ids;
+      const ids = adminBatchIdsSchema.parse((Array.isArray(raw) ? raw : raw.split(",")).map((value) => value.trim()));
+      return auth.adminOrganizerSummaries(who(res), ids);
+    }),
+  );
   api.get(
     "/admin/events",
-    route((req) =>
-      events.list({
-        status: query(req, "status") || null,
-        offset: page(req) * 50,
-      }),
-    ),
+    route(async (req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      const filters = await adminEventFilters(req, who(res));
+      const [items, count] = await db.snapshot.run(() => Promise.all([
+        events.adminList(filters),
+        events.adminCount(filters),
+      ]));
+      const total = Number(count.total);
+      return {
+        items,
+        pagination: {
+          page: filters.page,
+          limit: filters.limit,
+          total,
+          totalPages: Math.ceil(total / filters.limit),
+        },
+      };
+    }),
   );
   api.post(
     "/admin/events/:id/review",

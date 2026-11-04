@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "Queue -> correct C9 ID; shell exactly once; active sidebar; real tickets and organizer",
+    "Four viewports no document overflow; screenshots saved",
+    "20 developing controls: one bottom toast, no API request/decision, keyboard works",
+    "Back preserves applied filters; title link; deep link/reload works",
+    "Reject whitespace blocked; note shared; dialog keyboard/focus/mobile; real reject + history + disabled",
+    "Sign CTA uses real approve; note saved; double click sends one request; published status/history",
+    "Stale decision 409 -> real detail recheck, no false success, actions locked",
+    "Detail network failure -> visible error and retry recovery",
+    "Missing event 404 presented clearly",
+    "No browser JavaScript errors"
+  ],
+  "placeholderControls": 20,
+  "realDecisionRequests": 3,
+  "errors": []
+}

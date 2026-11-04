@@ -6,6 +6,8 @@ import { randomUUID } from "node:crypto";
 import { demoProvider } from "./provider";
 import { vnpayProvider } from "./vnpay";
 export { demoProvider } from "./provider";
+export { paymentDisplayFromEnv, paymentConfigurationInfo } from "./configuration";
+export type { PaymentDisplay } from "./configuration";
 export type { PaymentProvider, VerifiedPayment } from "./provider";
 export function paymentProviderFromEnv(env = process.env): PaymentProvider {
   const mode = env.PAYMENT_MODE || "disabled";

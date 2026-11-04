@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   BadgeCheck,
   Building2,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
   Clock,
@@ -10,17 +10,16 @@ import {
   FileText,
   IdCard,
   Inbox,
+  RefreshCw,
   Search,
   ShieldAlert,
   ShieldCheck,
   Sparkles,
   Timer,
   UserCheck,
-  X,
-  XCircle,
 } from "lucide-react";
 import api from "@/lib/api";
-import { message, money } from "@/features/ticketing/data";
+import { message } from "@/features/ticketing/data";
 import { AdminShell } from "./AdminShell";
 
 type OrganizerStatus = "PENDING" | "APPROVED" | "REJECTED";
@@ -57,7 +56,7 @@ type OrganizerPage = {
   stats: { total: number; active: number; pending: number };
 };
 
-type StatusFilter = "" | OrganizerStatus;
+type StatusFilter = "PENDING_OR_REJECTED" | OrganizerStatus;
 
 const statusLabel: Record<OrganizerStatus, string> = {
   PENDING: "Chờ thẩm định",
@@ -85,19 +84,26 @@ const legalChecks = [
 ];
 
 export function C6Approve() {
-  const [page, setPage] = useState(0);
-  const [limit, setLimit] = useState(10);
-  const [status, setStatus] = useState<StatusFilter>("");
-  const [search, setSearch] = useState("");
-  const [query, setQuery] = useState("");
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [page, setPage] = useState(() => {
+    const value = Number(searchParams.get("page") || 0);
+    return Number.isInteger(value) && value >= 0 && value <= 10000 ? value : 0;
+  });
+  const [limit, setLimit] = useState(() => {
+    const value = Number(searchParams.get("limit"));
+    return [10, 20, 50].includes(value) ? value : 10;
+  });
+  const [status, setStatus] = useState<StatusFilter>(() => {
+    const value = searchParams.get("status");
+    return value === "PENDING" || value === "REJECTED" ? value : "PENDING_OR_REJECTED";
+  });
+  const [search, setSearch] = useState(() => (searchParams.get("q") || "").slice(0, 200));
+  const [query, setQuery] = useState(search);
   const [result, setResult] = useState<OrganizerPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
   const [refresh, setRefresh] = useState(0);
-  const [detail, setDetail] = useState<Organizer | null>(null);
-  const [reason, setReason] = useState("");
-  const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState("");
 
   const params = useMemo(() => {
@@ -116,6 +122,14 @@ export function C6Approve() {
   }, [search]);
 
   useEffect(() => {
+    const next = new URLSearchParams({ page: String(page), limit: String(limit), status });
+    if (query) next.set("q", query);
+    if (next.toString() !== searchParams.toString()) {
+      setSearchParams(next, { replace: true, preventScrollReset: true });
+    }
+  }, [page, limit, status, query, searchParams, setSearchParams]);
+
+  useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
     setError("");
@@ -127,8 +141,8 @@ export function C6Approve() {
         if (controller.signal.aborted) return;
         const next = response.data.data;
         setResult(next);
-        if (next.pagination.totalPages > 0 && page >= next.pagination.totalPages)
-          setPage(next.pagination.totalPages - 1);
+        if (page > 0 && page >= next.pagination.totalPages)
+          setPage(Math.max(0, next.pagination.totalPages - 1));
       })
       .catch((cause) => {
         if (!controller.signal.aborted) setError(message(cause));
@@ -138,22 +152,6 @@ export function C6Approve() {
       });
     return () => controller.abort();
   }, [params, page, refresh]);
-
-  useEffect(() => {
-    if (!detail) return;
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDetail(null);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    const timer = window.setTimeout(
-      () => document.querySelector<HTMLElement>(".c6-dialog .c6-close")?.focus(),
-      30,
-    );
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      window.clearTimeout(timer);
-    };
-  }, [detail]);
 
   useEffect(() => {
     if (!toast) return;
@@ -170,44 +168,9 @@ export function C6Approve() {
 
   const showComingSoon = () => setToast("Chức năng đang phát triển");
 
-  const openDetail = (row: Organizer) => {
-    setReason("");
-    setError("");
-    setDetail(row);
-  };
-
-  async function review(approve: boolean) {
-    if (!detail) return;
-    if (!approve && !reason.trim()) {
-      setError("Cần nhập lý do khi từ chối hồ sơ.");
-      return;
-    }
-    setBusy(true);
-    setError("");
-    try {
-      await api.post(`/admin/organizer-applications/${detail.id}/review`, {
-        approve,
-        reason: reason.trim(),
-      });
-      setNotice(
-        approve
-          ? `Đã phê duyệt hồ sơ "${detail.organization_name}".`
-          : `Đã từ chối hồ sơ "${detail.organization_name}".`,
-      );
-      setDetail(null);
-      setReason("");
-      setRefresh((value) => value + 1);
-    } catch (cause) {
-      setError(message(cause));
-    } finally {
-      setBusy(false);
-    }
-  }
-
   const statusTabs: { key: StatusFilter; label: string; count?: number }[] = [
-    { key: "", label: "Tất cả", count: stats?.total },
+    { key: "PENDING_OR_REJECTED", label: "Chờ xử lý", count: (stats?.pending ?? 0) + (rejected ?? 0) },
     { key: "PENDING", label: "Chờ thẩm định", count: stats?.pending },
-    { key: "APPROVED", label: "Đã phê duyệt", count: stats?.active },
     { key: "REJECTED", label: "Từ chối", count: rejected },
   ];
 
@@ -291,9 +254,11 @@ export function C6Approve() {
           <button
             className="c6-refresh"
             type="button"
+            aria-label="Làm mới danh sách hồ sơ"
+            title="Làm mới"
             onClick={() => setRefresh((value) => value + 1)}
           >
-            Làm mới
+            <RefreshCw size={17} className={loading ? "is-spinning" : ""}/>
           </button>
         </section>
         <section className="c6-filters">
@@ -328,18 +293,6 @@ export function C6Approve() {
               onClick={() => setRefresh((value) => value + 1)}
             >
               Thử lại
-            </button>
-          </div>
-        )}
-        {notice && (
-          <div className="c6-notice" role="status">
-            {notice}
-            <button
-              type="button"
-              aria-label="Đóng thông báo"
-              onClick={() => setNotice("")}
-            >
-              <X size={16} />
             </button>
           </div>
         )}
@@ -417,15 +370,15 @@ export function C6Approve() {
                         </span>
                       </td>
                       <td>
-                        <button
+                        <Link
                           className="c6-action"
-                          type="button"
-                          aria-label={`Xem hồ sơ ${row.organization_name}`}
-                          onClick={() => openDetail(row)}
+                          aria-label={`${row.status === "PENDING" ? "Xét duyệt" : "Xem"} hồ sơ ${row.organization_name}`}
+                          to={`/admin/applications/review/${row.id}`}
+                          state={{ returnTo: `${location.pathname}${location.search}` }}
                         >
                           <Eye size={15} />
                           {row.status === "PENDING" ? "Xét duyệt" : "Xem"}
-                        </button>
+                        </Link>
                       </td>
                     </tr>
                   ))
@@ -484,131 +437,6 @@ export function C6Approve() {
             </div>
           </footer>
         </section>
-        {detail && (
-          <div
-            className="c6-overlay"
-            role="presentation"
-            onMouseDown={(event) => {
-              if (event.target === event.currentTarget) setDetail(null);
-            }}
-          >
-            <section
-              className="c6-dialog"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="c6-detail-title"
-            >
-              <button
-                className="c6-close"
-                type="button"
-                onClick={() => setDetail(null)}
-                aria-label="Đóng"
-              >
-                <X size={18} />
-              </button>
-              <span className="c6-eyebrow">HỒ SƠ BAN TỔ CHỨC</span>
-              <h2 id="c6-detail-title">{detail.organization_name}</h2>
-              <span className={`c6-status ${detail.status.toLowerCase()}`}>
-                {statusLabel[detail.status]}
-              </span>
-              <p className="c6-detail-desc">
-                {detail.description || "Hồ sơ chưa có mô tả."}
-              </p>
-              <div className="c6-legal-panel">
-                <div className="c6-legal-panel-head">
-                  <span>
-                    <ShieldCheck size={15} /> Thẩm tra pháp lý tự động
-                  </span>
-                  {/* <small>Chỉ hiển thị · đang phát triển</small> */}
-                </div>
-                <div className="c6-legal-grid">
-                  {legalChecks.map(({ key, label, icon: Icon }) => (
-                    <button
-                      key={key}
-                      type="button"
-                      onClick={showComingSoon}
-                      aria-label={`${label} — chức năng đang phát triển`}
-                    >
-                      <Icon size={15} />
-                      <span>{label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <dl className="c6-detail-grid">
-                {[
-                  ["Người đại diện", detail.contact_name],
-                  ["Email", detail.contact_email],
-                  ["Điện thoại", detail.contact_phone],
-                  ["Mã số thuế", detail.tax_id_or_business_license || "—"],
-                  ["Tên pháp nhân", detail.business_name || "—"],
-                  ["Website", detail.website_or_social || "—"],
-                  ["Danh mục chính", detail.main_event_category || "—"],
-                  ["Quy mô dự kiến", detail.expected_event_scale || "—"],
-                  ["Địa chỉ", detail.head_office_address || "—"],
-                  ["Tổng doanh thu GMV", money(detail.gmv)],
-                  ["Ngày nộp", date(detail.created_at)],
-                  ["Ngày xét duyệt", date(detail.reviewed_at)],
-                ].map(([label, value]) => (
-                  <div key={label}>
-                    <dt>{label}</dt>
-                    <dd>{value}</dd>
-                  </div>
-                ))}
-              </dl>
-              {detail.rejection_reason && (
-                <div className="c6-reject-reason">
-                  <span>Lý do từ chối</span>
-                  <p>{detail.rejection_reason}</p>
-                </div>
-              )}
-              {detail.status === "PENDING" ? (
-                <div className="c6-review">
-                  <label className="c6-reason">
-                    Lý do từ chối (bắt buộc khi từ chối)
-                    <textarea
-                      value={reason}
-                      rows={3}
-                      maxLength={2000}
-                      onChange={(event) => setReason(event.target.value)}
-                      placeholder="Nhập lý do để ghi nhận cho hồ sơ…"
-                    />
-                  </label>
-                  {error && (
-                    <div className="c6-alert" role="alert">
-                      {error}
-                    </div>
-                  )}
-                  <div className="c6-dialog-actions">
-                    <button
-                      className="c6-btn danger"
-                      type="button"
-                      disabled={busy || !reason.trim()}
-                      onClick={() => void review(false)}
-                    >
-                      <XCircle size={16} />
-                      {busy ? "Đang xử lý…" : "Từ chối"}
-                    </button>
-                    <button
-                      className="c6-btn primary"
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void review(true)}
-                    >
-                      <CheckCircle2 size={16} />
-                      {busy ? "Đang xử lý…" : "Phê duyệt & cấp quyền"}
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p className="c6-reviewed">
-                  Hồ sơ đã được xử lý. Chỉ hồ sơ đang chờ thẩm định mới có thể
-                  phê duyệt hoặc từ chối.
-                </p>
-              )}
-            </section>
-          </div>
-        )}
         {toast && (
           <div className="c6-toast" role="status">
             <span className="c6-toast-icon">
@@ -649,7 +477,7 @@ const styles = `
 .c6-status-tabs button span{padding:1px 6px;border-radius:10px;background:#ffffff0b;color:#aaa6bc;font:600 10px 'Space Grotesk',sans-serif}
 .c6-status-tabs button.active{border-color:#7c3aed70;background:#7c3aed20;color:#e7ddff}
 .c6-status-tabs button.active span{background:#7c3aed;color:white}
-.c6-refresh{flex:none;border:0;background:none;color:var(--cyan);font:600 12px 'Be Vietnam Pro',sans-serif;cursor:pointer}
+.c6-refresh{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border:1px solid var(--line);border-radius:7px;background:#ffffff04;color:var(--cyan);cursor:pointer}.c6-refresh:hover{border-color:#22d3ee66;background:#22d3ee0b}.c6-refresh svg.is-spinning{animation:c6-refresh-spin .8s linear infinite}@keyframes c6-refresh-spin{to{transform:rotate(360deg)}}
 .c6-filters{display:flex;align-items:center;gap:12px;margin-bottom:10px}
 .c6-search{display:flex;align-items:center;gap:9px;flex:1;max-width:620px;padding:0 12px;height:42px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--dim)}
 .c6-search input{flex:1;min-width:0;border:0;outline:0;background:none;color:var(--ink);font:13px 'Be Vietnam Pro',sans-serif}
@@ -680,7 +508,7 @@ const styles = `
 .c6-status.approved{background:#10b98118;color:#6ee7b7}
 .c6-status.pending{background:#f59e0b18;color:#fcd34d}
 .c6-status.rejected{background:#fb718518;color:#fda4af}
-.c6-action{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:#ffffff04;color:#c4b5fd;font:600 11px 'Be Vietnam Pro',sans-serif;cursor:pointer}
+.c6-action{text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:#ffffff04;color:#c4b5fd;font:600 11px 'Be Vietnam Pro',sans-serif;cursor:pointer}
 .c6-action:hover{border-color:#7c3aed;color:white}
 .c6-state{padding:45px!important;text-align:center!important;color:var(--muted)!important}
 .c6-pagination{display:flex;justify-content:space-between;align-items:center;flex:none;gap:10px;padding:12px 17px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}
@@ -689,33 +517,7 @@ const styles = `
 .c6-pagination button{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--line);border-radius:6px;background:var(--surface2);color:var(--ink);cursor:pointer}
 .c6-pagination button:disabled{opacity:.35;cursor:not-allowed}
 .c6-pagination b{color:var(--ink)}
-.c6-overlay{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:18px;background:#050610bd;backdrop-filter:blur(5px)}
-.c6-dialog{position:relative;width:min(100%,700px);max-height:90vh;overflow:auto;padding:25px;border:1px solid #4b4267;border-radius:12px;background:#181b2a;box-shadow:0 24px 90px #0008}
-.c6-dialog h2{margin:8px 0 10px;font:700 23px 'Be Vietnam Pro',sans-serif;padding-right:36px}
-.c6-close{position:absolute;top:15px;right:15px;display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--line);border-radius:7px;background:none;color:var(--muted);cursor:pointer}
-.c6-detail-desc{margin:14px 0 0;color:var(--muted);font-size:13px}
-.c6-legal-panel{margin:16px 0 0;padding:12px;border:1px dashed #5de6ff44;border-radius:9px;background:#0b233088}
-.c6-legal-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#a5f3fc;font:600 11px 'Space Grotesk',sans-serif;letter-spacing:.04em}
-.c6-legal-panel-head span{display:inline-flex;align-items:center;gap:7px}
-.c6-legal-panel-head small{color:var(--dim);font:10px 'Space Grotesk',sans-serif;letter-spacing:.02em}
-.c6-legal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .c6-legal-grid button{justify-content:flex-start}
-.c6-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 22px;margin:18px 0 0}
-.c6-detail-grid div{padding:10px 0;border-top:1px solid var(--line)}
-.c6-detail-grid dt{color:var(--dim);font-size:11px}
-.c6-detail-grid dd{margin:4px 0 0;color:var(--ink);font-size:13px;overflow-wrap:anywhere}
-.c6-reject-reason{margin-top:14px;padding:12px;border:1px solid #fb718544;border-radius:8px;background:#7f1d1d1f}
-.c6-reject-reason span{color:#fda4af;font-size:11px}
-.c6-reject-reason p{margin:5px 0 0;color:#fecaca;font-size:13px}
-.c6-review{margin-top:18px;padding-top:18px;border-top:1px solid var(--line)}
-.c6-reason{display:block;color:var(--ink);font-size:12px}
-.c6-reason textarea{display:block;width:100%;margin-top:7px;padding:10px;border:1px solid var(--line);border-radius:7px;background:#101322;color:var(--ink);font:13px 'Be Vietnam Pro',sans-serif;resize:vertical}
-.c6-dialog-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:16px}
-.c6-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 14px;border:1px solid var(--line);border-radius:7px;color:var(--ink);font:600 12px 'Be Vietnam Pro',sans-serif;cursor:pointer}
-.c6-btn.primary{border-color:#7c3aed;background:#7c3aed;color:white}
-.c6-btn.danger{border-color:#fb7185;background:#be123c;color:white}
-.c6-btn:disabled{opacity:.45;cursor:not-allowed}
-.c6-reviewed{margin-top:18px;padding-top:16px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
 .c6-toast{position:fixed;left:50%;bottom:26px;z-index:300;display:flex;align-items:center;gap:10px;max-width:calc(100vw - 32px);padding:12px 18px;border:1px solid #5de6ff66;border-radius:10px;background:#0b2330f2;color:#e0fbff;font:600 13px 'Be Vietnam Pro',sans-serif;box-shadow:0 16px 40px #00000066;transform:translateX(-50%);animation:c6-toast-in .18s ease-out}
 .c6-toast-icon{display:grid;place-items:center;color:#5de6ff}
 @keyframes c6-toast-in{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}

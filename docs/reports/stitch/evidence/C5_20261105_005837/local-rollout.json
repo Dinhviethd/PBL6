@@ -1,0 +1,46 @@
+{
+  "container": "pbl6-api-1",
+  "id": "9ad28c805b6b7b49653826f6ad11017f9004d795e2588e2bc6bbcc7ffafe5cda",
+  "image": "sha256:a6dea9361cd2c2758e3103db2b5266421331a1424106ba5a51d9511502ef0266",
+  "sameContainerAndImage": true,
+  "health": 200,
+  "login": 200,
+  "calls": [
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications?status=APPROVED&limit=1",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/90f0819e-6ea6-4cf4-b329-3c92cf9a5c59",
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=44f75b80-80dd-41b0-acdb-d8acf066284c&page=0&limit=10",
+      "status": 200
+    }
+  ],
+  "ownerEventsTotal": 22,
+  "allReturnedEventsCorrectOwner": true,
+  "hashes": [
+    {
+      "file": "app.js",
+      "sha256": "162fc3d581c58e243cd8110c62f9700cf27ae5181e79ce28e686c9c0ab5477a2"
+    },
+    {
+      "file": "modules/auth/public.js",
+      "sha256": "fb58979aac5836273f955c1b879ac301f11a5bda7780c007106072f06817067d"
+    },
+    {
+      "file": "modules/auth/infrastructure/store.js",
+      "sha256": "4760050c63b599e53f21131209d2f1d93fbc3be4630825a595d6773d0170f10e"
+    },
+    {
+      "file": "modules/event/infrastructure/store.js",
+      "sha256": "16baa69156d1dde3b6d91c630dc3f5506e4858f9f91d6785a6b1fa5bcb719bdd"
+    }
+  ],
+  "note": "Four compiled JS files copied in place; no DB/config/worker or static frontend changes; rebuild image for persistence"
+}

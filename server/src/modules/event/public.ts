@@ -18,6 +18,10 @@ export function createEvents(db: Store) {
   };
   return {
     ...r,
+    adminList: (filters: Row) => r.adminList(filters),
+    adminCount: (filters: Row) => r.adminCount(filters),
+    adminKpis: (filters: Row) => r.adminKpis(filters),
+    adminFilterOptions: () => r.adminFilterOptions(),
     uniqueCategorySlug,
     async assignmentPage(userId: string, page: number) {
       const rows = await r.staffAssignmentsPage(userId, page * 50);

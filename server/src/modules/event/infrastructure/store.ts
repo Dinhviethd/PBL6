@@ -181,6 +181,111 @@ export function eventStore(db: Store) {
           f.ids ?? null,
         ],
       ),
+    adminList: (f: Row) =>
+      db.query(
+        `SELECT e.id,e.slug,e.title,e.category_id,e.organizer_id,e.cover_image_url,
+          e.venue_name,e.address,e.city_code,e.starts_at,e.ends_at,e.status,e.sales_paused,
+          e.created_at,e.updated_at
+         FROM events e
+         WHERE ($1::text IS NULL OR e.status=$1)
+           AND ($3::uuid IS NULL OR e.category_id=$3)
+           AND ($4::text IS NULL OR e.city_code=$4)
+           AND ($5::timestamptz IS NULL OR e.starts_at >= $5)
+           AND ($6::timestamptz IS NULL OR e.starts_at <= $6)
+           AND ($7::uuid[] IS NULL OR e.id=ANY($7::uuid[]))
+           AND ($8::text='' OR e.title ILIKE $9 OR e.slug ILIKE $9 OR e.id::text ILIKE $9
+             OR e.organizer_id=ANY(coalesce($2::uuid[],'{}'::uuid[])))
+           AND ($12::uuid IS NULL OR e.organizer_id=$12)
+         ORDER BY e.created_at DESC,e.id
+         LIMIT $10 OFFSET $11`,
+        [
+          f.status ?? null,
+          f.organizerIds ?? null,
+          f.categoryId ?? null,
+          f.cityCode ?? null,
+          f.startsFrom ?? null,
+          f.startsTo ?? null,
+          f.eventIds ?? null,
+          f.q ?? "",
+          `%${String(f.q ?? "").replace(/[\\%_]/g, "\\$&")}%`,
+          f.limit,
+          f.offset,
+          f.organizerId ?? null,
+        ],
+      ),
+    adminCount: async (f: Row) =>
+      (
+        await db.query(
+          `SELECT count(*) AS total FROM events e
+           WHERE ($1::text IS NULL OR e.status=$1)
+             AND ($3::uuid IS NULL OR e.category_id=$3)
+             AND ($4::text IS NULL OR e.city_code=$4)
+             AND ($5::timestamptz IS NULL OR e.starts_at >= $5)
+             AND ($6::timestamptz IS NULL OR e.starts_at <= $6)
+             AND ($7::uuid[] IS NULL OR e.id=ANY($7::uuid[]))
+             AND ($8::text='' OR e.title ILIKE $9 OR e.slug ILIKE $9 OR e.id::text ILIKE $9
+               OR e.organizer_id=ANY(coalesce($2::uuid[],'{}'::uuid[])))
+             AND ($10::uuid IS NULL OR e.organizer_id=$10)`,
+          [
+            f.status ?? null,
+            f.organizerIds ?? null,
+            f.categoryId ?? null,
+            f.cityCode ?? null,
+            f.startsFrom ?? null,
+            f.startsTo ?? null,
+            f.eventIds ?? null,
+            f.q ?? "",
+            `%${String(f.q ?? "").replace(/[\\%_]/g, "\\$&")}%`,
+            f.organizerId ?? null,
+          ],
+        )
+      )[0],
+    adminKpis: async (f: Row) =>
+      (
+        await db.query(
+          `SELECT count(*)::text AS total,
+             count(*) FILTER (WHERE status='PUBLISHED' AND NOT sales_paused AND ends_at>now())::text AS selling,
+             count(*) FILTER (WHERE status='PENDING_REVIEW')::text AS pending_review,
+             count(*) FILTER (WHERE sales_paused OR status IN ('CANCELLED','ARCHIVED'))::text AS paused_or_cancelled
+           FROM events e
+           WHERE ($1::text IS NULL OR e.status=$1)
+             AND ($3::uuid IS NULL OR e.category_id=$3)
+             AND ($4::text IS NULL OR e.city_code=$4)
+             AND ($5::timestamptz IS NULL OR e.starts_at >= $5)
+             AND ($6::timestamptz IS NULL OR e.starts_at <= $6)
+             AND ($7::uuid[] IS NULL OR e.id=ANY($7::uuid[]))
+             AND ($8::text='' OR e.title ILIKE $9 OR e.slug ILIKE $9 OR e.id::text ILIKE $9
+               OR e.organizer_id=ANY(coalesce($2::uuid[],'{}'::uuid[])))
+             AND ($10::uuid IS NULL OR e.organizer_id=$10)`,
+          [
+            f.status ?? null,
+            f.organizerIds ?? null,
+            f.categoryId ?? null,
+            f.cityCode ?? null,
+            f.startsFrom ?? null,
+            f.startsTo ?? null,
+            f.eventIds ?? null,
+            f.q ?? "",
+            `%${String(f.q ?? "").replace(/[\\%_]/g, "\\$&")}%`,
+            f.organizerId ?? null,
+          ],
+        )
+      )[0],
+    adminFilterOptions: async () => {
+      const [categories, cities] = await Promise.all([
+        db.query("SELECT id,name FROM categories WHERE archived_at IS NULL ORDER BY name,id"),
+        db.query("SELECT DISTINCT city_code FROM events WHERE city_code<>'' ORDER BY city_code"),
+      ]);
+      return {
+        categories,
+        cities: cities.map((row) => row.city_code),
+        ticketScales: [
+          { value: "SMALL", label: "Dưới 1.000 vé" },
+          { value: "MEDIUM", label: "1.000–3.000 vé" },
+          { value: "LARGE", label: "Trên 3.000 vé" },
+        ],
+      };
+    },
     save: async (owner: string, d: Row, id?: string) => {
       const args = [
         id ?? randomUUID(),

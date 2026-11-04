@@ -27,7 +27,7 @@ async function seed() {
         ["customer@example.test", "Khách trải nghiệm", ["USER"]],
         ["organizer@example.test", "Ban tổ chức", ["USER", "ORGANIZER"]],
         ["organizer2@example.test", "Ban tổ chức khác", ["USER", "ORGANIZER"]],
-        ["admin@example.test", "Quản trị viên", ["USER", "ADMIN"]],
+        ["admin@example.test", "Quản trị viên", ["USER", "ADMIN", "ADMIN_MANAGER"]],
       ]) {
         await auth.query(
           'INSERT INTO users("idUser",name,email,password) VALUES($1,$2,$3,$4) ON CONFLICT(email) DO NOTHING',

@@ -1,0 +1,9 @@
+{
+  "checks": [
+    "Long registration content keeps natural page flow and no mobile overflow",
+    "Initial GET error does not show cached profile; explicit retry reads real API",
+    "An old delayed profile request cannot overwrite another selected application",
+    "Session change unmounts pending confirmation and sends no review under another session"
+  ],
+  "adminWrites": 0
+}

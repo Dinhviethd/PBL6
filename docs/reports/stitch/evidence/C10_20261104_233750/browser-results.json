@@ -1,0 +1,277 @@
+{
+  "checks": [
+    "shared shell, three live KPI, unsupported controls removed",
+    "payments pagination >50, page state and exact large amount",
+    "search/status/empty/reset, encoded UTC7 dates and invalid interval",
+    "revenue one series, zero period and exact accessible daily table",
+    "SePay separate status/reference filters and pagination",
+    "trace, real reprocess, duplicate click bounded and focus restoration",
+    "resolve external result persists history and preserves reference filter",
+    "reconcile real HTTP + DB, synthetic bank adapter",
+    "network-after-commit fault never auto replays financial action",
+    "GET loading/error/retry, stale response cancellation",
+    "responsive 1440 / shell / table scroll / dialog",
+    "responsive 1024 / shell / table scroll / dialog",
+    "responsive 768 / shell / table scroll / dialog",
+    "responsive 390 / shell / table scroll / dialog"
+  ],
+  "pageErrors": [],
+  "requests": [
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats/revenue-daily?fromDate=2026-10-29&toDate=2026-11-04"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=0"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=0"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=0&status=SUCCEEDED&q=tkhC10"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=0&q=no-results"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=0"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=0&from=2026-11-01T00%3A00%3A00.000%2B07%3A00&to=2026-11-05T23%3A59%3A59.999%2B07%3A00"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=1&from=2026-11-01T00%3A00%3A00.000%2B07%3A00&to=2026-11-05T23%3A59%3A59.999%2B07%3A00"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=0"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/payments?page=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats/revenue-daily?fromDate=2026-11-04&toDate=2026-11-04"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats/revenue-daily?fromDate=2099-01-01&toDate=2099-01-02"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=BANK-C10-0"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/bca36ee8-8962-4ee9-b59f-5d81310ce601"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/bca36ee8-8962-4ee9-b59f-5d81310ce601/reprocess"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats/revenue-daily?fromDate=2099-01-01&toDate=2099-01-02"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=BANK-C10-0"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/bca36ee8-8962-4ee9-b59f-5d81310ce601"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats/revenue-daily?fromDate=2099-01-01&toDate=2099-01-02"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=BANK-C10-0"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/bca36ee8-8962-4ee9-b59f-5d81310ce601"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=BANK-C10-1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/ae6a251c-97a0-47ca-a6aa-45740b215ffe"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/ae6a251c-97a0-47ca-a6aa-45740b215ffe/resolve"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats/revenue-daily?fromDate=2099-01-01&toDate=2099-01-02"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=BANK-C10-1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/ae6a251c-97a0-47ca-a6aa-45740b215ffe"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats/revenue-daily?fromDate=2099-01-01&toDate=2099-01-02"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=BANK-C10-1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/ae6a251c-97a0-47ca-a6aa-45740b215ffe"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:5182/api/admin/sepay/reconcile"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats/revenue-daily?fromDate=2099-01-01&toDate=2099-01-02"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=BANK-C10-1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats"
+    },
+    {
+      "method": "POST",
+      "url": "http://localhost:5182/api/admin/sepay/reconcile"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats/revenue-daily?fromDate=2099-01-01&toDate=2099-01-02"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=BANK-C10-1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats/revenue-daily?fromDate=2099-01-01&toDate=2099-01-02"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=BANK-C10-1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats/revenue-daily?fromDate=2099-01-01&toDate=2099-01-02"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=BANK-C10-1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/stats"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=SLOW"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0&reference=BANK-C10-1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=0"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions?page=1"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/87296125-555e-469a-bbf2-5250a5c3a58a"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/87296125-555e-469a-bbf2-5250a5c3a58a"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/87296125-555e-469a-bbf2-5250a5c3a58a"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:5182/api/admin/sepay/transactions/87296125-555e-469a-bbf2-5250a5c3a58a"
+    }
+  ]
+}

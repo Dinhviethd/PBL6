@@ -63,6 +63,14 @@ export function createOrders(db: Store, qrSecret: string) {
       if (!eventIds.length) return [];
       return r.paidRevenueByEventIds(eventIds);
     },
+    async adminEventIdsByTicketScale(p: Principal, scale: string) {
+      ensure(p.roles.includes("ADMIN"), "FORBIDDEN", "Bạn không có quyền thực hiện thao tác này.", 403);
+      return r.adminEventIdsByTicketScale(scale);
+    },
+    async adminEventMetrics(p: Principal, eventIds: string[]) {
+      ensure(p.roles.includes("ADMIN"), "FORBIDDEN", "Bạn không có quyền thực hiện thao tác này.", 403);
+      return eventIds.length ? r.adminEventMetrics(eventIds) : [];
+    },
     lockInventory,
     release,
     async createOrder(

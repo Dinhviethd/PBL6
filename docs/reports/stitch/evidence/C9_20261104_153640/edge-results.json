@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Draft/archived ticket excluded; empty table; failed cover fallback; actions disabled",
+    "Long Unicode title and 15-digit price accurate; mobile toast does not cover sign CTA",
+    "Queue second-page position retained after C9 round trip",
+    "Response lost after real commit -> recheck PUBLISHED, no duplicate mutation",
+    "Mutation and verification GET fail -> decision locked until explicit successful reload",
+    "USER cannot enter ADMIN C9 route"
+  ]
+}

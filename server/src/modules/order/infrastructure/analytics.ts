@@ -2,6 +2,12 @@ import type { Store } from "../../../contracts/core";
 
 export function orderAnalyticsStore(db: Store) {
   return {
+    adminPaidOrderBatch: (afterId: string | null) => db.query(
+      `SELECT id,total_amount,paid_payment_id FROM orders
+       WHERE status='PAID' AND ($1::uuid IS NULL OR id>$1::uuid)
+       ORDER BY id LIMIT 500`,
+      [afterId],
+    ),
     dashboardPaidOrders: (ids: string[]) => db.query(
       `SELECT id,event_id,paid_payment_id,total_amount,total_quantity FROM orders
        WHERE event_id=ANY($1::uuid[]) AND status='PAID' ORDER BY id`, [ids],

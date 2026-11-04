@@ -1,5 +1,5 @@
-﻿import { NavLink } from "react-router-dom";
-import { CreditCard, FileCheck2, LayoutDashboard, Tags, Users, CalendarDays, Building, ClipboardList} from "lucide-react";
+﻿import { NavLink, useLocation } from "react-router-dom";
+import { CreditCard, FileCheck2, LayoutDashboard, Tags, Users, CalendarDays, Building, ClipboardList, Settings} from "lucide-react";
 
 const sections = [
   { label: "TỔNG QUAN", links: [{ label: "Dashboard Quản trị", to: "/admin/stats", icon: LayoutDashboard }] },
@@ -11,20 +11,25 @@ const sections = [
   { label: "SỰ KIỆN & KIỂM DUYỆT", links: [
     { label: "Danh mục", to: "/admin/categories", icon: Tags },
     { label: "Toàn bộ sự kiện", to: "/admin/events", icon: CalendarDays },
-    { label: "Hàng đợi duyệt sự kiện", to: "/admin/events", icon: ClipboardList },   
+    { label: "Hàng đợi duyệt sự kiện", to: "/admin/events/review", icon: ClipboardList },
   ] },
   { label: "TÀI CHÍNH & VẬN HÀNH", links:
-    [{ label: "Quản lý giao dịch", to: "/admin/payments", icon: CreditCard }] },
+    [{ label: "Quản lý giao dịch", to: "/admin/payments", icon: CreditCard },
+      { label: "Cấu hình hệ thống", to: "/admin/settings", icon: Settings },
+    ] },
 ];
 
 export function AdminSidebar({ open = false, onNavigate }: { open?: boolean; onNavigate?: () => void }) {
+  const { pathname } = useLocation();
+  const isApplicationReviewDetail = /^\/admin\/applications\/review\/[^/]+\/?$/.test(pathname);
+  const isOrganizerDetail = /^\/admin\/applications\/(?!review\/?$)[^/]+\/?$/.test(pathname);
   return <aside className={`admin-sidebar${open ? " is-open" : ""}`} aria-label="Điều hướng quản trị">
     <NavLink className="admin-brand" to="/admin/stats" onClick={onNavigate}>
       <span className="admin-brand-mark">E</span><span className="admin-brand-copy">EVENT<span>HUB</span><small>SUPER CONTROL</small></span>
     </NavLink>
     <nav className="admin-nav">{sections.map(section => <section className="admin-nav-section" key={section.label}>
       <h2>{section.label}</h2>
-      {section.links.map(({ label, to, icon: Icon }) => <NavLink key={`${section.label}-${label}`} to={to} end className={({ isActive }) => `admin-nav-link${isActive ? " is-active" : ""}`} onClick={onNavigate}><Icon size={17}/><span>{label}</span></NavLink>)}
+      {section.links.map(({ label, to, icon: Icon }) => <NavLink key={`${section.label}-${label}`} to={to} end={to !== "/admin/events/review"} className={({ isActive }) => `admin-nav-link${isActive || (to === "/admin/applications" && isOrganizerDetail) || (to === "/admin/applications/review" && isApplicationReviewDetail) ? " is-active" : ""}`} onClick={onNavigate}><Icon size={17}/><span>{label}</span></NavLink>)}
     </section>)}</nav>
     <div className="admin-sidebar-foot"><span>EventHub</span><span>CONTROL CENTER</span></div>
     <style>{styles}</style>

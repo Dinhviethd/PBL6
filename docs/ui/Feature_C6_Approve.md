@@ -2,6 +2,10 @@
 
 ## 0. Thông tin phiên & trạng thái
 
+**Mới nhất 2026-11-05 01:41:15 UTC+07:** ĐÃ TRIỂN KHAI trang chi tiết `/admin/applications/review/:applicationId`, thay modal khi nhấn Xét duyệt/Xem. Shell/khungC5, DTO đủ2trường, approve/reject/confirm/recheck/backURL;31HTTP +15nhómChrome, build/lint/boundaries PASS. API8000 nạp1JS/local5173 read smoke PASS, không mutation hồ sơ thật. ĐẠT CÓ ĐIỀU KIỆN; fulla11y/image-static-public rollout còn thiếu. [Plan chi tiết](Feature_C6_OrganizerApplicationDetail.md); [Report triển khai](../reports/stitch/C6_20261105_012835_detail_implementation.md). Các mô tả modal/chưa triển khai phía dưới giữ lịch sử trước thay đổi.
+
+**Cập nhật 2026-11-05 01:24:11 UTC+07:** đã lập [plan trang chi tiết xét duyệt theo khung C5](Feature_C6_OrganizerApplicationDetail.md), mở từ Xét duyệt/Xem tại danh sách C6; route dự kiến `/admin/applications/review/:applicationId`. Trang mới **chưa triển khai**, hiện vẫn modal. API detail đã200 cho PENDING/REJECTED, còn thiếu2trường danh mục/quy mô; POST chưa kiểm lại phiên này. Đã xem trực tiếp ảnh C6 qua MCP; các ghi chú không xem được ảnh phía dưới thuộc lịch sử. [Report mới](../reports/stitch/C6_20261105_012411_detail_plan.md). Nội dung kế hoạch mới ưu tiên cho phần chi tiết; danh sách và scope nghiệp vụ C6 giữ nguyên.
+
 | Mục | Giá trị |
 |---|---|
 | Màn hình | **C6 — Xét duyệt hồ sơ Ban Tổ Chức** (Stitch: “C6. Xét duyệt hồ sơ Ban Tổ Chức - Cosmic Ticket Quản Trị Viên”) |

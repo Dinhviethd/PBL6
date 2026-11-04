@@ -521,8 +521,10 @@ export function AuthPage({
         rememberEmail(remember, form.email);
 
         const roles = result.data?.user?.roles ?? [];
-        if (roles.includes("ORGANIZER")) {
-          navigate("/organizer", { replace: true });
+        if (roles.includes("ADMIN")) {
+          navigate("/admin/stats", { replace: true });
+        } else if (roles.includes("ORGANIZER")) {
+          navigate("/organizer/dashboard", { replace: true });
         } else {
           const target = safeRedirect();
           if (target !== "/") {

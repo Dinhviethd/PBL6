@@ -1,0 +1,48 @@
+{
+  "base": "http://127.0.0.1:8031/api",
+  "checkpoints": [
+    "anonymous 401",
+    "customer 403",
+    "organizer 403",
+    "UTC7 boundaries/zero days/cancelled excluded/retry not doubled/large sum exact",
+    "total exact beyond Number safe integer",
+    "more than 500 orders keyset has no duplicates or missing orders",
+    "empty period includes all zero days",
+    "invalid query 400 ",
+    "invalid query 400 ?fromDate=2026-11-01",
+    "invalid query 400 ?fromDate=2026-02-29&toDate=2026-03-01",
+    "invalid query 400 ?fromDate=2026-11-03&toDate=2026-11-01",
+    "invalid query 400 ?fromDate=2025-01-01&toDate=2026-01-02",
+    "invalid query 400 ?fromDate=2026-11-01&toDate=2026-11-02&extra=true",
+    "invalid query 400 ?fromDate=2026-11-01&fromDate=2026-11-02&toDate=2026-11-03",
+    "366 days/leap year supported",
+    "inconsistent paid order 409 rather than hidden data",
+    "repeatable-read snapshot stable across concurrent payment update",
+    "event approve publishes",
+    "event duplicate review 409",
+    "application approve success",
+    "application duplicate review 409"
+  ],
+  "count": 21,
+  "sample": {
+    "fromDate": "2026-10-31",
+    "toDate": "2026-11-02",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "currency": "VND",
+    "totalRevenue": "9007199255090991",
+    "series": [
+      {
+        "date": "2026-10-31",
+        "revenue": "9007199254890991"
+      },
+      {
+        "date": "2026-11-01",
+        "revenue": "0"
+      },
+      {
+        "date": "2026-11-02",
+        "revenue": "200000"
+      }
+    ]
+  }
+}

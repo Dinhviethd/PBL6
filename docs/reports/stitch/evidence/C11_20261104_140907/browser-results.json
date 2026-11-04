@@ -1,0 +1,17 @@
+{
+  "checks": [
+    "ADMIN route, shared shell once, sidebar active, six cards",
+    "1440/1024/768/390 no document overflow, screenshots",
+    "server pagination second page",
+    "unicode title and category filters across dataset",
+    "fresh detail, ticket types, keyboard focus trap/Escape/restore",
+    "blank rejection blocked, valid real rejection saved and removed, empty filter",
+    "approve confirm real POST once despite double click, reload and removal",
+    "list network error and retry recovery",
+    "409 competing ADMIN, no false success, forced recheck and stale decision disabled",
+    "removed scope absent from C11 content",
+    "guest login redirect, USER denied route"
+  ],
+  "count": 11,
+  "pageErrors": []
+}

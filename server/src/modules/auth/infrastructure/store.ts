@@ -149,13 +149,24 @@ export function authStore(db: Store) {
         "SELECT * FROM organizer_applications WHERE ($1::uuid IS NULL OR user_id=$1) ORDER BY created_at DESC,id LIMIT 50 OFFSET $2",
         [user, offset],
       ),
+    adminApplication: async (id: string) =>
+      (
+        await db.query(
+          `SELECT id,user_id,organization_name,business_name,tax_id_or_business_license,
+            contact_name,contact_email,contact_phone,head_office_address,description,
+            website_or_social,logo_url,main_event_category,expected_event_scale,
+            status,created_at,reviewed_at,rejection_reason
+           FROM organizer_applications WHERE id=$1`,
+          [id],
+        )
+      )[0],
     adminApplications: (q: string, status: string | null, limit: number, offset: number) =>
       db.query(
         `SELECT * FROM organizer_applications
          WHERE ($1::text='' OR organization_name ILIKE $2 OR contact_name ILIKE $2
            OR contact_email ILIKE $2 OR coalesce(business_name,'') ILIKE $2
            OR coalesce(tax_id_or_business_license,'') ILIKE $2)
-           AND ($3::text IS NULL OR status=$3)
+           AND ($3::text IS NULL OR ($3='PENDING_OR_REJECTED' AND status IN ('PENDING','REJECTED')) OR status=$3)
          ORDER BY created_at DESC,id LIMIT $4 OFFSET $5`,
         [q, `%${q.replace(/[\\%_]/g, "\\$&")}%`, status, limit, offset],
       ),
@@ -166,10 +177,35 @@ export function authStore(db: Store) {
            WHERE ($1::text='' OR organization_name ILIKE $2 OR contact_name ILIKE $2
              OR contact_email ILIKE $2 OR coalesce(business_name,'') ILIKE $2
              OR coalesce(tax_id_or_business_license,'') ILIKE $2)
-             AND ($3::text IS NULL OR status=$3)`,
+             AND ($3::text IS NULL OR ($3='PENDING_OR_REJECTED' AND status IN ('PENDING','REJECTED')) OR status=$3)`,
           [q, `%${q.replace(/[\\%_]/g, "\\$&")}%`, status],
         )
       )[0],
+    adminOrganizerSummaries: (ids: string[]) =>
+      db.query(
+        `SELECT u."idUser" AS id,
+          coalesce(app.organization_name,u.name) AS organization_name,
+          coalesce(app.contact_name,u.name) AS contact_name,
+          u.name AS account_name
+         FROM users u
+         LEFT JOIN LATERAL (
+           SELECT organization_name,contact_name FROM organizer_applications
+           WHERE user_id=u."idUser" AND status='APPROVED'
+           ORDER BY reviewed_at DESC,id LIMIT 1
+         ) app ON true
+         WHERE u."idUser"=ANY($1::uuid[])
+         ORDER BY u."idUser"`,
+        [ids],
+      ),
+    adminOrganizerIdsMatchingQuery: (q: string) =>
+      db.query(
+        `SELECT DISTINCT u."idUser" AS id FROM users u
+         LEFT JOIN organizer_applications app ON app.user_id=u."idUser" AND app.status='APPROVED'
+         WHERE u."idUser"::text ILIKE $1 OR u.name ILIKE $1
+           OR app.organization_name ILIKE $1 OR app.contact_name ILIKE $1
+         ORDER BY u."idUser" LIMIT 5000`,
+        [`%${q.replace(/[\\%_]/g, "\\$&")}%`],
+      ),
     organizerStats: async () =>
       (
         await db.query(

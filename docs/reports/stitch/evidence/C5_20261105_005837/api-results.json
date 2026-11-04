@@ -1,0 +1,213 @@
+{
+  "environment": "isolated loopback test database",
+  "calls": [
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "POST",
+      "path": "/auth/login",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/5beae83c-551c-43a4-96bb-58683e27142d",
+      "status": 401,
+      "code": "UNAUTHORIZED"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/5beae83c-551c-43a4-96bb-58683e27142d",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/5beae83c-551c-43a4-96bb-58683e27142d",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258",
+      "status": 401,
+      "code": "UNAUTHORIZED"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258",
+      "status": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/5beae83c-551c-43a4-96bb-58683e27142d",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/58e5090a-71ec-414c-8fc6-2a08975005d0",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/7cf14e5f-89d4-4f9c-b314-97a886c2f239",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/not-a-uuid",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/5beae83c-551c-43a4-96bb-58683e27142d?ownerId=b2ee88b2-0b66-4254-aa8f-422319688d0b",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=not-a-uuid",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258&page=-1",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258&limit=101",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258&limit=0",
+      "status": 400,
+      "code": "VALIDATION"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/e1f4c374-4e5a-42f6-982d-94896da5a212",
+      "status": 404,
+      "code": "NOT_FOUND"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/organizer-applications/75c7c822-709a-4b69-bf1e-705c3eb6f258",
+      "status": 404,
+      "code": "NOT_FOUND"
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258&page=0&limit=10",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258&page=1&limit=10",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258&page=2&limit=10",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258&limit=100",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258&page=100&limit=10",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=c0a2fe60-eb0e-408a-a6b5-5df115d6b876",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=23d14331-e506-4bc6-bae6-8d1765b990dd",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=b2ee88b2-0b66-4254-aa8f-422319688d0b",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?q=75c7c822-709a-4b69-bf1e-705c3eb6f258&limit=100",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258&q=75c7c822-709a-4b69-bf1e-705c3eb6f258&limit=100",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258&status=DRAFT&categoryId=81beb956-dc3a-4cd8-8299-0f650db002f5&limit=100",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events?limit=100",
+      "status": 200,
+      "code": null
+    },
+    {
+      "method": "GET",
+      "path": "/admin/events/kpis?organizerId=75c7c822-709a-4b69-bf1e-705c3eb6f258",
+      "status": 200,
+      "code": null
+    }
+  ],
+  "verified": {
+    "ownerAEvents": 23,
+    "ownerBEvents": 3,
+    "pages": [
+      10,
+      10,
+      3
+    ],
+    "collisionSearchTotal": 26
+  }
+}

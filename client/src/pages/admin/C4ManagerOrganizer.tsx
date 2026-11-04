@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import {
   Building2,
   CheckCircle2,
@@ -7,6 +8,7 @@ import {
   Clock,
   Eye,
   Inbox,
+  RefreshCw,
   Search,
   ShieldCheck,
   UserCheck,
@@ -70,11 +72,22 @@ const date = (value: string | null) =>
 const initial = (value: string) => value.trim().slice(0, 1).toUpperCase() || "?";
 
 export function C4ManagerOrganizer() {
-  const [page, setPage] = useState(0);
-  const [limit, setLimit] = useState(10);
-  const [status, setStatus] = useState<StatusFilter>("");
-  const [search, setSearch] = useState("");
-  const [query, setQuery] = useState("");
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [page, setPage] = useState(() => {
+    const value = Number(searchParams.get("page") || 0);
+    return Number.isInteger(value) && value >= 0 && value <= 10000 ? value : 0;
+  });
+  const [limit, setLimit] = useState(() => {
+    const value = Number(searchParams.get("limit"));
+    return [10, 20, 50].includes(value) ? value : 10;
+  });
+  const [status, setStatus] = useState<StatusFilter>(() => {
+    const value = searchParams.get("status");
+    return value === "PENDING" || value === "APPROVED" || value === "REJECTED" ? value : "";
+  });
+  const [search, setSearch] = useState(() => (searchParams.get("q") || "").slice(0, 200));
+  const [query, setQuery] = useState(search);
   const [result, setResult] = useState<OrganizerPage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -98,6 +111,15 @@ export function C4ManagerOrganizer() {
     const timer = window.setTimeout(() => setQuery(search.trim()), 250);
     return () => window.clearTimeout(timer);
   }, [search]);
+
+  useEffect(() => {
+    const next = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (status) next.set("status", status);
+    if (query) next.set("q", query);
+    if (searchParams.toString() !== next.toString()) {
+      setSearchParams(next, { replace: true, preventScrollReset: true });
+    }
+  }, [page, limit, status, query, searchParams, setSearchParams]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -199,7 +221,7 @@ export function C4ManagerOrganizer() {
         <header className="c4-hero">
           <div>
             <span className="c4-eyebrow">
-              <ShieldCheck size={14} /> PHÂN HỆ C4 · BAN TỔ CHỨC
+              <ShieldCheck size={14} />BAN TỔ CHỨC
             </span>
             <h1>Quản lý Ban Tổ Chức</h1>
             <p>
@@ -262,9 +284,11 @@ export function C4ManagerOrganizer() {
           <button
             className="c4-refresh"
             type="button"
+            aria-label="Làm mới danh sách ban tổ chức"
+            title="Làm mới"
             onClick={() => setRefresh((value) => value + 1)}
           >
-            Làm mới
+            <RefreshCw size={17} className={loading ? "is-spinning" : ""}/>
           </button>
         </section>
         <section className="c4-filters">
@@ -376,15 +400,24 @@ export function C4ManagerOrganizer() {
                         </span>
                       </td>
                       <td>
+                        <Link
+                          className="c4-action"
+                          aria-label={`Xem hồ sơ ${row.organization_name}`}
+                          to={`/admin/applications/${row.id}`}
+                          state={{ returnTo: `${location.pathname}${location.search}` }}
+                        >
+                          <Eye size={15} /> Xem
+                        </Link>
+                        {row.status === "PENDING" && (
                         <button
                           className="c4-action"
                           type="button"
-                          aria-label={`Xem hồ sơ ${row.organization_name}`}
+                          aria-label={`Xét duyệt hồ sơ ${row.organization_name}`}
                           onClick={() => openDetail(row)}
                         >
-                          <Eye size={15} />
-                          {row.status === "PENDING" ? "Xét duyệt" : "Xem"}
+                          <ShieldCheck size={15} /> Xét duyệt
                         </button>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -575,7 +608,7 @@ const styles = `
 .c4-status-tabs button span{padding:1px 6px;border-radius:10px;background:#ffffff0b;color:#aaa6bc;font:600 10px 'Space Grotesk',sans-serif}
 .c4-status-tabs button.active{border-color:#7c3aed70;background:#7c3aed20;color:#e7ddff}
 .c4-status-tabs button.active span{background:#7c3aed;color:white}
-.c4-refresh{flex:none;border:0;background:none;color:var(--cyan);font:600 12px 'Be Vietnam Pro',sans-serif;cursor:pointer}
+.c4-refresh{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border:1px solid var(--line);border-radius:7px;background:#ffffff04;color:var(--cyan);cursor:pointer}.c4-refresh:hover{border-color:#22d3ee66;background:#22d3ee0b}.c4-refresh svg.is-spinning{animation:c4-refresh-spin .8s linear infinite}@keyframes c4-refresh-spin{to{transform:rotate(360deg)}}
 .c4-filters{display:flex;align-items:center;gap:12px;margin-bottom:10px}
 .c4-search{display:flex;align-items:center;gap:9px;flex:1;max-width:620px;padding:0 12px;height:42px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--dim)}
 .c4-search input{flex:1;min-width:0;border:0;outline:0;background:none;color:var(--ink);font:13px 'Be Vietnam Pro',sans-serif}
@@ -602,7 +635,7 @@ const styles = `
 .c4-status.approved{background:#10b98118;color:#6ee7b7}
 .c4-status.pending{background:#f59e0b18;color:#fcd34d}
 .c4-status.rejected{background:#fb718518;color:#fda4af}
-.c4-action{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:#ffffff04;color:#c4b5fd;font:600 11px 'Be Vietnam Pro',sans-serif;cursor:pointer}
+.c4-action{text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:6px 10px;border:1px solid var(--line);border-radius:7px;background:#ffffff04;color:#c4b5fd;font:600 11px 'Be Vietnam Pro',sans-serif;cursor:pointer}
 .c4-action:hover{border-color:#7c3aed;color:white}
 .c4-state{padding:45px!important;text-align:center!important;color:var(--muted)!important}
 .c4-pagination{display:flex;justify-content:space-between;align-items:center;flex:none;gap:10px;padding:12px 17px;border-top:1px solid var(--line);color:var(--muted);font-size:11px}

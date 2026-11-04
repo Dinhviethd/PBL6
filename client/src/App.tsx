@@ -41,6 +41,10 @@ import { Operations } from "./pages/organizer/Operations";
 import { ReportPage } from "./pages/organizer/ReportPage";
 import { Admin } from "./pages/admin/Admin";
 import { C6Approve } from "./pages/admin/C6Approve";
+import { C6OrganizerApplicationDetail } from "./pages/admin/C6OrganizerApplicationDetail";
+import { C5OrganizerDetail } from "./pages/admin/C5OrganizerDetail";
+import { C11ApproveEvent } from "./pages/admin/C11ApproveEvent";
+import { C9ApproveEventDetail } from "./pages/admin/C9ApproveEventDetail";
 import { StaffAssignments } from "./pages/staff/StaffAssignments";
 import { StaffCheckin } from "./pages/staff/StaffCheckin";
 import { Loading, Notice } from "./components/ticketing/shared";
@@ -64,7 +68,7 @@ function Guard({
       <Navigate to="/auth/login" state={{ from: location.pathname }} replace />
     );
   if (roles.length && !roles.some((r) => user.roles.includes(r)))
-    return <Notice error="Tài khoản chưa có quyền truy cập khu vực này." />;
+    return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 export function App() {
@@ -95,11 +99,18 @@ export function App() {
   }, [location.pathname]);
   const isAuthPage = location.pathname.startsWith("/auth/");
   const isAdminConsolePage =
+    location.pathname === "/admin/payments" ||
+    location.pathname === "/admin/settings" ||
+    location.pathname === "/admin/stats" ||
     location.pathname === "/admin/users" ||
     location.pathname === "/admin/categories" ||
     location.pathname === "/admin/applications" ||
-    location.pathname === "/admin/applications/review";
-  const isAdminHome = location.pathname === "/admin/stats";
+    location.pathname === "/admin/applications/review" ||
+    /^\/admin\/applications\/review\/[^/]+\/?$/.test(location.pathname) ||
+    /^\/admin\/applications\/[^/]+\/?$/.test(location.pathname) ||
+    location.pathname === "/admin/events" ||
+    location.pathname === "/admin/events/review" ||
+    /^\/admin\/events\/review\/[^/]+\/?$/.test(location.pathname);
   const isProfilePage = location.pathname === "/profile";
   const isEventDetailPage = /^\/events\/[^/]+\/?$/.test(location.pathname);
   const isCheckoutPage = location.pathname.startsWith("/checkout/");
@@ -124,14 +135,13 @@ export function App() {
     location.pathname.startsWith("/payment-status/") ||
     /^\/tickets(?:\/[^/]+)?\/?$/.test(location.pathname) ||
     isRegisterOrganizerPage;
-  const usesSharedAdminHomeShell = isAdminHome && isAuthVerified && Boolean(user);
   return (
     <div
       className={`eventhub${isProfilePage ? " profile-route" : ""}${
         isRegisterOrganizerPage ? " register-organizer-route" : ""
       }`}
     >
-      {usesSharedHomeShell || usesSharedAdminHomeShell ? (
+      {usesSharedHomeShell ? (
         <AuthHeader
           mode="login"
           user={user}
@@ -395,6 +405,38 @@ export function App() {
             }
           />
           <Route
+            path="/admin/applications/review/:applicationId"
+            element={
+              <Guard roles={["ADMIN"]}>
+                <C6OrganizerApplicationDetail />
+              </Guard>
+            }
+          />
+          <Route
+            path="/admin/applications/:applicationId"
+            element={
+              <Guard roles={["ADMIN"]}>
+                <C5OrganizerDetail />
+              </Guard>
+            }
+          />
+          <Route
+            path="/admin/events/review/:id"
+            element={
+              <Guard roles={["ADMIN"]}>
+                <C9ApproveEventDetail />
+              </Guard>
+            }
+          />
+          <Route
+            path="/admin/events/review"
+            element={
+              <Guard roles={["ADMIN"]}>
+                <C11ApproveEvent />
+              </Guard>
+            }
+          />
+          <Route
             path="/admin/:tab"
             element={
               <Guard roles={["ADMIN"]}>
@@ -415,7 +457,7 @@ export function App() {
           />
         </Routes>
       </main>
-      {usesSharedHomeShell || usesSharedAdminHomeShell ? (
+      {usesSharedHomeShell ? (
         <>
           <AuthFooter onNotice={setHomeNotice} />
           {homeNotice && (

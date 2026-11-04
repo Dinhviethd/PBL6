@@ -167,6 +167,35 @@ if (!url) {
     if (app) await app.close();
     if (fixture) await fixture.close();
   });
+  test("C8 admin event list, KPI, filters, page metrics and organizer summary are split and guarded", async () => {
+    const listed = await ok("GET", "/admin/events?page=0&limit=1", undefined, admin.accessToken);
+    assert.equal(listed.items.length, 1);
+    assert.equal(listed.pagination.limit, 1);
+    assert.ok(listed.pagination.total >= 1);
+    assert.equal(typeof listed.items[0].id, "string");
+    assert.equal("revenue" in listed.items[0], false);
+    const filtered = await ok("GET", `/admin/events?q=${encodeURIComponent("Integration event")}&cityCode=DN&categoryId=${categoryId}&page=0&limit=10`, undefined, admin.accessToken);
+    assert.equal(filtered.pagination.total, 1);
+    assert.equal(filtered.items[0].id, eventId);
+    const stats = await ok("GET", `/admin/events/kpis?q=${encodeURIComponent("Integration event")}&cityCode=DN&categoryId=${categoryId}`, undefined, admin.accessToken);
+    assert.equal(stats.total, "1");
+    assert.equal("items" in stats, false);
+    const metric = await ok("GET", `/admin/events/metrics?eventIds=${eventId}`, undefined, admin.accessToken);
+    assert.equal(metric.length, 1);
+    assert.equal(metric[0].eventId, eventId);
+    assert.equal(metric[0].ticketCapacity, "5");
+    assert.equal(metric[0].ticketsIssued, "0");
+    assert.equal(metric[0].gmv, "0");
+    assert.equal(metric[0].checkins, "0");
+    const organizers = await ok("GET", `/admin/organizers/summaries?ids=${organizer.user.idUser}`, undefined, admin.accessToken);
+    assert.equal(organizers.length, 1);
+    assert.equal(organizers[0].id, organizer.user.idUser);
+    const options = await ok("GET", "/admin/events/filter-options", undefined, admin.accessToken);
+    assert.ok(options.categories.some((category) => category.id === categoryId));
+    assert.ok(options.cities.includes("DN"));
+    assert.equal((await call("GET", "/admin/events", undefined, buyer.accessToken)).status, 403);
+    assert.equal((await call("GET", "/admin/events/metrics?eventIds=invalid", undefined, admin.accessToken)).status, 400);
+  });
   test("admin categories auto-generate slug, expose event_count/stats and keep slug on rename", async () => {
     const suffix = randomUUID().slice(0, 8);
     const created = await ok(

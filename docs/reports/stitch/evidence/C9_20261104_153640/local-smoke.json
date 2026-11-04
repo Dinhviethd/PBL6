@@ -1,0 +1,18 @@
+{
+  "frontend": "http://localhost:5173",
+  "api": "http://localhost:8000",
+  "detailId": "a5572651-c50c-443a-a55e-1474e615c852",
+  "status": "PENDING_REVIEW",
+  "viewports": [
+    1440,
+    1024,
+    768,
+    390
+  ],
+  "title": true,
+  "organizer": true,
+  "toast": true,
+  "eventUnchanged": true,
+  "eventWrites": 0,
+  "errors": []
+}

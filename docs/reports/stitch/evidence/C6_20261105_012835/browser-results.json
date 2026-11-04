@@ -1,0 +1,43 @@
+{
+  "origin": "http://localhost:5186",
+  "checks": [
+    "PENDING deep link/login/reload/new tab reads DTO fields; one shared shell and correct active menu",
+    "Four viewports no overflow; legal placeholders explicitly developing and show toast",
+    "Blank reject disabled, max2000, accessible confirmation cancel/Escape sends no POST and restores focus",
+    "Approve real POST succeeds, status refetched read-only, double click sends one decision",
+    "Reject trims reason and persists status/reason/date across reload without further review action",
+    "Lost POST response after actual commit rechecks GET and never auto-repeats POST",
+    "409 from actual concurrent decision rechecks latest rejected status and becomes read-only",
+    "GET failure after successful POST locks form until explicit status reload; no repeated mutation",
+    "C6 link back/browser back preserve filters; approving last pending record clamps empty final page and refreshes totals",
+    "400/404 explicit, and C5 route is still separate and functional",
+    "Customer and Organizer browser sessions cannot open C6 detail"
+  ],
+  "pageErrors": [],
+  "reviewRequests": [
+    {
+      "applicationId": "5c1ed64a-9dd9-49d7-b0ff-8bf650fb679c",
+      "approve": true
+    },
+    {
+      "applicationId": "50ee7c45-4983-44b6-9521-a75afeca7c0b",
+      "approve": false
+    },
+    {
+      "applicationId": "4d971aa4-2c39-4bab-8fd1-35835007b908",
+      "approve": true
+    },
+    {
+      "applicationId": "c8e818e9-237c-4fbe-9d41-b99323b56d69",
+      "approve": true
+    },
+    {
+      "applicationId": "a64b4e6b-08c4-4373-a474-407d389f39b6",
+      "approve": true
+    },
+    {
+      "applicationId": "e53da5d0-cf3f-4080-95a2-a30cc73d5434",
+      "approve": true
+    }
+  ]
+}

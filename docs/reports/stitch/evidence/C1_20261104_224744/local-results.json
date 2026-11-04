@@ -1,0 +1,17 @@
+{
+  "apiStatus": 200,
+  "period": {
+    "from": "2026-10-06",
+    "today": "2026-11-04"
+  },
+  "days": 30,
+  "revenue": "695000",
+  "widths": [
+    1440,
+    1024,
+    768,
+    390
+  ],
+  "businessWrites": 0,
+  "pageErrors": []
+}

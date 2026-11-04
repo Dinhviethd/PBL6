@@ -1,0 +1,12 @@
+{
+  "origin": "http://localhost:5173",
+  "api": "http://localhost:8000/api",
+  "profileFromC4": true,
+  "reload": true,
+  "viewports": [
+    1440,
+    390
+  ],
+  "pageErrors": [],
+  "adminWrites": 0
+}

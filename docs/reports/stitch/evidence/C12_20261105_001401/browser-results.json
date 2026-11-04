@@ -1,0 +1,21 @@
+{
+  "checkpoints": [
+    "real payment-information + manager catalog + shared shell + removed actions",
+    "real pagination over ten admins",
+    "viewport 1440 no page overflow",
+    "viewport 1280 no page overflow",
+    "viewport 768 no page overflow",
+    "viewport 390 no page overflow",
+    "search + empty state",
+    "mobile dialog + keyboard focus trap",
+    "grant existing account via real API + success",
+    "lock admin via real API + confirmation + refreshed state",
+    "unlock + management permission via real API",
+    "real version conflict + reload + keyboard Escape",
+    "payment error + retry restores real data",
+    "loading state + refresh disabled while pending",
+    "ordinary ADMIN read-only management UI",
+    "no browser page errors"
+  ],
+  "errors": []
+}

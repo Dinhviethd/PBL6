@@ -339,5 +339,50 @@ export function orderStore(db: Store) {
         "SELECT event_id, coalesce(sum(capacity),0) AS capacity, coalesce(sum(sold_quantity),0) AS sold_quantity FROM ticket_types WHERE event_id=ANY($1::uuid[]) GROUP BY event_id",
         [ids],
       ),
+    adminEventIdsByTicketScale: (scale: string) =>
+      db.query(
+        `SELECT event_id FROM ticket_types WHERE archived_at IS NULL
+         GROUP BY event_id
+         HAVING CASE $1::text
+           WHEN 'SMALL' THEN sum(capacity)<1000
+           WHEN 'MEDIUM' THEN sum(capacity)>=1000 AND sum(capacity)<=3000
+           WHEN 'LARGE' THEN sum(capacity)>3000
+           ELSE false END
+         ORDER BY event_id`,
+        [scale],
+      ),
+    adminEventMetrics: (ids: string[]) => {
+      const selected = ids.map((_, index) => `($${index + 1}::uuid)`).join(",");
+      const eventIdsParam = `$${ids.length + 1}::uuid[]`;
+      return db.query(
+        `SELECT selected.event_id,
+           coalesce(inventory.ticket_capacity,'0') AS ticket_capacity,
+           coalesce(inventory.tickets_sold,'0') AS tickets_sold,
+           coalesce(issued.tickets_issued,'0') AS tickets_issued,
+           coalesce(revenue.gmv,'0') AS gmv,
+           coalesce(revenue.gmv,'0') AS revenue,
+           coalesce(attendance.checkins,'0') AS checkins
+         FROM (VALUES ${selected}) AS selected(event_id)
+         LEFT JOIN (
+           SELECT event_id,sum(capacity)::text AS ticket_capacity,
+             sum(sold_quantity)::text AS tickets_sold
+           FROM ticket_types WHERE event_id=ANY(${eventIdsParam}) AND archived_at IS NULL GROUP BY event_id
+         ) inventory USING(event_id)
+         LEFT JOIN (
+           SELECT event_id,count(*) FILTER (WHERE status<>'VOID')::text AS tickets_issued
+           FROM tickets WHERE event_id=ANY(${eventIdsParam}) GROUP BY event_id
+         ) issued USING(event_id)
+         LEFT JOIN (
+           SELECT event_id,coalesce(sum(total_amount),0)::text AS gmv
+           FROM orders WHERE event_id=ANY(${eventIdsParam}) AND status='PAID' GROUP BY event_id
+         ) revenue USING(event_id)
+         LEFT JOIN (
+           SELECT event_id,count(*)::text AS checkins FROM checkins
+           WHERE event_id=ANY(${eventIdsParam}) GROUP BY event_id
+         ) attendance USING(event_id)
+         ORDER BY selected.event_id`,
+        [...ids, ids],
+      );
+    },
   };
 }

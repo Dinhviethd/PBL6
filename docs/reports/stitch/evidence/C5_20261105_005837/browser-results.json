@@ -1,0 +1,20 @@
+{
+  "origin": "http://localhost:5185",
+  "checks": [
+    "Login redirect opens the correct deep link, one shared shell, owner total 23",
+    "Server pagination 10/10/3, no duplicate pages, reload restores page and auth",
+    "Four viewports: no document overflow, screenshots saved",
+    "Out-of-range pages clamp, empty owner resets page, rejected profile shows only its events",
+    "Invalid and missing profile errors never show old profile/events",
+    "Network failure shows an error, retry reads real API and restores events",
+    "C4 Xem -> C5 -> link back/browser back preserves search, status and page",
+    "Static C6 review route and existing C4 pending review modal still work",
+    "New tab deep link works without navigation state; removed features absent",
+    "Pagination supports keyboard focus and Enter",
+    "Delayed prior profile read cannot overwrite another organization after SPA navigation",
+    "Customer and Organizer sessions cannot open C5 in browser",
+    "No page errors, no admin writes or advanced API requests"
+  ],
+  "pageErrors": [],
+  "adminWrites": 0
+}
