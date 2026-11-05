@@ -1330,14 +1330,29 @@ if (!url) {
     );
   });
   test("logout and account lock invalidate existing access sessions", async () => {
-    await ok(
+    const customer = await ok("POST", "/auth/register", {
+      name: "Account lock customer",
+      email: `${randomUUID()}@example.test`,
+      password,
+      confirmPassword: password,
+    });
+    const organizerLock = await call(
       "PATCH",
       `/admin/users/${other.user.idUser}`,
       { status: "ACTIVE", locked: true, reason: "integration" },
       admin.accessToken,
     );
+    assert.equal(organizerLock.status, 400);
+    assert.equal(organizerLock.body.code, "INVALID_CUSTOMER");
+    await ok("GET", "/auth/me", undefined, other.accessToken);
+    await ok(
+      "PATCH",
+      `/admin/users/${customer.user.idUser}`,
+      { status: "ACTIVE", locked: true, reason: "integration" },
+      admin.accessToken,
+    );
     assert.equal(
-      (await call("GET", "/auth/me", undefined, other.accessToken)).status,
+      (await call("GET", "/auth/me", undefined, customer.accessToken)).status,
       403,
     );
     const login = await call("POST", "/auth/login", {
