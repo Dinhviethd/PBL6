@@ -11,3 +11,6 @@ opencode.json
 .vscode/mcp.json
 .qoder/
 
+
+# Keep local audit reports out of version control.
+docs/[Aa][Uu][Dd][Ii][Tt]*.md
