@@ -156,7 +156,11 @@ export function createApplication(config: {
   sepayAcceptNewPayments?: boolean;
   databaseSsl?: import("./platform/database").DatabaseTls | false;
   paymentDisplay?: PaymentDisplay;
+  hstsMaxAgeSeconds?: number;
 }) {
+  const hstsMaxAge = config.hstsMaxAgeSeconds ?? 0;
+  ensure(Number.isInteger(hstsMaxAge) && hstsMaxAge >= 0 && hstsMaxAge <= 31536000,
+    "CONFIG", "HSTS_MAX_AGE_SECONDS must be an integer from 0 to 31536000.", 500);
   const clientOrigin = config.clientUrl ?? "http://localhost:5173";
   const allowedClientOrigins = new Set([clientOrigin, ...(config.clientOrigins ?? [])]);
   ensure(
@@ -212,6 +216,15 @@ export function createApplication(config: {
     app = express(),
     api = express.Router();
   app.disable("x-powered-by");
+  // Run before body parsing/webhooks so error responses receive the same protections.
+  app.use((_req, res, next) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Referrer-Policy", "same-origin");
+    res.setHeader("X-Frame-Options", "DENY");
+    res.setHeader("Content-Security-Policy", "frame-ancestors 'none'; object-src 'none'; base-uri 'self'");
+    if (hstsMaxAge > 0) res.setHeader("Strict-Transport-Security", `max-age=${hstsMaxAge}`);
+    next();
+  });
   const waitQueue = createWaitQueue(
     auth,
     events,
@@ -249,11 +262,6 @@ export function createApplication(config: {
     express.json({ limit: "1mb" }),
     cookieParser(),
   );
-  app.use((_req, res, next) => {
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("Referrer-Policy", "same-origin");
-    next();
-  });
   const limits = new Map<string, { n: number; until: number }>();
   app.use("/api", (req, res, next) => {
     if (req.method === "GET") return next();

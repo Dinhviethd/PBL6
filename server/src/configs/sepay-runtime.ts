@@ -42,6 +42,7 @@ export function loadRuntimeConfig(env: Env = process.env) {
     paymentProvider: paymentProviderFromEnv(env), clientUrl: env.CLIENT_URL,
     paymentDisplay: paymentDisplayFromEnv(env),
     clientOrigins: additionalClientOrigins(env.CLIENT_EXTRA_ORIGINS),
+    hstsMaxAgeSeconds: integer(env, "HSTS_MAX_AGE_SECONDS", 0, 0, 31536000),
   };
   if (enabled === "false") return { app: base, worker: null };
   const acceptNewPayments = env.SEPAY_ACCEPT_NEW_PAYMENTS ?? "true";
