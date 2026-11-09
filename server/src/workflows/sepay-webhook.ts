@@ -26,10 +26,15 @@ export function createSepayWebhook(sepay:SepayPayments,payments:Payments,orders:
             if(!reference) {await review('PAYMENT_CODE_MISSING_OR_AMBIGUOUS');return;}
             const matched=await sepay.findByCode(reference);
             if(matched.length!==1) {await review(matched.length?'PAYMENT_CODE_AMBIGUOUS':'PAYMENT_NOT_FOUND');return;}
-            const payment=await payments.one(matched[0].id,true);
-            if(!payment||payment.provider!=='sepay') {await review('PAYMENT_NOT_FOUND');return;}
-            const order=await orders.one(payment.order_id,true);
+            // Discover the order without locking payment. Match expiry's
+            // order -> inventory -> payment order, then re-read under the lock.
+            const initial=await payments.one(matched[0].id);
+            if(!initial||initial.provider!=='sepay') {await review('PAYMENT_NOT_FOUND');return;}
+            const order=await orders.one(initial.order_id,true);
+            if(!order) {await review('PAYMENT_NOT_FOUND');return;}
             const reservations=await orders.lockInventory(order);
+            const payment=await payments.one(initial.id,true);
+            if(!payment||payment.provider!=='sepay'||payment.order_id!==order.id) {await review('PAYMENT_NOT_FOUND');return;}
             if(payment.status==='SUCCEEDED') {await review('PAYMENT_ALREADY_SETTLED',payment.id);return;}
             if(String(payment.amount)!==String(tx.amount)||payment.currency!=='VND') {await payments.review(payment.id,'SEPAY_AMOUNT_MISMATCH');await review('AMOUNT_MISMATCH',payment.id);return;}
             if(new Date(tx.transaction_at)>new Date(payment.provider_expires_at)) {await payments.review(payment.id,'SEPAY_LATE_TRANSFER');await review('LATE_TRANSFER',payment.id);return;}
