@@ -1702,3 +1702,14 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Keep guest draft guidance readable beside the login action on narrow screens. */
+@media (max-width: 600px) {
+  .reg-alert-info {
+    flex-wrap: wrap;
+  }
+
+  .reg-alert-info > div {
+    flex-basis: calc(100% - 29px);
+  }
+}

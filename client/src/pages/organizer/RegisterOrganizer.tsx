@@ -41,11 +41,11 @@ import {
 } from "lucide-react";
 import api from "@/lib/api";
 import { useAuth } from "@/features/auth/stores/authStore";
+import { FORM_KEYS, type FormState, discardLegacyDraft, readDraft, saveDraft as persistDraft, removeDraft } from "./organizer-draft";
 import "./register-organizer.css";
 
 const HERO_IMAGE =
   "https://res.cloudinary.com/qncrpmrb/image/upload/v1793090528/795256f4-8bf1-4556-8e61-23bc211b2600.png";
-const DRAFT_KEY = "eventhub.register-organizer.draft.v1";
 const HOTLINE = "0378531013";
 
 const CATEGORY_OPTIONS = [
@@ -86,38 +86,7 @@ type OrganizerApplication = {
   expected_event_scale: string;
 };
 
-type FormState = {
-  organizationName: string;
-  contactEmail: string;
-  contactPhone: string;
-  businessName: string;
-  taxIdOrBusinessLicense: string;
-  websiteOrSocial: string;
-  headOfficeAddress: string;
-  mainEventCategory: string;
-  expectedEventScale: string;
-  description: string;
-};
-
-type Draft = {
-  savedAt: string;
-  form: Partial<FormState>;
-};
-
 type TabKey = "form" | "tracking";
-
-const FORM_KEYS = [
-  "organizationName",
-  "contactEmail",
-  "contactPhone",
-  "businessName",
-  "taxIdOrBusinessLicense",
-  "websiteOrSocial",
-  "headOfficeAddress",
-  "mainEventCategory",
-  "expectedEventScale",
-  "description",
-] as const satisfies readonly (keyof FormState)[];
 
 const EMPTY_FORM: FormState = {
   organizationName: "",
@@ -179,31 +148,6 @@ function formatDate(value?: string | null) {
 
 function shortCode(id: string) {
   return id.replace(/-/g, "").slice(0, 8).toUpperCase();
-}
-
-function readDraft(): Draft | null {
-  try {
-    const raw = window.localStorage.getItem(DRAFT_KEY);
-    if (!raw) return null;
-    const parsed: unknown = JSON.parse(raw);
-    if (
-      !isRecord(parsed) ||
-      !isRecord(parsed.form) ||
-      typeof parsed.savedAt !== "string"
-    ) {
-      return null;
-    }
-    const form: Partial<FormState> = {};
-    for (const key of FORM_KEYS) {
-      const value = parsed.form[key];
-      if (typeof value === "string") form[key] = value;
-    }
-    const hasValue = FORM_KEYS.some((key) => (form[key] ?? "").trim().length > 0);
-    if (!hasValue) return null;
-    return { savedAt: parsed.savedAt, form };
-  } catch {
-    return null;
-  }
 }
 
 function Field({
@@ -417,6 +361,12 @@ function ApplicationCard({
 }
 
 export function RegisterOrganizer() {
+  const { user, revision, isAuthVerified } = useAuth();
+  useEffect(() => { discardLegacyDraft(); }, []);
+  return <RegisterOrganizerSession key={`${revision}:${isAuthVerified ? user?.idUser ?? "guest" : "pending"}`} />;
+}
+
+function RegisterOrganizerSession() {
   const user = useAuth((state) => state.user);
   const isAuthVerified = useAuth((state) => state.isAuthVerified);
   const revision = useAuth((state) => state.revision);
@@ -452,13 +402,14 @@ export function RegisterOrganizer() {
   );
 
   useEffect(() => {
-    const saved = readDraft();
+    if (!isAuthVerified || !userId) return;
+    const saved = readDraft(userId);
     if (!saved) return;
     setForm((current) => ({ ...current, ...saved.form }));
     setDraftNotice(
       `Đã khôi phục bản nháp lưu lúc ${formatDate(saved.savedAt) || "trước đó"}.`,
     );
-  }, []);
+  }, [isAuthVerified, userId]);
 
   useEffect(() => {
     if (!user) return;
@@ -582,16 +533,14 @@ export function RegisterOrganizer() {
   }
 
   function saveDraft() {
+    const current = useAuth.getState();
+    if (!isAuthVerified || !userId || current.revision !== revision || !current.isAuthVerified || current.user?.idUser !== userId) return;
     if (!hasDraftContent) {
       setDraftNotice("Chưa có thông tin để lưu nháp.");
       return;
     }
-    const savedAt = new Date().toISOString();
     try {
-      window.localStorage.setItem(
-        DRAFT_KEY,
-        JSON.stringify({ savedAt, form }),
-      );
+      const savedAt = persistDraft(userId, form);
       setDraftNotice(`Đã lưu bản nháp lúc ${formatDate(savedAt)}.`);
     } catch {
       setDraftNotice("Không thể lưu bản nháp trên trình duyệt này.");
@@ -599,16 +548,17 @@ export function RegisterOrganizer() {
   }
 
   function clearDraft() {
+    if (!isAuthVerified || !userId || useAuth.getState().revision !== revision) return;
     try {
-      window.localStorage.removeItem(DRAFT_KEY);
+      if (userId) removeDraft(userId);
     } catch {
-      // The browser may block storage; the form still works without a draft.
+      setDraftNotice("Không thể xóa bản nháp trên trình duyệt này.");
+      return;
     }
     setDraftNotice("Đã xóa bản nháp đã lưu.");
   }
 
   function goToLogin() {
-    if (hasDraftContent) saveDraft();
     navigate("/auth/login", { state: { from: "/register-organizer" } });
   }
 
@@ -700,7 +650,7 @@ export function RegisterOrganizer() {
       );
       setDraftNotice("");
       try {
-        window.localStorage.removeItem(DRAFT_KEY);
+        if (userId) removeDraft(userId);
       } catch {
         // Ignore storage failures; the draft is only a local convenience.
       }
@@ -920,8 +870,8 @@ export function RegisterOrganizer() {
                       <div>
                         <strong>Bạn chưa đăng nhập</strong>
                         <p>
-                          Bạn có thể điền trước và lưu bản nháp. Khi gửi hồ sơ,
-                          hệ thống sẽ yêu cầu đăng nhập rồi quay lại trang này.
+                          Đăng nhập trước khi nhập để lưu bản nháp. Nội dung
+                          nhập khi chưa đăng nhập sẽ không được giữ lại khi chuyển trang.
                         </p>
                       </div>
                       <button
@@ -1243,7 +1193,7 @@ export function RegisterOrganizer() {
                       type="button"
                       className="register-btn register-btn-draft"
                       onClick={saveDraft}
-                      disabled={busy}
+                      disabled={busy || !isAuthVerified || !userId}
                     >
                       <Save size={15} aria-hidden="true" />
                       Lưu bản nháp hồ sơ
@@ -1270,6 +1220,9 @@ export function RegisterOrganizer() {
                     </button>
                   </div>
 
+                  {(!isAuthVerified || !userId) && (
+                    <p className="reg-draft-note">Đăng nhập trước khi nhập để lưu bản nháp. Nội dung nhập khi chưa đăng nhập sẽ không được giữ lại khi chuyển trang.</p>
+                  )}
                   {draftNotice && (
                     <p className="reg-draft-note" role="status">
                       {draftNotice}
