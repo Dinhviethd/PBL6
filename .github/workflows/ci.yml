@@ -2,7 +2,7 @@ name: MVP checks
 on: [push, pull_request]
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     services:
       postgres:
         image: postgres:17-alpine
@@ -27,19 +27,39 @@ jobs:
       - run: npm ci --prefix mobile
       - run: npm run build
       - run: npm run check
-      - name: Install Chromium with retries for transient package mirror failures
-        working-directory: client
+      - run: npm run check:mobile
+      - run: npm run export --prefix mobile
+      - run: npm test
+        env:
+          TEST_DATABASE_URL: postgresql://postgres:testpass@localhost:5432/eventhub_test
+
+  security:
+    name: Browser security checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    container:
+      # Keep this version aligned with client/package-lock.json.
+      # Browsers and OS dependencies are preinstalled; no apt mirrors needed.
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
+      options: --ipc=host
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            server/package-lock.json
+            client/package-lock.json
+      - name: Check Playwright image matches the lockfile
         run: |
-          for attempt in 1 2 3; do
-            if npx playwright install --with-deps chromium; then
-              exit 0
-            fi
-            if [ "$attempt" -lt 3 ]; then
-              echo "Chromium installation failed (attempt $attempt/3); retrying in 10 seconds."
-              sleep 10
-            fi
-          done
-          exit 1
+          node -e "const v = require('./client/package-lock.json').packages['node_modules/playwright'].version; if (v !== '1.63.0') throw new Error('Update the pinned Playwright container to match the lockfile: ' + v);"
+      - run: npm ci --prefix server
+      - run: npm ci --prefix client
+      - run: npm run build
       - run: npm run test:security --prefix client
       - run: npm run test:security-smoke --prefix client
       - name: Upload security test diagnostics on failure
@@ -50,8 +70,3 @@ jobs:
           path: client/test-results/
           if-no-files-found: ignore
           retention-days: 7
-      - run: npm run check:mobile
-      - run: npm run export --prefix mobile
-      - run: npm test
-        env:
-          TEST_DATABASE_URL: postgresql://postgres:testpass@localhost:5432/eventhub_test
