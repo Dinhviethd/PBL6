@@ -1,0 +1,197 @@
+{
+  "timestamp": "2026-11-11T10:44:02.196Z",
+  "verdict": "NO_GO_FULL_ACCEPTANCE",
+  "scope": "37 screen codes; Android emulator and isolated local API; real-server read-only smoke",
+  "gitCommit": "a2a96d78549781d0406aae571d5726fba0b1e8f6",
+  "workingTree": "dirty; includes uncommitted migration work",
+  "mobile": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "unit": {
+      "passed": 34,
+      "failed": 0
+    }
+  },
+  "clientLint": "PASS",
+  "backendBuild": "PASS",
+  "moduleBoundaries": "PASS",
+  "backend": {
+    "total": 121,
+    "pass": 120,
+    "fail": 0,
+    "skip": 1,
+    "files": 34
+  },
+  "localApiUi": {
+    "startTime": "2026-11-11T10:35:59.488Z",
+    "passed": 22,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "durationMs": 349663.255
+  },
+  "mockUi": {
+    "startTime": "2026-11-11T10:43:38.803Z",
+    "passed": 19,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "durationMs": 20007.408
+  },
+  "lifecycle": {
+    "timestamp": "2026-11-11T10:42:35.706Z",
+    "device": "Pixel_8 emulator Android 17 x86_64",
+    "checks": [
+      {
+        "cycle": 1,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 2,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 3,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 4,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 5,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 6,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 7,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 8,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 9,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 10,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 11,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 12,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 13,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 14,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 15,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 16,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 17,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 18,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 19,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      },
+      {
+        "cycle": 20,
+        "result": "PASS",
+        "processPreserved": true,
+        "foregroundVerified": true
+      }
+    ],
+    "limitations": "Launcher-based warm resume; no physical-device, FPS, cold-start or iOS measurement."
+  },
+  "realServer": {
+    "base": "https://eventhubqrmarketing.tech/api",
+    "requests": 37,
+    "http200": 36,
+    "expected403": 1,
+    "businessWrites": 0,
+    "evidence": "MOBILE_SERVER_20261111_164652/live-readonly.json"
+  },
+  "apk": {
+    "version": "1.0.0",
+    "versionCode": 1,
+    "abi": "x86_64",
+    "bytes": 52806505,
+    "sha256": "EB8ACBBFA7CB2ABDC4B1A4DD8F412AA2F8BA4B8A723EF90E7570E917B23EB7B2",
+    "needsMetro": false,
+    "signing": "internal debug keystore",
+    "api": "https://eventhubqrmarketing.tech/api"
+  },
+  "notVerified": [
+    "physical Android/iOS",
+    "physical QR scan and two-device race",
+    "native bank return and successful SePay v2 sandbox reconciliation",
+    "native OTP/upload complete flow on final APK",
+    "TalkBack/VoiceOver complete tasks",
+    "physical performance/FPS",
+    "UAT/SUS",
+    "100% web action mapping",
+    "Stitch pixel comparison"
+  ]
+}

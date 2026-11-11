@@ -1,0 +1,112 @@
+[
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "history filters use canonical groups and inclusive Vietnam date bounds",
+    "status": "expected"
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "organizer analytics range, touch chart and authenticated CSV export",
+    "status": "expected"
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "attendees preserve server pagination and combine ticket type with check-in status",
+    "status": "expected"
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "organizer order detail shows authoritative timeline and ticket QR preview",
+    "status": "expected"
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "event draft survives reload, restores by account and guards unsaved navigation",
+    "status": "expected"
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "admin CSV export and bulk lock require selection and reason",
+    "status": "expected"
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "admin advanced event filters and batch metrics render at 320px",
+    "status": "expected"
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "organizer team invites to an owned event and confirms scoped revocation",
+    "status": "expected"
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "admin organizer profile loads only that organizer's event collection",
+    "status": "expected"
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "SePay reconcile validates range and shows real missing-token response",
+    "status": "expected"
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "phone previews capture customer, organizer and admin layouts with real local API",
+    "status": "expected"
+  },
+  {
+    "file": "migration-live.spec.ts",
+    "title": "real API: profile saves name/phone and uploaded avatar survives later edits",
+    "status": "expected"
+  },
+  {
+    "file": "migration-live.spec.ts",
+    "title": "real API: password mismatch blocks submit, password change ends old session",
+    "status": "expected"
+  },
+  {
+    "file": "migration-live.spec.ts",
+    "title": "real SMTP: reset password sends OTP, verifies it and returns to intended route",
+    "status": "expected"
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "real public API: price sheet validates ranges and sends zero-priced bounds",
+    "status": "expected"
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "real API: organizer creates event and ticket, submits it, admin approves in mobile UI",
+    "status": "expected"
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "real API: category create/edit/archive in mobile sheets",
+    "status": "expected"
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "role guards reject customer deep links to organizer/admin without showing private data",
+    "status": "expected"
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "real API: customer submits organizer application and admin rejects it with a reason",
+    "status": "expected"
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "management routes render real data without runtime exceptions or horizontal overflow at 320/390",
+    "status": "expected"
+  },
+  {
+    "file": "migration-payment-live.spec.ts",
+    "title": "real SePay: pending never reports success, transfer details and signed webhook lead to PAID and tickets",
+    "status": "expected"
+  },
+  {
+    "file": "migration-payment-live.spec.ts",
+    "title": "real API: cancel requires confirmation and cannot display paid result",
+    "status": "expected"
+  }
+]

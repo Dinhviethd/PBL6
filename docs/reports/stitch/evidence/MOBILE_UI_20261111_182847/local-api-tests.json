@@ -1,0 +1,134 @@
+[
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "history filters use canonical groups and inclusive Vietnam date bounds",
+    "status": "expected",
+    "durationMs": 4259.0
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "organizer analytics range, touch chart and authenticated CSV export",
+    "status": "expected",
+    "durationMs": 13582.0
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "attendees preserve server pagination and combine ticket type with check-in status",
+    "status": "expected",
+    "durationMs": 14752.0
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "organizer order detail shows authoritative timeline and ticket QR preview",
+    "status": "expected",
+    "durationMs": 14356.0
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "event draft survives reload, restores by account and guards unsaved navigation",
+    "status": "expected",
+    "durationMs": 15301.0
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "admin CSV export and bulk lock require selection and reason",
+    "status": "expected",
+    "durationMs": 15206.0
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "admin advanced event filters and batch metrics render at 320px",
+    "status": "expected",
+    "durationMs": 13497.0
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "organizer team invites to an owned event and confirms scoped revocation",
+    "status": "expected",
+    "durationMs": 15514.0
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "admin organizer profile loads only that organizer's event collection",
+    "status": "expected",
+    "durationMs": 14238.0
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "SePay reconcile validates range and shows real missing-token response",
+    "status": "expected",
+    "durationMs": 15319.0
+  },
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "phone previews capture customer, organizer and admin layouts with real local API",
+    "status": "expected",
+    "durationMs": 16747.0
+  },
+  {
+    "file": "migration-live.spec.ts",
+    "title": "real API: profile saves name/phone and uploaded avatar survives later edits",
+    "status": "expected",
+    "durationMs": 13754.0
+  },
+  {
+    "file": "migration-live.spec.ts",
+    "title": "real API: password mismatch blocks submit, password change ends old session",
+    "status": "expected",
+    "durationMs": 15516.0
+  },
+  {
+    "file": "migration-live.spec.ts",
+    "title": "real SMTP: reset password sends OTP, verifies it and returns to intended route",
+    "status": "expected",
+    "durationMs": 15901.0
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "real public API: price sheet validates ranges and sends zero-priced bounds",
+    "status": "expected",
+    "durationMs": 12457.0
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "real API: organizer creates event and ticket, submits it, admin approves in mobile UI",
+    "status": "expected",
+    "durationMs": 17400.0
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "real API: category create/edit/archive in mobile sheets",
+    "status": "expected",
+    "durationMs": 13693.0
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "role guards reject customer deep links to organizer/admin without showing private data",
+    "status": "expected",
+    "durationMs": 14157.0
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "real API: customer submits organizer application and admin rejects it with a reason",
+    "status": "expected",
+    "durationMs": 16778.0
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "management routes render real data without runtime exceptions or horizontal overflow at 320/390",
+    "status": "expected",
+    "durationMs": 52681.0
+  },
+  {
+    "file": "migration-payment-live.spec.ts",
+    "title": "real SePay: pending never reports success, transfer details and signed webhook lead to PAID and tickets",
+    "status": "expected",
+    "durationMs": 3058.0
+  },
+  {
+    "file": "migration-payment-live.spec.ts",
+    "title": "real API: cancel requires confirmation and cannot display paid result",
+    "status": "expected",
+    "durationMs": 13846.0
+  }
+]

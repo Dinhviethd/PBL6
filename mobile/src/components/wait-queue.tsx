@@ -136,7 +136,7 @@ export function MyWaitQueue() {
           )}
         </View>
       ))}
-      <Pager page={page} setPage={setPage} more={r.data?.length === 50} />
+      <Pager page={page} setPage={setPage} more={r.data?.length === 50} loading={r.loading} error={!!r.error} />
     </View>
   );
 }

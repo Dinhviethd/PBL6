@@ -52,6 +52,7 @@ export default function StaffScreen() {
         <Notice error text={error || r.error} />
         <Button
           title="Làm mới phân công"
+          icon="refresh-cw"
           secondary
           disabled={r.loading}
           onPress={r.reload}
@@ -91,11 +92,13 @@ export default function StaffScreen() {
                     </Text>
                     <Button
                       title="Chấp nhận lời mời"
+                      icon="check"
                       disabled={busy}
                       onPress={() => void respond(s.id, true)}
                     />
                     <Button
                       title="Từ chối"
+                      icon="x"
                       secondary
                       disabled={busy}
                       onPress={() => void respond(s.id, false)}
@@ -117,7 +120,13 @@ export default function StaffScreen() {
             );
           })
         )}
-        <Pager page={page} setPage={setPage} more={r.data?.length === 50} />
+        <Pager
+          page={page}
+          setPage={setPage}
+          more={r.data?.length === 50}
+          loading={r.loading}
+          error={!!r.error}
+        />
       </Screen>
     </RequireAuth>
   );

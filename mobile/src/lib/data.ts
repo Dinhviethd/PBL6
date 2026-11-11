@@ -3,21 +3,26 @@ import { useFocusEffect } from "expo-router";
 import { api } from "./api";
 import { useSession } from "./session";
 export const money = (value: string | number) =>
-  new Intl.NumberFormat("vi-VN", {
-    style: "currency",
-    currency: "VND",
-    maximumFractionDigits: 0,
-  }).format(Number(value));
+  value === "" || !Number.isFinite(Number(value))
+    ? "Chưa có thông tin"
+    : new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+        maximumFractionDigits: 0,
+      }).format(Number(value));
 export const when = (value: string) =>
-  new Date(value).toLocaleString("vi-VN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+  !Number.isFinite(Date.parse(value))
+    ? "Chưa có thời gian"
+    : new Date(value).toLocaleString("vi-VN", {
+        dateStyle: "medium",
+        timeStyle: "short",
+        timeZone: "Asia/Ho_Chi_Minh",
+      });
 export const errorMessage = (e: unknown) =>
   e instanceof Error ? e.message : "Có lỗi xảy ra. Vui lòng thử lại.";
-export function useResource<T>(path: string | null) {
+export function useResource<T>(path: string | null, envelope = false) {
   const { user } = useSession();
-  const identity = `${user?.idUser ?? "guest"}:${path}`;
+  const identity = `${user?.idUser ?? "guest"}:${path}:${envelope}`;
   const [state, setState] = useState<{
     identity: string;
     data: T | null;
@@ -40,7 +45,7 @@ export function useResource<T>(path: string | null) {
         loading: true,
       }));
       api
-        .request<T>(path)
+        .request<T>(path, "GET", undefined, {}, envelope)
         .then((data) => {
           if (generation.current === current)
             setState({ identity, data, error: "", loading: false });
@@ -59,7 +64,7 @@ export function useResource<T>(path: string | null) {
       };
       // The version is an explicit invalidation key for pull-to-refresh/polling.
       // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [path, identity, version]),
+    }, [path, identity, version, envelope]),
   );
   return {
     ...(state.identity === identity
@@ -103,5 +108,17 @@ const stateLabels: Record<string, string> = {
   REVOKED: "Đã thu hồi",
   FAILED: "Thất bại",
   SUCCEEDED: "Thành công",
+  DRAFT: "Bản nháp",
+  PENDING_REVIEW: "Chờ xét duyệt",
+  PUBLISHED: "Đã xuất bản",
+  APPROVED: "Đã phê duyệt",
+  REJECTED: "Đã từ chối",
+  INACTIVE: "Không hoạt động",
+  LOCKED: "Đã khóa",
+  RECEIVED: "Đã nhận",
+  PROCESSING: "Đang xử lý",
+  PROCESSED: "Đã xử lý",
+  REVIEW: "Cần đối soát",
+  ERROR: "Lỗi xử lý",
 };
 export const stateLabel = (status: string) => stateLabels[status] ?? status;

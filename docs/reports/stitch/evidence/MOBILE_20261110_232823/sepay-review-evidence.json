@@ -1,0 +1,78 @@
+{
+  "timestamp": "2026-11-10T15:58:25.564Z",
+  "target": "http://127.0.0.1:8016/api",
+  "calls": [
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/orders",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/sepay/orders/71ae91e9-8881-4e60-b18a-fda355205dc9/payment",
+      "status": 201,
+      "expected": 201
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/sepay/transactions",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/sepay/transactions",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/sepay/transactions/b2ca2316-bfe9-4d66-a845-9c7b5791f9a7",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/admin/sepay/transactions/b2ca2316-bfe9-4d66-a845-9c7b5791f9a7/reprocess",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/sepay/transactions/b2ca2316-bfe9-4d66-a845-9c7b5791f9a7",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/sepay/transactions/b2ca2316-bfe9-4d66-a845-9c7b5791f9a7",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/admin/sepay/transactions/b2ca2316-bfe9-4d66-a845-9c7b5791f9a7/resolve",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/me/orders/71ae91e9-8881-4e60-b18a-fda355205dc9",
+      "status": 200,
+      "expected": 200
+    }
+  ]
+}

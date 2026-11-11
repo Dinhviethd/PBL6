@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>EventHub — Bố cục điện thoại</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#080b1a;color:#f8fafc;font:16px/1.6 system-ui,sans-serif}main{max-width:1080px;margin:auto;padding:32px 20px}h1{line-height:1.25;font-size:30px}p{color:#a9b7ca;max-width:700px}a{color:#22d3ee}nav{display:flex;flex-wrap:wrap;gap:8px;margin:24px 0}button{font:inherit;min-height:48px;border:1px solid #334155;border-radius:12px;background:#10162b;color:#f8fafc;padding:10px 16px;cursor:pointer}button[aria-pressed=true]{background:#7c3aed;border-color:#9f71ff}button:focus-visible{outline:3px solid #22d3ee;outline-offset:3px}.layout{display:flex;align-items:flex-start;flex-wrap:wrap;gap:32px}.phone{width:min(100%,414px);padding:10px;border:2px solid #334155;background:#10162b;border-radius:32px;box-shadow:0 20px 70px #0007;transition:width .2s}.phone img{display:block;width:100%;border-radius:22px}.description{flex:1;min-width:220px;max-width:420px}.tag{color:#22d3ee;font-size:13px;letter-spacing:1px}#caption{font-size:20px;font-weight:650}small{color:#94a3b8} @media(max-width:500px){main{padding:20px 12px}h1{font-size:25px}}
+    #phone{max-width:100%}
+  </style>
+</head>
+<body>
+<main>
+  <div class="tag">EVENTHUB · KIỂM TRA BỐ CỤC MOBILE</div>
+  <h1>Giao diện phù hợp với điện thoại</h1>
+  <p>Giao diện cập nhật ngày 11/11/2026: tải thêm trên ví vé/thông báo, khám phá cuộn tải tiếp, phân trang quản lý gọn và icon ứng dụng từ logo web. Ảnh web dùng dữ liệu QA local; các mục Android là ảnh emulator của APK mới. Chọn màn để xem.</p>
+  <nav aria-label="Chọn màn hình" id="screens"></nav>
+  <div class="layout">
+    <div class="phone" id="phone"><img id="preview" alt="" src="../reports/stitch/evidence/MOBILE_POLISH_20261111_190822/home-390.png"></div>
+    <div class="description">
+      <div id="caption" aria-live="polite"></div><p id="detail"></p>
+      <nav aria-label="Kích thước xem thử"><button id="normal" aria-pressed="true">390 px</button><button id="narrow" aria-pressed="false">320 px</button></nav>
+      <small>Ảnh tĩnh không phải ứng dụng Live. Kết quả UI/API local và giới hạn native được ghi trong <a href="../reports/stitch/MOBILE_20261111_210623_load_more_brand_implementation.md">báo cáo phiên</a>.</small>
+    </div>
+  </div>
+</main>
+<script>
+  const entries=[
+    ['Trang chủ','home-390','Hero gọn, tìm kiếm dễ chạm, danh mục có thể vuốt ngang và bốn tab chính.'],
+    ['Thống kê BTC','organizer-stats-390','Phân biệt số liệu toàn sự kiện với kỳ báo cáo; bộ lọc ngày và xuất báo cáo.'],
+    ['Biểu đồ','organizer-chart-390','Biểu đồ cuộn ngang, chạm chọn ngày để đọc giá trị và số vé.'],
+    ['Đội ngũ','organizer-team-390','Nhân sự theo tổ chức, lời mời theo sự kiện và thu hồi phân công có xác nhận.'],
+    ['Sự kiện Admin','admin-events-390','Bộ lọc nâng cao thu gọn, tìm kiếm, trạng thái và danh sách thẻ thay bảng rộng.'],
+    ['Tổng quan Admin','admin-dashboard-390','Doanh thu theo kỳ và các chỉ số toàn hệ thống được ghi rõ phạm vi.']
+  ];
+  entries.push(
+    ['Tài khoản','account-390','Menu theo nhóm, avatar và icon dễ nhận biết. Ảnh web với dữ liệu QA local.','account-320'],
+    ['Ví vé','tickets-390','Trạng thái và loại vé rõ ràng; mã dài rút gọn trong danh sách, CTA Mở vé giữ mã đầy đủ trong nhãn trợ năng. Ảnh web QA.','tickets-320'],
+    ['Đăng nhập','auth-390','Icon email, khóa và mắt trong ô nhập; giữ xác thực hiện có. Ảnh web QA.','auth-320'],
+    ['Android — Trang chủ','native-home','Ảnh APK mới trên Android emulator; kiểm tra bố cục và icon trên native.'],
+    ['Android — Chữ 200%','native-auth-font200','Ảnh Android ở font_scale 2.0; đã mở được biểu mẫu đăng ký. Đây là kiểm tra riêng auth, không chứng nhận tất cả màn.']
+  );
+  const pagingRoot='../reports/stitch/evidence/MOBILE_PAGING_20261111_210623/';
+  const walletIndex=entries.findIndex(e=>e[0]==='Ví vé');
+  entries[walletIndex]=['Ví vé','tickets-390','Danh sách ảo hóa; Tải thêm khi có trang sau. Ảnh API local với dữ liệu QA; không hiện thanh chuyển trang trên danh sách một trang.','tickets-320',pagingRoot];
+  entries.push(
+    ['Thông báo','notifications-390','Tải thêm và giữ các trang đã nạp khi cập nhật trạng thái đọc; ảnh API local QA.',null,pagingRoot],
+    ['Đơn hàng — Pager gọn','orders-pager-390','Mũi tên 48 px, số trang ở giữa. Ẩn khi chỉ có một trang hoặc đang tải/lỗi. Ảnh API local QA.',null,pagingRoot],
+    ['Icon ứng dụng','app-icon','Logo nguyên gốc web, căn giữa trên nền sáng để dễ đọc; icon vuông 1024 px.',null,pagingRoot],
+    ['Android — Logo launcher','native-launcher-icon','Ảnh launcher Android emulator sau khi cài APK mới: logo web nằm trong icon tròn.',null,pagingRoot],
+    ['Android — Khám phá','native-explore-bottom','Ảnh cuộn danh sách native; không còn thanh Trang trước / Trang sau. Chưa chứng nhận authenticated nhiều trang.',null,pagingRoot]
+  );
+  let current=0,narrow=false;
+  const root='../reports/stitch/evidence/MOBILE_POLISH_20261111_190822/';
+  function render(){const e=entries[current];document.getElementById('preview').src=(e[4]||root)+(narrow?(e[3]||(current===4?'admin-events-320':e[1])):e[1])+'.png';document.getElementById('preview').alt=e[0]+' — ảnh bố cục điện thoại';document.getElementById('caption').textContent=e[0];document.getElementById('detail').textContent=e[2];document.getElementById('phone').style.width=narrow?'344px':'414px';document.querySelectorAll('#screens button').forEach((b,i)=>b.setAttribute('aria-pressed',String(i===current)));document.getElementById('normal').setAttribute('aria-pressed',String(!narrow));document.getElementById('narrow').setAttribute('aria-pressed',String(narrow));}
+  entries.forEach((e,i)=>{const b=document.createElement('button');b.textContent=e[0];b.onclick=()=>{current=i;render()};document.getElementById('screens').append(b)});
+  document.getElementById('normal').onclick=()=>{narrow=false;render()};document.getElementById('narrow').onclick=()=>{narrow=true;render()};render();
+</script>
+</body>
+</html>

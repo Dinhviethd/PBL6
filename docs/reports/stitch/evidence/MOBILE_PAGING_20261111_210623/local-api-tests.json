@@ -1,0 +1,17 @@
+[
+  {
+    "file": "migration-completion-live.spec.ts",
+    "title": "history filters use canonical groups and inclusive Vietnam date bounds",
+    "status": "expected"
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "real public API: price sheet validates ranges and sends zero-priced bounds",
+    "status": "expected"
+  },
+  {
+    "file": "migration-management-live.spec.ts",
+    "title": "management routes render real data without runtime exceptions or horizontal overflow at 320/390",
+    "status": "expected"
+  }
+]

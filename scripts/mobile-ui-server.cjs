@@ -29,7 +29,16 @@ http
       res.writeHead(403).end();
       return;
     }
-    if (pathname.startsWith("/api/")) {
+    if (pathname.startsWith("/api/") || (process.argv.includes("--live-test-api") && pathname.startsWith("/uploads/"))) {
+      if (process.argv.includes("--live-test-api")) {
+        // Fixed loopback target: never proxy tests to a configured Live API.
+        const port = process.argv.includes("--sepay") ? 8016 : 8015;
+        const upstream = http.request({ hostname: "127.0.0.1", port, path: req.url, method: req.method, headers: { ...req.headers, host: `127.0.0.1:${port}` } }, incoming => {
+          res.writeHead(incoming.statusCode, incoming.headers); incoming.pipe(res);
+        });
+        upstream.on("error", () => res.writeHead(502).end("Local migration API unavailable"));
+        req.pipe(upstream); return;
+      }
       res.writeHead(503).end("UI tests must mock API requests");
       return;
     }

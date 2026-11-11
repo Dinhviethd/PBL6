@@ -1,0 +1,22 @@
+{
+  "timestamp": "2026-11-10T16:49:57.936Z",
+  "device": "Pixel_8 emulator Android 17",
+  "checks": [
+    {
+      "label": "camera stops after background/resume",
+      "result": "PASS"
+    },
+    {
+      "label": "native manual entry checks in real VALID ticket",
+      "result": "PASS"
+    },
+    {
+      "label": "native duplicate entry displays already checked in",
+      "result": "PASS"
+    },
+    {
+      "label": "server ticket state is CHECKED_IN",
+      "result": "PASS"
+    }
+  ]
+}

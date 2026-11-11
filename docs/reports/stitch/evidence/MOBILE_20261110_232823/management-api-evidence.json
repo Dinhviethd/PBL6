@@ -1,0 +1,1021 @@
+{
+  "timestamp": "2026-11-10T15:40:52.270Z",
+  "target": "http://127.0.0.1:8016/api",
+  "calls": [
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "user",
+          "accessToken",
+          "refreshToken"
+        ],
+        "nested": {
+          "user": [
+            "idUser",
+            "name",
+            "email",
+            "phone",
+            "avatarUrl",
+            "emailVerified",
+            "createdAt",
+            "roles",
+            "permissions"
+          ]
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "user",
+          "accessToken",
+          "refreshToken"
+        ],
+        "nested": {
+          "user": [
+            "idUser",
+            "name",
+            "email",
+            "phone",
+            "avatarUrl",
+            "emailVerified",
+            "createdAt",
+            "roles",
+            "permissions"
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/dashboard",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "asOf",
+          "timezone",
+          "range",
+          "scope",
+          "totals",
+          "currentEventCounts",
+          "dailySeries",
+          "upcomingEvents"
+        ],
+        "nested": {
+          "range": [
+            "fromDate",
+            "toDate"
+          ],
+          "scope": [
+            "eventId"
+          ],
+          "totals": [
+            "revenue",
+            "sold",
+            "paidOrders"
+          ],
+          "currentEventCounts": [
+            "onSale"
+          ],
+          "dailySeries": {
+            "array": true,
+            "length": 30,
+            "itemKeys": [
+              "date",
+              "revenue",
+              "sold"
+            ]
+          },
+          "upcomingEvents": {
+            "array": true,
+            "length": 1,
+            "itemKeys": [
+              "id",
+              "title",
+              "coverImageUrl",
+              "venueName",
+              "startsAt",
+              "endsAt",
+              "temporalStatus",
+              "capacity",
+              "sold",
+              "checkedIn",
+              "eligibleTickets"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "array": true,
+        "length": 1,
+        "itemKeys": [
+          "id",
+          "organizer_id",
+          "category_id",
+          "slug",
+          "title",
+          "description",
+          "cover_image_url",
+          "cover_image_public_id",
+          "venue_name",
+          "address",
+          "city_code",
+          "starts_at",
+          "ends_at",
+          "checkin_opens_at",
+          "checkin_closes_at",
+          "status",
+          "review_version",
+          "submitted_at",
+          "published_at",
+          "sales_paused",
+          "checkin_paused",
+          "cancelled_at",
+          "cancellation_reason",
+          "archived_at",
+          "created_at",
+          "updated_at",
+          "total_results",
+          "revenue",
+          "capacity",
+          "sold_quantity",
+          "fill_rate"
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events/status-counts",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "array": true,
+        "length": 1,
+        "itemKeys": [
+          "status",
+          "count"
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "id",
+          "organizer_id",
+          "category_id",
+          "slug",
+          "title",
+          "description",
+          "cover_image_url",
+          "cover_image_public_id",
+          "venue_name",
+          "address",
+          "city_code",
+          "starts_at",
+          "ends_at",
+          "checkin_opens_at",
+          "checkin_closes_at",
+          "status",
+          "review_version",
+          "submitted_at",
+          "published_at",
+          "sales_paused",
+          "checkin_paused",
+          "cancelled_at",
+          "cancellation_reason",
+          "archived_at",
+          "created_at",
+          "updated_at",
+          "ticketTypes",
+          "reviews"
+        ],
+        "nested": {
+          "ticketTypes": {
+            "array": true,
+            "length": 1,
+            "itemKeys": [
+              "id",
+              "event_id",
+              "name",
+              "description",
+              "price_amount",
+              "capacity",
+              "reserved_quantity",
+              "sold_quantity",
+              "sale_starts_at",
+              "sale_ends_at",
+              "archived_at",
+              "created_at",
+              "updated_at",
+              "waiting_count"
+            ]
+          },
+          "reviews": {
+            "array": true,
+            "length": 1,
+            "itemKeys": [
+              "decision",
+              "reason",
+              "review_version",
+              "created_at"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/orders",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "array": true,
+        "length": 3,
+        "itemKeys": [
+          "id",
+          "order_code",
+          "buyer_id",
+          "event_id",
+          "status",
+          "currency",
+          "total_quantity",
+          "total_amount",
+          "buyer_name_snapshot",
+          "buyer_email_snapshot",
+          "event_title_snapshot",
+          "idempotency_key",
+          "request_hash",
+          "expires_at",
+          "paid_payment_id",
+          "paid_at",
+          "closed_at",
+          "close_reason",
+          "created_at",
+          "updated_at"
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/order-manager",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "asOf",
+          "items",
+          "counts",
+          "summary",
+          "pagination"
+        ],
+        "nested": {
+          "items": {
+            "array": true,
+            "length": 3,
+            "itemKeys": [
+              "id",
+              "orderCode",
+              "createdAt",
+              "buyer",
+              "event",
+              "totalQuantity",
+              "totalAmount",
+              "currency",
+              "status",
+              "group",
+              "items",
+              "payment",
+              "tickets",
+              "actions"
+            ]
+          },
+          "counts": [
+            "all",
+            "paid",
+            "processing",
+            "closed"
+          ],
+          "summary": [
+            "totalOrders",
+            "revenuePaid",
+            "paidOrders",
+            "paidRatePercent",
+            "processingOrders",
+            "closedOrders"
+          ],
+          "pagination": [
+            "page",
+            "pageSize",
+            "total",
+            "totalPages"
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/orders/ec65e75b-0bc8-4036-b164-f7792be8eba0",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "id",
+          "orderCode",
+          "status",
+          "group",
+          "createdAt",
+          "expiresAt",
+          "totalQuantity",
+          "totalAmount",
+          "currency",
+          "buyer",
+          "event",
+          "items",
+          "tickets",
+          "payment",
+          "bankAccount",
+          "timeline",
+          "traceId",
+          "actions",
+          "capabilities",
+          "asOf"
+        ],
+        "nested": {
+          "buyer": [
+            "name",
+            "email",
+            "phone",
+            "phoneSource"
+          ],
+          "event": [
+            "id",
+            "title",
+            "startsAt",
+            "endsAt",
+            "venueName"
+          ],
+          "items": {
+            "array": true,
+            "length": 1,
+            "itemKeys": [
+              "typeName",
+              "quantity",
+              "unitPrice",
+              "lineTotal"
+            ]
+          },
+          "tickets": {
+            "array": true,
+            "length": 1,
+            "itemKeys": [
+              "id",
+              "code",
+              "typeName",
+              "unitPrice",
+              "status",
+              "issuedAt",
+              "checkedInAt"
+            ]
+          },
+          "payment": [
+            "paid",
+            "active",
+            "latest",
+            "display",
+            "unresolvedReview"
+          ],
+          "bankAccount": [
+            "paymentId",
+            "bankCode",
+            "accountNumber",
+            "accountName",
+            "source"
+          ],
+          "timeline": {
+            "array": true,
+            "length": 4,
+            "itemKeys": [
+              "id",
+              "type",
+              "occurredAt",
+              "source"
+            ]
+          },
+          "actions": [
+            "canPreviewTickets",
+            "canPrintTickets"
+          ],
+          "capabilities": [
+            "invoice",
+            "kyc",
+            "risk",
+            "dynamicQr",
+            "audit",
+            "timeline",
+            "pos"
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/attendees",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "array": true,
+        "length": 2,
+        "itemKeys": [
+          "id",
+          "event_id",
+          "ticket_code",
+          "status",
+          "issued_at",
+          "ticket_type_name_snapshot",
+          "event_title_snapshot",
+          "buyer_name_snapshot",
+          "buyer_email_snapshot",
+          "checked_in_at"
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/analytics",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "eventId",
+          "eventTitle",
+          "asOf",
+          "timezone",
+          "range",
+          "totals",
+          "dailySeries",
+          "ticketTypes"
+        ],
+        "nested": {
+          "range": [
+            "fromDate",
+            "toDate"
+          ],
+          "totals": [
+            "revenue",
+            "sold",
+            "paidOrders"
+          ],
+          "dailySeries": {
+            "array": true,
+            "length": 30,
+            "itemKeys": [
+              "date",
+              "revenue",
+              "sold"
+            ]
+          },
+          "ticketTypes": {
+            "array": true,
+            "length": 1,
+            "itemKeys": [
+              "id",
+              "name",
+              "capacity",
+              "archived",
+              "sold",
+              "revenue"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/staff",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "array": true,
+        "length": 0,
+        "itemKeys": []
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/checkins",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "array": true,
+        "length": 0,
+        "itemKeys": []
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/stats",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "orders",
+          "revenue",
+          "sold",
+          "checkins",
+          "provider_received",
+          "needs_review",
+          "events",
+          "users",
+          "organizers"
+        ],
+        "nested": {}
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/users",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "data",
+          "pagination"
+        ],
+        "nested": {
+          "data": {
+            "array": true,
+            "length": 0,
+            "itemKeys": []
+          },
+          "pagination": [
+            "page",
+            "pageSize",
+            "total",
+            "totalPages"
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/organizer-applications",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "items",
+          "pagination",
+          "stats"
+        ],
+        "nested": {
+          "items": {
+            "array": true,
+            "length": 0,
+            "itemKeys": []
+          },
+          "pagination": [
+            "page",
+            "pageSize",
+            "total",
+            "totalPages"
+          ],
+          "stats": [
+            "total",
+            "active",
+            "pending"
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/categories",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "data",
+          "pagination",
+          "stats"
+        ],
+        "nested": {
+          "data": {
+            "array": true,
+            "length": 3,
+            "itemKeys": [
+              "id",
+              "name",
+              "slug",
+              "description",
+              "archived_at",
+              "created_at",
+              "updated_at",
+              "event_count"
+            ]
+          },
+          "pagination": [
+            "page",
+            "pageSize",
+            "total",
+            "totalPages"
+          ],
+          "stats": [
+            "total",
+            "archived",
+            "total_events"
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/events",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "items",
+          "pagination"
+        ],
+        "nested": {
+          "items": {
+            "array": true,
+            "length": 3,
+            "itemKeys": [
+              "id",
+              "slug",
+              "title",
+              "category_id",
+              "organizer_id",
+              "cover_image_url",
+              "venue_name",
+              "address",
+              "city_code",
+              "starts_at",
+              "ends_at",
+              "status",
+              "sales_paused",
+              "created_at",
+              "updated_at"
+            ]
+          },
+          "pagination": [
+            "page",
+            "limit",
+            "total",
+            "totalPages"
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/events/kpis",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "total",
+          "selling",
+          "pending_review",
+          "paused_or_cancelled"
+        ],
+        "nested": {}
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/payments",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "array": true,
+        "length": 3,
+        "itemKeys": [
+          "id",
+          "order_id",
+          "provider",
+          "merchant_account",
+          "merchant_reference",
+          "provider_transaction_id",
+          "status",
+          "amount",
+          "currency",
+          "checkout_url",
+          "provider_expires_at",
+          "reconcile_until",
+          "next_reconcile_at",
+          "last_verified_at",
+          "succeeded_at",
+          "failure_code",
+          "requires_review",
+          "review_reason",
+          "review_resolved_at",
+          "review_resolved_by",
+          "review_resolution_note",
+          "created_at",
+          "updated_at"
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/sepay/transactions",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "array": true,
+        "length": 3,
+        "itemKeys": [
+          "id",
+          "environment",
+          "integration_account",
+          "webhook_transaction_id",
+          "api_transaction_id",
+          "reference_code",
+          "bank_code",
+          "account_masked",
+          "transfer_type",
+          "amount",
+          "currency",
+          "payment_code",
+          "payment_id",
+          "status",
+          "reason",
+          "attempt_count",
+          "transaction_at",
+          "received_at",
+          "processed_at"
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/settings/payment-information",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "sepay",
+          "vnpay"
+        ],
+        "nested": {
+          "sepay": [
+            "name",
+            "configured",
+            "enabled",
+            "environment",
+            "bankCode",
+            "accountNumber",
+            "accountName",
+            "transferContent",
+            "webhookUrl"
+          ],
+          "vnpay": [
+            "name",
+            "environment",
+            "configured",
+            "merchantCode",
+            "checkoutUrl",
+            "returnUrl",
+            "ipnUrl",
+            "enabled"
+          ]
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/register",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "user",
+          "accessToken",
+          "refreshToken"
+        ],
+        "nested": {
+          "user": [
+            "idUser",
+            "name",
+            "email",
+            "phone",
+            "avatarUrl",
+            "emailVerified",
+            "createdAt",
+            "roles",
+            "permissions"
+          ]
+        }
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/me/organizer-applications",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "id",
+          "user_id",
+          "organization_name",
+          "contact_name",
+          "contact_email",
+          "contact_phone",
+          "description",
+          "business_name",
+          "tax_id_or_business_license",
+          "website_or_social",
+          "head_office_address",
+          "main_event_category",
+          "expected_event_scale",
+          "status",
+          "reviewed_by",
+          "reviewed_at",
+          "rejection_reason",
+          "created_at",
+          "logo_url",
+          "pending_legal_changes"
+        ],
+        "nested": {}
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/me/organizer-applications",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "array": true,
+        "length": 1,
+        "itemKeys": [
+          "id",
+          "user_id",
+          "organization_name",
+          "contact_name",
+          "contact_email",
+          "contact_phone",
+          "description",
+          "business_name",
+          "tax_id_or_business_license",
+          "website_or_social",
+          "head_office_address",
+          "main_event_category",
+          "expected_event_scale",
+          "status",
+          "reviewed_by",
+          "reviewed_at",
+          "rejection_reason",
+          "created_at",
+          "logo_url",
+          "pending_legal_changes"
+        ]
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/organizer-applications/034d9481-a4f7-4699-bf55-b051958e9561",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "id",
+          "user_id",
+          "organization_name",
+          "business_name",
+          "tax_id_or_business_license",
+          "contact_name",
+          "contact_email",
+          "contact_phone",
+          "head_office_address",
+          "description",
+          "website_or_social",
+          "logo_url",
+          "main_event_category",
+          "expected_event_scale",
+          "status",
+          "created_at",
+          "reviewed_at",
+          "rejection_reason"
+        ],
+        "nested": {}
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/admin/organizer-applications/034d9481-a4f7-4699-bf55-b051958e9561/review",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [],
+        "nested": {}
+      }
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "user",
+          "accessToken",
+          "refreshToken"
+        ],
+        "nested": {
+          "user": [
+            "idUser",
+            "name",
+            "email",
+            "phone",
+            "avatarUrl",
+            "emailVerified",
+            "createdAt",
+            "roles",
+            "permissions"
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/profile",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "organizationName",
+          "businessName",
+          "taxIdOrBusinessLicense",
+          "contactName",
+          "contactEmail",
+          "contactPhone",
+          "headOfficeAddress",
+          "description",
+          "websiteOrSocial",
+          "logoUrl",
+          "ownerId",
+          "sourceApplicationId",
+          "version",
+          "initialized",
+          "applicationStatus",
+          "verification",
+          "updatedAt",
+          "capabilities"
+        ],
+        "nested": {
+          "capabilities": [
+            "logo",
+            "legalReview"
+          ]
+        }
+      }
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/team",
+      "status": 200,
+      "expected": 200,
+      "shape": {
+        "keys": [
+          "owner",
+          "items",
+          "hasNext"
+        ],
+        "nested": {
+          "owner": [
+            "id",
+            "name",
+            "email",
+            "avatarUrl"
+          ],
+          "items": {
+            "array": true,
+            "length": 0,
+            "itemKeys": []
+          }
+        }
+      }
+    }
+  ]
+}

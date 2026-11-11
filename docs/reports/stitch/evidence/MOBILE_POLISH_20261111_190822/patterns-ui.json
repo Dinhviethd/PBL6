@@ -1,0 +1,32 @@
+{
+  "timestamp": "2026-11-11T12:05:27.944Z",
+  "checks": [
+    {
+      "width": 320,
+      "menuTouch48": true,
+      "allFourDestinations": true,
+      "customerCannotSeeAdmin": true,
+      "noOverflow": true,
+      "noPageError": true,
+      "result": "PASS"
+    },
+    {
+      "width": 390,
+      "menuTouch48": true,
+      "allFourDestinations": true,
+      "customerCannotSeeAdmin": true,
+      "noOverflow": true,
+      "noPageError": true,
+      "result": "PASS"
+    },
+    {
+      "width": 768,
+      "menuTouch48": true,
+      "allFourDestinations": true,
+      "customerCannotSeeAdmin": true,
+      "noOverflow": true,
+      "noPageError": true,
+      "result": "PASS"
+    }
+  ]
+}

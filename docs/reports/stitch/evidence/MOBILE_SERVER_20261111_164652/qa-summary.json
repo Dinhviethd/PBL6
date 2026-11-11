@@ -1,0 +1,92 @@
+{
+  "date": "2026-11-11",
+  "timezone": "Asia/Ho_Chi_Minh",
+  "source": "Observed command results in this session; counts refer to tests or HTTP calls as labeled.",
+  "mobileChecks": {
+    "typecheck": "PASS",
+    "lint": "PASS",
+    "unitTests": {
+      "passed": 34,
+      "failed": 0
+    }
+  },
+  "clientLint": "PASS",
+  "localApiUiSuite": {
+    "passed": 21,
+    "failed": 0,
+    "duration": "5.8m",
+    "environment": "127.0.0.1:8083 -> local API8016/PostgreSQL55433/Mailpit"
+  },
+  "mockUiSuite": {
+    "passed": 19,
+    "failed": 0,
+    "duration": "38.6s",
+    "includes": "VOID ticket QR/export suppression and home viewports320/360/390/430/768"
+  },
+  "phonePreviewAndCollapsedFilterChecks": {
+    "passed": 2,
+    "failed": 0,
+    "duration": "27.6s",
+    "note": "Targeted checks after the C8 filter layout change; preview is one additional unique scenario."
+  },
+  "remoteApi": {
+    "base": "https://eventhubqrmarketing.tech/api",
+    "httpCalls": 37,
+    "http200": 36,
+    "http403Expected": 1,
+    "roles": [
+      "USER",
+      "ORGANIZER",
+      "ADMIN"
+    ],
+    "businessMutations": 0
+  },
+  "androidDevelopmentBuild": {
+    "status": "PASS",
+    "duration": "5m11s",
+    "tasks": 477,
+    "apkBytes": 97306998,
+    "sha256": "F4195E3402DCF4B40E7C0F5372BD8035F57EF39F0677DBFBB874DF2E5AE84B34",
+    "abi": "x86_64",
+    "installed": true
+  },
+  "standaloneApk": {
+    "status": "BUILD_AND_INSTALL_PASS",
+    "duration": "5m42s",
+    "tasks": 797,
+    "bytes": 52806297,
+    "sha256": "49C377E834F75229701D63DD9FD1875A12F3406E6EA4C942A7BB14E59EB297F4",
+    "abi": "x86_64",
+    "embeddedApi": "https://eventhubqrmarketing.tech/api",
+    "localTestApiEmbedded": false,
+    "needsMetro": false,
+    "signing": "internal debug keystore; not store signing"
+  },
+  "nativeFullAcceptance": "PARTIAL; see new standalone report",
+  "stitchArtifactDownload": "BLOCKED_HTTP_401",
+  "sepayV2SuccessfulReconciliation": "BLOCKED_MISSING_SANDBOX_TOKEN",
+  "chartLatestDateChecks": {
+    "passed": 2,
+    "failed": 0,
+    "duration": "41.6s",
+    "note": "Targeted chart/CSV and refreshed phone previews after default scrolling change."
+  },
+  "latestStandaloneApk": {
+    "bytes": 52806505,
+    "sha256": "EB8ACBBFA7CB2ABDC4B1A4DD8F412AA2F8BA4B8A723EF90E7570E917B23EB7B2",
+    "build": "SUCCESS3m797tasks",
+    "changes": "font200 tab labels wrap; height follows fontScale",
+    "installed": true
+  },
+  "nativeLiveVerified": [
+    "Customer/Organizer/Admin login",
+    "Customer history/wallet/VALID ticket",
+    "PDF system chooser",
+    "Organizer7day native date filter",
+    "OrganizerCSV system chooser",
+    "Admin dashboard/scale filter",
+    "Admin session restored after force-stop",
+    "Offline startup/online retry preserves session",
+    "four complete tab labels at font200"
+  ]
+}

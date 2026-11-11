@@ -3,7 +3,12 @@ import base from "./playwright.mobile.config";
 
 export default defineConfig({
   ...base,
-  testMatch: ["stitch-mobile.spec.ts", "notifications-ui.spec.ts"],
+  testMatch: [
+    "stitch-mobile.spec.ts",
+    "notifications-ui.spec.ts",
+    "home-mobile.spec.ts",
+    "load-more-ui.spec.ts",
+  ],
   use: { ...base.use, baseURL: "http://127.0.0.1:8083" },
   webServer: {
     command: "node ../scripts/mobile-ui-server.cjs",

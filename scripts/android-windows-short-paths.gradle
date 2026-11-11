@@ -1,0 +1,11 @@
+// Local build-only setting: hash C++ object paths before Windows MAX_PATH.
+allprojects { target ->
+    ['com.android.application', 'com.android.library'].each { pluginId ->
+        target.plugins.withId(pluginId) {
+            target.android.defaultConfig.externalNativeBuild.cmake.arguments.add('-DCMAKE_OBJECT_PATH_MAX=250')
+            if (pluginId == 'com.android.application') {
+                target.android.externalNativeBuild.cmake.buildStagingDirectory = new File(target.rootDir, '../../.local/cxx/app').canonicalFile
+            }
+        }
+    }
+}

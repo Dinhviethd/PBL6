@@ -1,0 +1,41 @@
+{
+  "timestamp": "2026-11-10T16:47:23.230Z",
+  "device": "Pixel_8 emulator Android 17",
+  "checks": [
+    {
+      "route": "/organizer",
+      "expected": "Tổng quan Ban tổ chức",
+      "result": "PASS"
+    },
+    {
+      "route": "/organizer/events",
+      "expected": "Sự kiện của bạn",
+      "result": "PASS"
+    },
+    {
+      "route": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe",
+      "expected": "Sự kiện mobile b42dbd7b",
+      "result": "PASS"
+    },
+    {
+      "route": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/stats",
+      "expected": "Thống kê sự kiện",
+      "result": "PASS"
+    },
+    {
+      "route": "/admin",
+      "expected": "Tổng quan quản trị",
+      "result": "PASS"
+    },
+    {
+      "route": "/admin/categories",
+      "expected": "Danh mục sự kiện",
+      "result": "PASS"
+    },
+    {
+      "route": "/admin/settings",
+      "expected": "Cấu hình thanh toán",
+      "result": "PASS"
+    }
+  ]
+}

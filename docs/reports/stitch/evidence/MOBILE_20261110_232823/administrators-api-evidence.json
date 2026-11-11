@@ -1,0 +1,73 @@
+{
+  "timestamp": "2026-11-10T15:52:39.716Z",
+  "target": "http://127.0.0.1:8016/api",
+  "calls": [
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/administrators/catalog",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/administrators",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/register",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/admin/administrators",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/administrators/da824440-4ad9-4641-ab67-324a1a10da16",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/admin/administrators/da824440-4ad9-4641-ab67-324a1a10da16",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/administrators/da824440-4ad9-4641-ab67-324a1a10da16",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/admin/administrators/da824440-4ad9-4641-ab67-324a1a10da16",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/admin/sepay/reconcile",
+      "status": 503,
+      "expected": 503,
+      "code": "SEPAY_V2_NOT_CONFIGURED"
+    }
+  ]
+}

@@ -18,6 +18,8 @@
 
 ## 2. Tổng quan dự án
 
+> Cập nhật kế hoạch mobile 2026-11-10 22:16 UTC+07: [Kế hoạch chuyển toàn bộ web sang mobile](ui/MOBILE_FULL_MIGRATION_PLAN.md) bao phủ A1–A13, B1–B12, C1–C12 và route phụ, gồm Organizer/Admin. Thay giới hạn phạm vi của kế hoạch mobile 21/10 cho công việc sắp tới; chưa thay đổi trạng thái nghiệm thu các màn. Stitch metadata/list truy cập được; danh mục hiện có thêm A12/A13 nên tổng là 37 mã (số 35 bên dưới là lịch sử). [Báo cáo phiên](reports/stitch/A1-A13_B1-B12_C1-C12_20261110_221639_mobile_migration_plan.md).
+
 ### 2.1. Mục tiêu
 Hệ thống quản lý sự kiện, bán vé trực tuyến và check-in bằng QR Code với 3 vai trò:
 - **Customer**: khám phá sự kiện, đăng ký/đăng nhập, đặt vé, thanh toán, quản lý vé QR, hồ sơ cá nhân, lịch sử đơn hàng.
@@ -102,6 +104,8 @@ Ghi chú ma trận API — C6 detail (2026-11-05 01:41:15 UTC+07): ĐÃ TÍCH H�
 Tiền tố Stitch ID: `projects/10374042969343935993/screens/<ID>`. Ba lớp trạng thái được tách riêng: **Thiết kế** (Stitch) / **Review** / **Triển khai** (frontend–API–test). Thiết kế: cả 35 màn `ĐÃ TẠO` (đã xác minh qua Stitch MCP). Review: **A4 `KHÔNG ĐẠT`** (correction `BLOCKED` — `edit_screens` không làm thay đổi artifact khi xác minh lại), **A11 Stitch review `BLOCKED`** (artifact vẫn `KHÔNG ĐẠT`; lượt sửa in-place 16:38 không đổi HTML/screenshot readback); frontend A11 đã được tái tạo theo ảnh, build thành công và browser-review ở desktop/mobile; runtime API/accessibility chưa xác minh. A2: see section 5.4 for the latest review. Báo cáo A4: `reports/stitch/A4_20261025_094146_correction.md`; báo cáo A11 mới nhất: `reports/stitch/A11_20261025_165155_implementation.md`. Cột "Triển khai" ghi trạng thái code hiện tại, chưa đối chiếu pixel với thiết kế Stitch.
 
 ### 5.1. Khu vực khách hàng (A1–A11)
+
+Ghi chú A1 mobile — 2026-11-10 18:05 UTC+07: đã triển khai [plan chuyển trang chủ web sang mobile](ui/Feature_A1_Mobile_Home_Plan.md), đầy đủ section A1, tab Trang chủ và route Explore riêng với lọc ngày/phân trang. Theo xác nhận mới, mọi CTA dùng route mobile hoặc thông báo “Chức năng đang phát triển”. Typecheck/lint,26 unit tests,export Android/iOS/web PASS; API public/config/detail/filter HTTP200, browser smoke dữ liệu thật qua proxy QA PASS. Native thiết bị/font lớn/a11y chưa nghiệm thu; Stitch metadata đọc được, tải ảnh/HTML BLOCKED401. Trạng thái NEEDS_REVIEW, không đổi A1 web. [Báo cáo triển khai](reports/stitch/A1_20261110_180523_mobile_home_implementation.md); [plan ban đầu](reports/stitch/A1_20261110_173326_mobile_home_plan.md).
 | ID | Màn hình | Stitch ID | Route/Page hiện tại | Triển khai |
 |---|---|---|---|---|
 | A1 | Trang chủ | `f9b7d6b096af4e598718c3f855ffe1e6` | `/` | Đã tái hiện frontend theo bố cục A1 bằng Explore/home.css; giữ AuthHeader/AuthFooter; GET /api/events và /api/categories trả 200; build và browser review desktop 1440px/mobile 390px đạt có điều kiện; runtime tương tác/accessibility cần review |
@@ -161,6 +165,14 @@ Ghi chú: quản lý nhân viên check-in (`/organizer/events/:id/staff`) đã c
 **Biến thể ghi nhận (không thuộc 35 màn hình chính):** `0a2708e17325456990198cec0f0d162a` — trùng tên "B7. Chi tiết đơn hàng".
 
 ### 5.4. Theo dõi review Stitch đã xác minh
+
+**APK Android ARM64 — 2026-11-11 21:15:02 UTC+07:** đã build/công bố prerelease và kiểm tra tải ẩn danh+SHA256/chữ ký/ABI. [Link cài điện thoại](https://github.com/Dinhviethd/PBL6/releases/download/mobile-preview-20261111-211350/EventHub-1.0.0-android-arm64.apk), Android7+/ARM64, bản thử nghiệm ký nội bộ; chưa runtime máy thật. MP-15 giữ IN_PROGRESS. [Báo cáo phân phối](reports/stitch/MOBILE_20261111_211502_arm64_distribution.md).
+
+**Mobile paging và logo — 2026-11-11 21:07:37 UTC+07:** A2 cuộn tải tiếp; A8/A12 Tải thêm, giữ dữ liệu/retry/dedupe và virtualized list; A9/A13/BTC/Admin pager mũi tên48px, ẩn1trang/loading/error. Logo gốc web đã thành icon1024/adaptive/favicon; APK x86_64 mới đã build/cài và nhìn launcher đúng logo. Typecheck/lint,34unit,24UI fixture,3UI API local và6GET200 PASS; gallery16mục đã kiểm. Native discovery smoke PASS; native authenticated nhiều trang/iOS/fullmotion chưa đủ. MP-15 giữ IN_PROGRESS. [Báo cáo paging/logo](reports/stitch/MOBILE_20261111_210623_load_more_brand_implementation.md).
+
+**Mobile app polish — 2026-11-11 19:08:22 UTC+07:** thêm hệ icon Feather, menu tài khoản theo nhóm, card vé/đơn/thông báo và hero gọn; giữ luồng/API/quyền. Typecheck/lint,34unit,19UI fixture cuối,22UI API local,menu320/390/768 PASS. APK standalone x86_64 mới đã build/cài/chạy, auth mask/unmask và auth→đăng ký font200 PASS; đã xem ảnh/video sample, chưa FPS/iOS/native toàn bộ. Gallery cập nhật; MP-15 vẫn IN_PROGRESS. [Báo cáo app polish](reports/stitch/MOBILE_20261111_190822_native_polish_implementation.md).
+
+**Mobile UI — 2026-11-11 18:28:47 UTC+07:** A1/A2/A4 đã tải và xem ảnh/HTML từ Stitch (khả năng tải3artifact này hiện hoạt động). Source sửa shared keyboard offset, ô nhập/nút mắt và cuộn sheet; giữ route/API/nghiệp vụ/theme. Typecheck/lint,34unit,19UI fixture,22UI API local và export web/Android/iOS PASS; biểu mẫu320/390/768 PASS. Native source mới chưa chạy do automatic approval review từ chối lệnh Metro/ADB; chưa full-motion/font200/iOS. NEEDS_REVIEW; MP-15 giữ IN_PROGRESS. [Báo cáo UI mobile](reports/stitch/MOBILE_20261111_182847_ui_review_implementation.md).
 
 
 B1 (2026-11-02 00:01:39 UTC+07): đã soạn mô tả chức năng Dashboard để người dùng đưa cho Stitch; chưa render/chỉnh sửa Stitch hoặc tích hợp API. Sidebar hiện chưa nối route Tổng quan; `/organizer` đang mở Quản lý sự kiện. Giữ nguyên trạng thái triển khai; API tổng hợp và giao diện chưa xác minh. [Brief và báo cáo](reports/stitch/B1_20261102_000139_design_brief.md).
@@ -276,6 +288,8 @@ Ghi chú 6.F — C6 detail (2026-11-05 01:41:15 UTC+07): ĐÃ TRIỂN KHAI, Đ�
 | Camera check-in trên thiết bị thật/HTTPS | Trung bình | Chưa nghiệm thu đầy đủ | `docs/IMPLEMENTATION-STATUS.md` | Kiểm thử thực tế. |
 | VNPay sandbox vs demo | Trung bình | Có hỗ trợ sandbox | `docs/EMAIL-PAYMENT-SETUP.md` | Kiểm thử callback/return. |
 | Bundle size lớn / Browserslist cũ | Thấp–Trung bình | Cảnh báo build | Build warnings | Tách chunk sau (không block MVP). |
+| Mobile chưa đồng bộ web và chưa nghiệm thu native | Cao | Xác minh 10/11/2026: typecheck/lint, 23 unit tests, export Android/iOS/web và 8 UI mock tests PASS; chưa có SePay/MB Bank, sửa hồ sơ/khôi phục mật khẩu và cấu hình OTA trong repo | [Rà soát dự án/mobile](AUDIT-PROJECT-MOBILE-2026-11-10.md); mobile commit 23/10, web commit 05/11 | Đồng bộ các luồng khách hàng; kiểm thử API thật trên DB riêng và thiết bị Android/iOS; xác minh bản phát hành. Docker/root build chỉ đóng gói web/backend. |
+| Bộ UI regression web chưa theo kịp giao diện | Trung bình–Cao | Rà soát 10/11/2026 phát hiện selector cũ và fixture thiếu thời gian check-in gây `Invalid time value`; chưa nghiệm thu toàn bộ web | [Bằng chứng và giới hạn](AUDIT-PROJECT-MOBILE-2026-11-10.md) | Cập nhật fixture/selector theo contract hiện tại; kiểm tra khả năng xử lý dữ liệu ngày không hợp lệ; chạy lại regression. |
 | Migration/DB Supabase | Thấp | Đã xử lý | `docs/IMPLEMENTATION-STATUS.md` | Giữ quy trình migrate an toàn. |
 
 ## 9. Bảng theo dõi tiến độ tổng
@@ -297,8 +311,12 @@ Trạng thái: `NOT_STARTED` | `IN_PROGRESS` | `BLOCKED` | `NEEDS_REVIEW` | `COM
 | MP-11 | Rà soát tích hợp API còn thiếu | P1 | NEEDS_REVIEW | Chưa đánh giá | Mục 4, mục 5 | Mục 4 |
 | MP-12 | Kiểm thử build/lint/E2E theo luồng chính | P1 | NEEDS_REVIEW | Chưa đánh giá | CI/scripts | `npm run build`, `check`, `test`, `test:ui` |
 | MP-13 | Hoàn thiện responsive, design tokens Cosmic Graffiti, trạng thái loading/empty/error | P2 | NOT_STARTED | - | MP-04…MP-09 | `index.css`, `ticketing.css`, `components/ticketing/shared.tsx` |
+| MP-14 | Chuyển A1 trang chủ web sang mobile | P1 | NEEDS_REVIEW | Đã triển khai; typecheck/lint,26unit,18UI,export3platform PASS | Native thiết bị/font lớn/a11y; tải artifact Stitch BLOCKED401; CORS preview web Live | [Plan A1 mobile](ui/Feature_A1_Mobile_Home_Plan.md); [Triển khai](reports/stitch/A1_20261110_180523_mobile_home_implementation.md) |
+| MP-15 | Chuyển toàn bộ web sang app mobile theo vai trò | P1 | IN_PROGRESS | Nghiệm thu 2026-11-11 17:44:02: mobile34/34unit,typecheck/lint; backend120/121PASS,1SKIP; UI API local22PASS/UI mock19PASS; build/boundaries PASS. Server thật37HTTP expected; native standalone3roles/PDF/CSV/session/offline/font200 và20warm lifecycle emulator PASS | NO-GO nghiệm thu toàn bộ: P0/P1 native chưa đủ; iOS/Android thật,camera/bank return/SePay v2 token sandbox,a11y/perf/UAT và action inventory/Stitch artifact401 chưa đóng; không tính SKIP/PARTIAL là PASS; M5 chưa hoàn tất; người dùng xác nhận chỉ có emulator | [APK ARM64](reports/stitch/MOBILE_20261111_211502_arm64_distribution.md); [Paging/logo](reports/stitch/MOBILE_20261111_210623_load_more_brand_implementation.md); [App polish](reports/stitch/MOBILE_20261111_190822_native_polish_implementation.md); [UI mobile 2026-11-11 18:28:47](reports/stitch/MOBILE_20261111_182847_ui_review_implementation.md); [Xác nhận phạm vi](reports/stitch/A1-A13_B1-B12_C1-C12_20261111_175916_acceptance_scope_confirmation.md); [Kết quả nghiệm thu cuối](reports/stitch/A1-A13_B1-B12_C1-C12_20261111_174402_final_acceptance.md); [Tiến độ](ui/MOBILE_MIGRATION_IMPLEMENTATION.md); [Plan](ui/MOBILE_FULL_MIGRATION_PLAN.md) |
 
 ## 10. Kế hoạch hành động tiếp theo
+
+Mobile toàn diện: MP-15 đã triển khai đợt đầu M1–M4 trên DB/API/SMTP local riêng và kiểm chứng 17 check native emulator lúc 23:50 ngày 10/11. Tiếp tục đóng gap từng màn/inventory action M0 và các bài native còn thiếu ở M5; Metro test đã chạy qua relay loopback IPv4→IPv6. Kết quả/giới hạn xem [tiến độ mobile](ui/MOBILE_MIGRATION_IMPLEMENTATION.md); không đồng nhất emulator smoke với nghiệm thu điện thoại vật lý/iOS/release.
 
 | Ưu tiên | Công việc | Liên quan | Tiêu chí hoàn thành |
 |---|---|---|---|

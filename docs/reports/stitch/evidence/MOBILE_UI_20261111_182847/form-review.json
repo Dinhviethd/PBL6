@@ -1,0 +1,47 @@
+{
+  "timestamp": "2026-11-11T11:22:53.946Z",
+  "evidence": [
+    {
+      "width": 320,
+      "checks": [
+        "touch48",
+        "inline-eye",
+        "mask-unmask-preserves-value",
+        "confirmation-toggle",
+        "submit-reachable",
+        "no-horizontal-overflow",
+        "recovery-destination",
+        "no-runtime-error"
+      ],
+      "result": "PASS"
+    },
+    {
+      "width": 390,
+      "checks": [
+        "touch48",
+        "inline-eye",
+        "mask-unmask-preserves-value",
+        "confirmation-toggle",
+        "submit-reachable",
+        "no-horizontal-overflow",
+        "recovery-destination",
+        "no-runtime-error"
+      ],
+      "result": "PASS"
+    },
+    {
+      "width": 768,
+      "checks": [
+        "touch48",
+        "inline-eye",
+        "mask-unmask-preserves-value",
+        "confirmation-toggle",
+        "submit-reachable",
+        "no-horizontal-overflow",
+        "recovery-destination",
+        "no-runtime-error"
+      ],
+      "result": "PASS"
+    }
+  ]
+}

@@ -1,0 +1,216 @@
+{
+  "timestamp": "2026-11-10T15:48:10.874Z",
+  "target": "http://127.0.0.1:8016/api",
+  "calls": [
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/profile",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/organizer/profile",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/profile",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/organizer/profile/legal-requests",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/profile/legal-requests",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/organizer-profile-requests",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/admin/organizer-profile-requests/92311198-3267-43cb-86b3-c31a139d1cd3/review",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/admin/categories",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/admin/categories/96b50680-b422-4e24-9719-4b5d20c70a93",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "DELETE",
+      "endpoint": "/admin/categories/96b50680-b422-4e24-9719-4b5d20c70a93",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/register",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/admin/users/10212cde-08f6-429f-8588-a213e1782704",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/admin/users/10212cde-08f6-429f-8588-a213e1782704",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/admin/users/10212cde-08f6-429f-8588-a213e1782704",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/organizer/events",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/organizer/events/58f26262-07fa-4897-8f0c-fc8d6e949615",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/organizer/events/58f26262-07fa-4897-8f0c-fc8d6e949615/ticket-types",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/organizer/events/58f26262-07fa-4897-8f0c-fc8d6e949615/ticket-types/c60d0936-7b96-4599-b9d7-dc79a70c416a",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "DELETE",
+      "endpoint": "/organizer/events/58f26262-07fa-4897-8f0c-fc8d6e949615/ticket-types/c60d0936-7b96-4599-b9d7-dc79a70c416a",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/organizer/events/58f26262-07fa-4897-8f0c-fc8d6e949615/cancel",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/pause",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/pause",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/staff",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/me/checkin-invitations/1bce472d-fe42-4fda-a491-d5f25d0dc131/respond",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/checkin/events/6538dbac-0848-42d9-8b78-4f5b81df84fe",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/me/tickets",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/checkin/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/checkins",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/checkin/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/checkins",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/checkins",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "DELETE",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/staff/1bce472d-fe42-4fda-a491-d5f25d0dc131",
+      "status": 200,
+      "expected": 200
+    }
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "timestamp": "2026-11-10T15:26:38.043Z",
+  "target": "http://127.0.0.1:8015/api",
+  "test": "real PostgreSQL/HTTP/local SMTP",
+  "calls": [
+    {
+      "method": "GET",
+      "endpoint": "/health",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/register",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/auth/me",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/media",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/me",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/me/password",
+      "status": 400,
+      "expected": 400,
+      "code": "INVALID_PASSWORD"
+    },
+    {
+      "method": "POST",
+      "endpoint": "/me/password",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/auth/me",
+      "status": 401,
+      "expected": 401,
+      "code": "INVALID_SESSION"
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/forgot-password",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/verify-otp",
+      "status": 400,
+      "expected": 400,
+      "code": "INVALID_OTP"
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/verify-otp",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/reset-password",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/verify-otp",
+      "status": 400,
+      "expected": 400,
+      "code": "INVALID_OTP"
+    }
+  ],
+  "assertions": "profile/avatar preserved, password revokes session, OTP sent/verified/consumed"
+}

@@ -3,6 +3,11 @@ export type User = {
   name: string;
   email: string;
   roles: string[];
+  phone?: string | null;
+  avatarUrl?: string | null;
+  emailVerified?: boolean;
+  createdAt?: string;
+  permissions?: string[];
 };
 export type TokenStorage = {
   read(): Promise<string | null>;
@@ -43,17 +48,30 @@ export function createApiClient(options: {
     method = "GET",
     body?: unknown,
     headers: Record<string, string> = {},
+    envelope: boolean | "text" = false,
   ): Promise<T> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 15000);
     try {
+      const multipart =
+        typeof FormData !== "undefined" && body instanceof FormData;
       const response = await fetcher(`${options.baseUrl}${path}`, {
         method,
-        headers: { "Content-Type": "application/json", ...headers },
+        headers: {
+          ...(!multipart ? { "Content-Type": "application/json" } : {}),
+          ...headers,
+        },
         credentials: options.native ? "omit" : "include",
-        body: body === undefined ? undefined : JSON.stringify(body),
+        body:
+          body === undefined
+            ? undefined
+            : multipart
+              ? body
+              : JSON.stringify(body),
         signal: controller.signal,
       });
+      if (envelope === "text" && response.ok)
+        return (await response.text()) as T;
       const result = await response.json().catch(() => null);
       if (!response.ok || !result?.success)
         throw new ApiError(
@@ -61,7 +79,7 @@ export function createApiClient(options: {
           response.status,
           result?.code ?? "SERVER",
         );
-      return result.data as T;
+      return (envelope ? result : result.data) as T;
     } catch (error) {
       if (error instanceof ApiError) throw error;
       throw new ApiError(
@@ -150,15 +168,22 @@ export function createApiClient(options: {
     method = "GET",
     body?: unknown,
     headers: Record<string, string> = {},
+    envelope: boolean | "text" = false,
   ): Promise<T> {
     const generation = epoch;
     const usedToken = accessToken;
     const perform = async () => {
       assertCurrent(generation);
-      const data = await raw<T>(path, method, body, {
-        ...headers,
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      });
+      const data = await raw<T>(
+        path,
+        method,
+        body,
+        {
+          ...headers,
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
+        envelope,
+      );
       assertCurrent(generation);
       return data;
     };

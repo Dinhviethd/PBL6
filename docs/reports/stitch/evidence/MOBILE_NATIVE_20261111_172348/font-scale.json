@@ -1,0 +1,20 @@
+{
+  "timestamp": "2026-11-11T10:32:14.275Z",
+  "artifact": {
+    "sha256": "EB8ACBBFA7CB2ABDC4B1A4DD8F412AA2F8BA4B8A723EF90E7570E917B23EB7B2",
+    "bytes": 52806505,
+    "build": "release x86_64; debug signing; standalone API Live",
+    "buildTime": "3m",
+    "tasks": 797
+  },
+  "checks": [
+    {
+      "check": "four complete navigation labels visible at Android font_scale2.0",
+      "result": "PASS"
+    },
+    {
+      "check": "font scale restored1.0 after test",
+      "result": "PASS"
+    }
+  ]
+}

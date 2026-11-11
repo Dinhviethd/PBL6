@@ -1,0 +1,583 @@
+{
+  "timestamp": "2026-11-11T09:27:29.393Z",
+  "base": "https://eventhubqrmarketing.tech/api",
+  "writes": "login/logout sessions only; business GET only",
+  "checks": [
+    {
+      "method": "GET",
+      "route": "/health",
+      "status": 200,
+      "durationMs": 1195,
+      "success": true,
+      "keys": [
+        "status"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/config",
+      "status": 200,
+      "durationMs": 155,
+      "success": true,
+      "keys": [
+        "paymentMode",
+        "sepayEnabled"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/categories",
+      "status": 200,
+      "durationMs": 117,
+      "success": true,
+      "keys": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/events?page=0&limit=2",
+      "status": 200,
+      "durationMs": 379,
+      "success": true,
+      "keys": [
+        "items",
+        "total"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/auth/mobile/login",
+      "status": 200,
+      "durationMs": 1064,
+      "success": true,
+      "keys": [
+        "user",
+        "accessToken",
+        "refreshToken"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/auth/me",
+      "status": 200,
+      "durationMs": 516,
+      "success": true,
+      "keys": [
+        "idUser",
+        "name",
+        "email",
+        "phone",
+        "avatarUrl",
+        "emailVerified",
+        "createdAt",
+        "roles",
+        "permissions"
+      ]
+    },
+    {
+      "role": "buyer",
+      "roles": [
+        "USER"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/me/order-history?page=0&pageSize=10&group=all",
+      "status": 200,
+      "durationMs": 932,
+      "success": true,
+      "keys": [
+        "items",
+        "pagination",
+        "summary",
+        "counts",
+        "asOf",
+        "capabilities"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/me/tickets?page=0",
+      "status": 200,
+      "durationMs": 868,
+      "success": true,
+      "keys": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/me/notifications?page=0",
+      "status": 200,
+      "durationMs": 420,
+      "success": true,
+      "keys": [
+        "items",
+        "hasNext",
+        "unreadCount",
+        "pagination"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/me/checkin-assignments?page=0",
+      "status": 200,
+      "durationMs": 413,
+      "success": true,
+      "keys": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/me/organizer-applications",
+      "status": 200,
+      "durationMs": 409,
+      "success": true,
+      "keys": [
+        "0"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/admin/stats",
+      "status": 403,
+      "durationMs": 330,
+      "success": false,
+      "keys": [],
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "POST",
+      "route": "/auth/logout",
+      "status": 200,
+      "durationMs": 394,
+      "success": true,
+      "keys": []
+    },
+    {
+      "method": "POST",
+      "route": "/auth/mobile/login",
+      "status": 200,
+      "durationMs": 1081,
+      "success": true,
+      "keys": [
+        "user",
+        "accessToken",
+        "refreshToken"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/auth/me",
+      "status": 200,
+      "durationMs": 541,
+      "success": true,
+      "keys": [
+        "idUser",
+        "name",
+        "email",
+        "phone",
+        "avatarUrl",
+        "emailVerified",
+        "createdAt",
+        "roles",
+        "permissions"
+      ]
+    },
+    {
+      "role": "organizer",
+      "roles": [
+        "USER",
+        "ORGANIZER"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/dashboard",
+      "status": 200,
+      "durationMs": 990,
+      "success": true,
+      "keys": [
+        "asOf",
+        "timezone",
+        "range",
+        "scope",
+        "totals",
+        "currentEventCounts",
+        "dailySeries",
+        "upcomingEvents"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/profile",
+      "status": 200,
+      "durationMs": 404,
+      "success": true,
+      "keys": [
+        "organizationName",
+        "businessName",
+        "taxIdOrBusinessLicense",
+        "contactName",
+        "contactEmail",
+        "contactPhone",
+        "headOfficeAddress",
+        "description",
+        "websiteOrSocial",
+        "logoUrl",
+        "ownerId",
+        "sourceApplicationId",
+        "version",
+        "initialized",
+        "applicationStatus",
+        "verification",
+        "updatedAt",
+        "capabilities"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events?page=0",
+      "status": 200,
+      "durationMs": 610,
+      "success": true,
+      "keys": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/1c403640-c361-43ff-96c8-1cbcaaaf67ea",
+      "status": 200,
+      "durationMs": 545,
+      "success": true,
+      "keys": [
+        "id",
+        "organizer_id",
+        "category_id",
+        "slug",
+        "title",
+        "description",
+        "cover_image_url",
+        "cover_image_public_id",
+        "venue_name",
+        "address",
+        "city_code",
+        "starts_at",
+        "ends_at",
+        "checkin_opens_at",
+        "checkin_closes_at",
+        "status",
+        "review_version",
+        "submitted_at",
+        "published_at",
+        "sales_paused",
+        "checkin_paused",
+        "cancelled_at",
+        "cancellation_reason",
+        "archived_at",
+        "created_at",
+        "updated_at",
+        "ticketTypes",
+        "reviews"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/1c403640-c361-43ff-96c8-1cbcaaaf67ea/order-manager",
+      "status": 200,
+      "durationMs": 811,
+      "success": true,
+      "keys": [
+        "asOf",
+        "items",
+        "counts",
+        "summary",
+        "pagination"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/1c403640-c361-43ff-96c8-1cbcaaaf67ea/attendees?paginated=true&limit=10",
+      "status": 200,
+      "durationMs": 758,
+      "success": true,
+      "keys": []
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/1c403640-c361-43ff-96c8-1cbcaaaf67ea/analytics",
+      "status": 200,
+      "durationMs": 753,
+      "success": true,
+      "keys": [
+        "eventId",
+        "eventTitle",
+        "asOf",
+        "timezone",
+        "range",
+        "totals",
+        "dailySeries",
+        "ticketTypes"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/1c403640-c361-43ff-96c8-1cbcaaaf67ea/checkins?page=0",
+      "status": 200,
+      "durationMs": 542,
+      "success": true,
+      "keys": []
+    },
+    {
+      "method": "GET",
+      "route": "/organizer/events/1c403640-c361-43ff-96c8-1cbcaaaf67ea/staff",
+      "status": 200,
+      "durationMs": 1216,
+      "success": true,
+      "keys": [
+        "0"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/auth/logout",
+      "status": 200,
+      "durationMs": 946,
+      "success": true,
+      "keys": []
+    },
+    {
+      "method": "POST",
+      "route": "/auth/mobile/login",
+      "status": 200,
+      "durationMs": 1195,
+      "success": true,
+      "keys": [
+        "user",
+        "accessToken",
+        "refreshToken"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/auth/me",
+      "status": 200,
+      "durationMs": 542,
+      "success": true,
+      "keys": [
+        "idUser",
+        "name",
+        "email",
+        "phone",
+        "avatarUrl",
+        "emailVerified",
+        "createdAt",
+        "roles",
+        "permissions"
+      ]
+    },
+    {
+      "role": "admin",
+      "roles": [
+        "USER",
+        "ADMIN"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/admin/stats",
+      "status": 200,
+      "durationMs": 686,
+      "success": true,
+      "keys": [
+        "orders",
+        "revenue",
+        "sold",
+        "checkins",
+        "provider_received",
+        "needs_review",
+        "events",
+        "users",
+        "organizers"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/admin/stats/revenue-daily?fromDate=2026-11-01&toDate=2026-11-11",
+      "status": 200,
+      "durationMs": 729,
+      "success": true,
+      "keys": [
+        "fromDate",
+        "toDate",
+        "timezone",
+        "currency",
+        "totalRevenue",
+        "series"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/admin/users?page=0",
+      "status": 200,
+      "durationMs": 752,
+      "success": true,
+      "keys": [
+        "data",
+        "pagination"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/admin/organizer-applications?page=0",
+      "status": 200,
+      "durationMs": 869,
+      "success": true,
+      "keys": [
+        "items",
+        "pagination",
+        "stats"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/admin/events?page=0",
+      "status": 200,
+      "durationMs": 686,
+      "success": true,
+      "keys": [
+        "items",
+        "pagination"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/admin/payments?page=0",
+      "status": 200,
+      "durationMs": 515,
+      "success": true,
+      "keys": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+        "19",
+        "20",
+        "21",
+        "22",
+        "23",
+        "24"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/admin/sepay/transactions?page=0",
+      "status": 200,
+      "durationMs": 408,
+      "success": true,
+      "keys": [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/admin/settings/payment-information",
+      "status": 200,
+      "durationMs": 337,
+      "success": true,
+      "keys": [
+        "sepay",
+        "vnpay"
+      ]
+    },
+    {
+      "method": "GET",
+      "route": "/admin/administrators?page=0",
+      "status": 200,
+      "durationMs": 818,
+      "success": true,
+      "keys": [
+        "items",
+        "pagination"
+      ]
+    },
+    {
+      "method": "POST",
+      "route": "/auth/logout",
+      "status": 200,
+      "durationMs": 393,
+      "success": true,
+      "keys": []
+    }
+  ]
+}

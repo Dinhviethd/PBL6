@@ -1,4 +1,5 @@
 import { BookingSteps } from "../../components/booking-steps";
+import { SepayCheckout } from "../../components/sepay-checkout";
 import { useCallback, useState } from "react";
 import { AppState, Text, View } from "react-native";
 import * as Linking from "expo-linking";
@@ -27,10 +28,11 @@ export default function OrderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>(),
     { user } = useSession(),
     r = useResource<Order>(user ? `/me/orders/${id}` : null),
-    config = useResource<{ paymentMode: string }>("/config");
+    config = useResource<{ paymentMode: string; sepayEnabled?: boolean }>("/config");
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [result, setResult] = useState(""),
+    [confirmCancel, setConfirmCancel] = useState(false),
     [now, setNow] = useState(() => Date.now());
   const order = r.data,
     pending = order?.status === "PENDING_PAYMENT",
@@ -44,7 +46,7 @@ export default function OrderScreen() {
       const clock = setInterval(() => setNow(Date.now()), 1000),
         poll = paymentId
           ? setInterval(() => {
-              if (Date.now() < until) reloadOrder();
+              if (Date.now() < until && AppState.currentState === "active") reloadOrder();
               else clearInterval(poll);
             }, 3000)
           : undefined;
@@ -91,6 +93,7 @@ export default function OrderScreen() {
           setResult("Thanh toán thất bại. Bạn có thể thử lại nếu đơn còn hạn.");
       }
       r.reload();
+      setConfirmCancel(false);
     } catch (e) {
       setError(errorMessage(e));
     } finally {
@@ -139,6 +142,9 @@ export default function OrderScreen() {
                 />
               )}
               {order.status === "PAID" && (
+                <Button title="Xem kết quả thanh toán" onPress={() => router.push({ pathname: "/payment-status/[id]", params: { id } })} />
+              )}
+              {order.status === "PAID" && (
                 <Button
                   title="Mở ví vé QR"
                   onPress={() => router.push("/tickets")}
@@ -152,13 +158,16 @@ export default function OrderScreen() {
               )}
               {pending && seconds > 0 && (
                 <>
+                  <Notice error text={config.error} />
+                  {config.error && <Button title="Tải lại phương thức thanh toán" secondary onPress={config.reload} />}
+                  {config.data?.sepayEnabled && <SepayCheckout orderId={id} existing={payment?.provider === "sepay" || order.latest_payment?.provider === "sepay"} onChange={reloadOrder} />}
                   {config.data?.paymentMode === "demo" ? (
                     <Notice text="Thanh toán demo · Không thu tiền thật." />
                   ) : config.data?.paymentMode === "vnpay_sandbox" ? (
                     <Notice text="VNPay Sandbox · Chỉ dùng thông tin thanh toán thử." />
-                  ) : (
+                  ) : !config.data?.sepayEnabled && !config.loading && !config.error ? (
                     <Notice text="Thanh toán chưa được bật. Bạn có thể quay lại sau hoặc hủy đơn." />
-                  )}
+                  ) : null}
                   {!payment && config.data?.paymentMode === "demo" && (
                     <Button
                       title="Tiếp tục thanh toán"
@@ -196,11 +205,15 @@ export default function OrderScreen() {
                       </>
                     )}
                   {!payment && (
-                    <Button
+                    confirmCancel ? <View style={ui.card}>
+                      <Text style={ui.text}>Hủy đơn này và trả số vé đang giữ về kho?</Text>
+                      <Button title="Xác nhận hủy đơn" disabled={busy} onPress={() => void act("cancel")} />
+                      <Button title="Giữ đơn hàng" secondary disabled={busy} onPress={() => setConfirmCancel(false)} />
+                    </View> : <Button
                       title="Hủy đơn chưa thanh toán"
                       secondary
                       disabled={busy}
-                      onPress={() => void act("cancel")}
+                      onPress={() => setConfirmCancel(true)}
                     />
                   )}
                 </>

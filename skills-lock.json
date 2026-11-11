@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "skills": {
+    "appllama-app-design-skill": {
+      "source": "Appllama/appllama-skills",
+      "sourceType": "github",
+      "skillPath": "skills/appllama-app-design-skill/SKILL.md",
+      "computedHash": "72e277fb3fd2baa1429824132269715feac74ab8cabbf7067a0fb1cddf666ffa"
+    }
+  }
+}

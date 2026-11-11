@@ -27,6 +27,15 @@ const event = {
   ],
 };
 
+test("void tickets hide QR and export actions while showing the server reason", async ({ page }) => {
+  await mockApi(page);
+  await page.route("**/api/me/tickets/void-ticket", route => route.fulfill({ json: { success: true, data: { id: "void-ticket", code: "VOID-001", eventTitle: event.title, typeName: "Vé tiêu chuẩn", status: "VOID", voidReason: "Sự kiện đã hủy", qrImage: "data:image/png;base64,aGVsbG8=" } } }));
+  await page.goto("/tickets/void-ticket");
+  await expect(page.getByText("Vé đã hủy và không thể sử dụng. Sự kiện đã hủy", { exact: true })).toBeVisible();
+  await expect(page.getByRole("img", { name: "Mã QR của vé" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Lưu / chia sẻ vé PDF", exact: true })).toHaveCount(0);
+});
+
 async function mockApi(page: Page, guest = false) {
   let paid = false,
     attempts = 0,
@@ -144,7 +153,7 @@ for (const width of [360, 390, 430, 768]) {
     await mockApi(page);
     await page.goto("/");
     await expect(
-      page.getByRole("button", { name: "Khám phá sự kiện", exact: true }),
+      page.getByRole("button", { name: "Khám phá sự kiện", exact: true }).first(),
     ).toBeVisible();
     await expect(
       page.getByLabel(`Ảnh minh họa: ${event.title}`).first(),

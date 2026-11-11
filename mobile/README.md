@@ -1,8 +1,27 @@
 # EventHub Mobile
 
-Expo SDK 57 + React Native + Expo Router, dùng chung API Express và tài khoản với web. Phạm vi: khách hàng mua/xem vé và nhân viên check-in. Organizer/Admin quản lý trên web.
+Expo SDK 57 + React Native + Expo Router, dùng chung API Express và tài khoản với web. Đã mở rộng giao diện khách hàng/nhân viên sang các không gian Ban tổ chức và Admin trong đợt chuyển đổi 10/11/2026. Trạng thái hiện tại là triển khai từng phần, chưa nghiệm thu toàn bộ native; xem [tiến độ theo màn và cách chạy API test local](../docs/ui/MOBILE_MIGRATION_IMPLEMENTATION.md).
 
 ## Đã triển khai
+
+- Đợt chuyển đổi mới: hồ sơ/avatar, đổi/reset mật khẩu qua OTP, SePay và trang kết quả PAID; wizard đăng ký BTC; các màn quản lý sự kiện/vé/đơn/staff/thống kê, hồ sơ BTC; quản trị khách hàng/BTC/danh mục/sự kiện/giao dịch/cấu hình/quản trị viên. Những hành động và kiểm thử còn thiếu được ghi riêng trong tài liệu tiến độ ở trên.
+
+## Kết nối server thực đã xác minh
+
+Bản APK nội bộ chạy độc lập cho Pixel_8 emulator x86_64: `.local/mobile-migration/EventHub-server-preview-x86_64.apk`. Bản này nhúng sẵn API HTTPS và giao diện, mở biểu tượng EventHub sau khi cài, không cần Metro. Đây là bản kiểm thử ký bằng debug keystore; chưa phải gói phát hành store hoặc APK cho điện thoại ARM64. Hash/kết quả native nằm trong [báo cáo11/11](../docs/reports/stitch/A1-A13_B1-B12_C1-C12_20261111_164652_server_completion.md).
+
+Khi cần tiếp tục sửa mã bằng development client:
+
+```powershell
+# Chạy được từ thư mục bất kỳ trên máy dự án hiện tại:
+npm --prefix "D:\Nam4Ky1\PBL6\SrcCode\PBL6\mobile" run start:server
+```
+
+Lệnh này dùng `https://eventhubqrmarketing.tech/api`, development client và Metro 8084, xóa cache; không khởi động backend local. Khi hiện `Using development build`, nhấn `a` để mở Android đang kết nối. Nếu Metro cũ đang chạy, nhấn Ctrl+C trước. `npm run start` mặc định là Expo Go, khác với lệnh này. Bản Android development mới có thư viện PDF/chia sẻ; cài lại APK khi native dependencies thay đổi.
+
+Phiên SecureStore và bản nháp sự kiện được tách theo địa chỉ API. Sau khi nâng cấp cơ chế này cần đăng nhập lại một lần. Lưu nháp là thao tác tường minh, giữ 30 ngày; biểu mẫu chưa tự lưu. Dùng dữ liệu/tài khoản demo được cho phép khi kiểm thử server thật; bài mutation tự động trong repo vẫn chỉ dùng DB local riêng.
+
+## Các luồng có sẵn
 
 - Đăng ký/đăng nhập, khôi phục phiên, refresh token xoay vòng và đăng xuất. App native lưu refresh token trong Expo SecureStore; access token chỉ ở bộ nhớ. Bản web dùng cookie HttpOnly của backend.
 - Khám phá, tìm theo từ khóa/thành phố/danh mục, chi tiết sự kiện, chọn nhiều loại vé (tối đa 10 vé/đơn).
@@ -72,7 +91,14 @@ npx eas-cli@latest build --platform android --profile preview
 npx eas-cli@latest build --platform ios --profile preview
 ```
 
-`eas.json` có profile development, preview (Android APK) và production. Native release yêu cầu `EXPO_PUBLIC_API_URL` HTTPS; development build dùng `APP_VARIANT=development`. Chưa build/ký APK/IPA, chưa upload store. Camera vật lý, SecureStore trên thiết bị và mạng Wi-Fi từ điện thoại cần nghiệm thu riêng.
+`eas.json` có profile development, preview (Android APK) và production. Native release yêu cầu `EXPO_PUBLIC_API_URL` HTTPS; development build dùng `APP_VARIANT=development`. Ngày 10/11/2026 đã build/cài APK development x86_64 trên Pixel_8 emulator; xem artifact/hash trong tài liệu tiến độ. Chưa ký bản production hoặc tạo IPA, chưa upload store. Camera vật lý, SecureStore trên thiết bị và mạng Wi-Fi từ điện thoại cần nghiệm thu riêng.
+
+## Danh sách và logo ứng dụng
+
+- Khám phá sự kiện tự tải trang tiếp theo khi cuộn gần cuối, có nút **Tải thêm** dự phòng. Ví vé và thông báo dùng **Tải thêm**; các trang được nối và khử trùng theo ID. Đổi bộ lọc/tài khoản hoặc kéo làm mới sẽ nạp lại đúng phạm vi; lỗi trang sau giữ danh sách đã có và cho thử lại.
+- Thông báo định kỳ và thao tác đánh dấu đã đọc cập nhật lại các trang đã tải. Đơn hàng, phân công và danh sách quản lý giữ phân trang mũi tên gọn, ẩn khi chỉ có một trang hoặc đang tải/lỗi.
+- Logo gốc là `client/public/logo.png`, cùng nguồn với header/footer web. Chạy `node scripts/mobile-brand-assets.cjs` từ thư mục gốc repo để xuất lại `mobile/assets/logo.png`, `app-icon.png` và `adaptive-icon.png`. Script dùng Sharp hiện có của backend; không sửa màu hoặc nội dung logo. Icon dùng nền sáng để chữ gốc dễ đọc.
+- Cấu hình icon nằm trong `app.config.ts`. Thay icon cần tạo bản native mới (prebuild/EAS build); hot reload hoặc Expo web không cập nhật icon đã cài trên điện thoại.
 
 ## API auth mobile
 

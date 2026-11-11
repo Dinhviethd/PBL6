@@ -1,0 +1,221 @@
+{
+  "stats": {
+    "startTime": "2026-11-11T10:43:38.803Z",
+    "duration": 20007.408,
+    "expected": 19,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  },
+  "cases": [
+    {
+      "title": "home sections and native routes at 320px",
+      "file": "home-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 1414
+        }
+      ]
+    },
+    {
+      "title": "home sections and native routes at 360px",
+      "file": "home-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 1231
+        }
+      ]
+    },
+    {
+      "title": "home sections and native routes at 390px",
+      "file": "home-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 1305
+        }
+      ]
+    },
+    {
+      "title": "home sections and native routes at 430px",
+      "file": "home-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 1356
+        }
+      ]
+    },
+    {
+      "title": "home sections and native routes at 768px",
+      "file": "home-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 1382
+        }
+      ]
+    },
+    {
+      "title": "search preserves home draft, filters calendar dates and resets pagination",
+      "file": "home-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 1415
+        }
+      ]
+    },
+    {
+      "title": "event errors can retry independently without displaying an empty result",
+      "file": "home-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 611
+        }
+      ]
+    },
+    {
+      "title": "category failure preserves event cards and empty search can be cleared",
+      "file": "home-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 897
+        }
+      ]
+    },
+    {
+      "title": "filter sheet remains usable on a short landscape viewport",
+      "file": "home-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 627
+        }
+      ]
+    },
+    {
+      "title": "home poster routes to mobile detail and account tabs still work",
+      "file": "home-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 763
+        }
+      ]
+    },
+    {
+      "title": "Expo notification UI with mocked API: bell, read state and staff navigation",
+      "file": "notifications-ui.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 983
+        }
+      ]
+    },
+    {
+      "title": "void tickets hide QR and export actions while showing the server reason",
+      "file": "stitch-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 486
+        }
+      ]
+    },
+    {
+      "title": "discovery layout and filters at 360px",
+      "file": "stitch-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 752
+        }
+      ]
+    },
+    {
+      "title": "discovery layout and filters at 390px",
+      "file": "stitch-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 736
+        }
+      ]
+    },
+    {
+      "title": "discovery layout and filters at 430px",
+      "file": "stitch-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 687
+        }
+      ]
+    },
+    {
+      "title": "discovery layout and filters at 768px",
+      "file": "stitch-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 762
+        }
+      ]
+    },
+    {
+      "title": "quantity cap, retry key, demo payment and ticket QR",
+      "file": "stitch-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 1851
+        }
+      ]
+    },
+    {
+      "title": "guest booking leads to login and keeps destination",
+      "file": "stitch-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 513
+        }
+      ]
+    },
+    {
+      "title": "manual check-in reports success and duplicate",
+      "file": "stitch-mobile.spec.ts",
+      "ok": true,
+      "results": [
+        {
+          "status": "passed",
+          "durationMs": 596
+        }
+      ]
+    }
+  ]
+}

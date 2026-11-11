@@ -1,0 +1,40 @@
+{
+  "timestamp": "2026-11-11T13:58:58.851Z",
+  "checks": [
+    {
+      "endpoint": "/me/tickets?page=0",
+      "status": 200,
+      "rows": 10
+    },
+    {
+      "endpoint": "/me/tickets?page=1",
+      "status": 200,
+      "rows": 0
+    },
+    {
+      "endpoint": "/me/notifications?page=0",
+      "status": 200,
+      "rows": 10
+    },
+    {
+      "endpoint": "/me/notifications?page=1",
+      "status": 200,
+      "rows": 0
+    },
+    {
+      "endpoint": "/events?page=0",
+      "status": 200,
+      "rows": 11
+    },
+    {
+      "endpoint": "/events?page=1",
+      "status": 200,
+      "rows": 0
+    },
+    {
+      "screens": "tickets/notifications/orders",
+      "pageErrors": 0,
+      "overflow": false
+    }
+  ]
+}

@@ -1,16 +1,19 @@
 import { useCallback, useState } from "react";
-import { Text, View } from "react-native";
+import { FlatList, Text, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useFocusEffect } from "expo-router";
 import { api } from "../lib/api";
 import { useSession } from "../lib/session";
-import { errorMessage, useResource, when } from "../lib/data";
+import { errorMessage, when } from "../lib/data";
+import { usePagedResource } from "../lib/paged-resource";
+import { LoadMore } from "../components/load-more";
+import { IconBadge, type IconName } from "../components/app-icon";
+import { EmptyState, InfoLine } from "../components/mobile-patterns";
 import {
   Button,
   Loading,
   Notice,
-  Pager,
   RequireAuth,
-  Screen,
   ui,
   colors,
 } from "../components/ui";
@@ -26,17 +29,30 @@ const notificationLabels = {
   EVENT_UPDATED: "Cập nhật sự kiện",
   EVENT_REMINDER: "Nhắc lịch",
 };
+const notificationIcons: Record<keyof typeof notificationLabels, IconName> = {
+  WAIT_QUEUE_OFFER: "clock",
+  ORDER_PAID: "tag",
+  STAFF_INVITED: "users",
+  EVENT_UPDATED: "calendar",
+  EVENT_REMINDER: "bell",
+};
+const notificationPages = {
+  items: (data: NotificationInbox) => data.items,
+  more: (data: NotificationInbox) => data.hasNext,
+  key: (notification: InboxNotification) => notification.id,
+};
 
 export default function NotificationsScreen() {
+  const insets = useSafeAreaInsets();
   const { user } = useSession(),
-    [page, setPage] = useState(0),
     [unread, setUnread] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
-  const r = useResource<NotificationInbox>(
-    user ? `/me/notifications?page=${page}&unread=${unread}` : null,
+  const r = usePagedResource(
+    user ? `/me/notifications?unread=${unread}` : null,
+    notificationPages,
   );
-  const reload = r.reload;
+  const reload = r.refreshLoaded;
   useFocusEffect(
     useCallback(() => {
       const timer = setInterval(reload, 30000);
@@ -63,8 +79,7 @@ export default function NotificationsScreen() {
             n.target === "STAFF" ? "/(tabs)/staff" : "/(tabs)/tickets",
           );
       } else {
-        if (!n) setPage(0);
-        r.reload();
+        r.refreshLoaded(true);
       }
     } catch (e) {
       setError(errorMessage(e));
@@ -74,90 +89,127 @@ export default function NotificationsScreen() {
   }
   return (
     <RequireAuth>
-      <Screen refresh={r.reload} loading={r.loading}>
-        <Text style={ui.eyebrow}>LUÔN CẬP NHẬT</Text>
-        <Text style={ui.title}>Thông báo của bạn.</Text>
-        <Text style={ui.muted}>
-          Nhắc lịch xuất hiện trong 24 giờ trước sự kiện.{" "}
-          {r.data?.unreadCount ?? 0} thông báo chưa đọc.
-        </Text>
-        <View style={ui.row}>
-          <Button
-            title="Tất cả"
-            secondary={unread}
-            onPress={() => {
-              setUnread(false);
-              setPage(0);
-            }}
-          />
-          <Button
-            title="Chưa đọc"
-            secondary={!unread}
-            onPress={() => {
-              setUnread(true);
-              setPage(0);
-            }}
-          />
-        </View>
-        <Button
-          title="Đánh dấu tất cả đã đọc"
-          secondary
-          disabled={busy || !r.data?.unreadCount}
-          onPress={() => void read()}
-        />
-        <Notice error text={error || r.error} />
-        {r.error && <Button title="Thử lại" secondary onPress={r.reload} />}
-        {r.loading ? (
-          <Loading />
-        ) : r.error ? null : !r.data?.items.length ? (
-          <Text style={ui.muted}>
-            {unread
-              ? "Bạn đã đọc hết thông báo trên trang này."
-              : "Chưa có thông báo. Những cập nhật mới sẽ xuất hiện tại đây."}
-          </Text>
-        ) : (
-          r.data.items.map((n) => (
-            <View
-              key={n.id}
-              style={[
-                ui.card,
-                !n.read_at && {
-                  backgroundColor: colors.accentSurface,
-                  borderColor: colors.primary,
-                },
-              ]}
-            >
-              <View style={ui.row}>
-                <Text style={ui.badge}>{notificationLabels[n.kind]}</Text>
-                {!n.read_at && <Text style={ui.badge}>Chưa đọc</Text>}
-              </View>
-              <Text style={ui.h2}>{n.title}</Text>
-              <Text style={ui.text}>{n.message}</Text>
-              <Text style={ui.muted}>{when(n.created_at)}</Text>
+      <FlatList
+        style={{ flex: 1, backgroundColor: colors.bg }}
+        contentContainerStyle={{
+          padding: 20,
+          paddingBottom: 24 + insets.bottom,
+          gap: 18,
+          width: "100%",
+          maxWidth: 620,
+          alignSelf: "center",
+        }}
+        data={r.items}
+        keyExtractor={(notification) => notification.id}
+        refreshing={r.loading}
+        onRefresh={r.reload}
+        ListHeaderComponent={
+          <View style={{ gap: 18 }}>
+            <Text style={ui.eyebrow}>LUÔN CẬP NHẬT</Text>
+            <Text style={ui.title}>Thông báo của bạn.</Text>
+            <Text style={ui.muted}>
+              Nhắc lịch xuất hiện trong 24 giờ trước sự kiện.{" "}
+              {r.data?.unreadCount ?? 0} thông báo chưa đọc.
+            </Text>
+            <View style={ui.row}>
               <Button
-                title={
-                  n.target === "ORDER"
-                    ? "Xem đơn hàng"
-                    : n.target === "STAFF"
-                      ? "Xem phân công"
-                      : "Xem vé của tôi"
-                }
-                disabled={busy}
-                onPress={() => void read(n, true)}
+                title="Tất cả"
+                secondary={unread}
+                onPress={() => {
+                  setUnread(false);
+                }}
               />
-              {!n.read_at && (
-                <Button
-                  title="Đánh dấu đã đọc"
-                  secondary
-                  disabled={busy}
-                  onPress={() => void read(n)}
-                />
-              )}
+              <Button
+                title="Chưa đọc"
+                secondary={!unread}
+                onPress={() => {
+                  setUnread(true);
+                }}
+              />
             </View>
-          ))
+            <Button
+              title="Đánh dấu tất cả đã đọc"
+              icon="check-circle"
+              secondary
+              disabled={busy || !r.data?.unreadCount}
+              onPress={() => void read()}
+            />
+            <Notice error text={error} />
+          </View>
+        }
+        ListEmptyComponent={
+          r.loading ? (
+            <Loading />
+          ) : !r.error ? (
+            <EmptyState
+              icon="bell"
+              title={unread ? "Bạn đã cập nhật tất cả" : "Hộp thư đang trống"}
+              description={
+                unread
+                  ? "Bạn đã đọc hết thông báo trên trang này."
+                  : "Chưa có thông báo. Những cập nhật mới sẽ xuất hiện tại đây."
+              }
+            />
+          ) : null
+        }
+        renderItem={({ item: n }) => (
+          <View
+            key={n.id}
+            style={[
+              ui.card,
+              !n.read_at && {
+                backgroundColor: colors.accentSurface,
+                borderColor: colors.primary,
+              },
+            ]}
+          >
+            <View style={ui.row}>
+              <IconBadge name={notificationIcons[n.kind]} />
+              <Text style={ui.badge}>{notificationLabels[n.kind]}</Text>
+              {!n.read_at && <Text style={ui.badge}>Chưa đọc</Text>}
+            </View>
+            <Text style={ui.h2}>{n.title}</Text>
+            <Text style={ui.text}>{n.message}</Text>
+            <InfoLine icon="clock" text={when(n.created_at)} />
+            <Button
+              icon={
+                n.target === "ORDER"
+                  ? "shopping-bag"
+                  : n.target === "STAFF"
+                    ? "users"
+                    : "tag"
+              }
+              title={
+                n.target === "ORDER"
+                  ? "Xem đơn hàng"
+                  : n.target === "STAFF"
+                    ? "Xem phân công"
+                    : "Xem vé của tôi"
+              }
+              disabled={busy}
+              onPress={() => void read(n, true)}
+            />
+            {!n.read_at && (
+              <Button
+                title="Đánh dấu đã đọc"
+                icon="check"
+                secondary
+                disabled={busy}
+                onPress={() => void read(n)}
+              />
+            )}
+          </View>
         )}
-        <Pager page={page} setPage={setPage} more={r.data?.hasNext ?? false} />
-      </Screen>
+        ListFooterComponent={
+          <LoadMore
+            more={r.more}
+            loading={r.loadingMore}
+            error={r.error}
+            onLoadMore={r.loadMore}
+            onRetry={r.retry}
+          />
+        }
+      />
     </RequireAuth>
   );
 }

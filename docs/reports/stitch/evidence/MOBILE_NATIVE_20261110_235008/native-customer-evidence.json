@@ -1,0 +1,31 @@
+{
+  "timestamp": "2026-11-10T16:45:30.373Z",
+  "device": "Pixel_8 emulator Android 17",
+  "api": "http://10.0.2.2:8016/api",
+  "checks": [
+    {
+      "label": "native profile loads authenticated customer",
+      "result": "PASS"
+    },
+    {
+      "label": "native profile save acknowledged",
+      "result": "PASS"
+    },
+    {
+      "label": "customer deep link denied admin access",
+      "result": "PASS"
+    },
+    {
+      "label": "native payment result reads PAID from server",
+      "result": "PASS"
+    },
+    {
+      "label": "native ticket wallet renders",
+      "result": "PASS"
+    },
+    {
+      "label": "native session restored after process restart (wait for asynchronous restore)",
+      "result": "PASS"
+    }
+  ]
+}

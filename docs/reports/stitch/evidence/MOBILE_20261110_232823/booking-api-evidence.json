@@ -1,0 +1,146 @@
+{
+  "timestamp": "2026-11-10T15:36:42.222Z",
+  "target": "http://127.0.0.1:8016/api",
+  "calls": [
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/register",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/register",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/register",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/auth/mobile/login",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/admin/categories",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/organizer/events",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/ticket-types",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/organizer/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/submit",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/admin/events/6538dbac-0848-42d9-8b78-4f5b81df84fe/review",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/events/su-kien-mobile-b42dbd7b",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/orders",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "POST",
+      "endpoint": "/orders",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/me/orders/ec65e75b-0bc8-4036-b164-f7792be8eba0",
+      "status": 403,
+      "expected": 403,
+      "code": "FORBIDDEN"
+    },
+    {
+      "method": "POST",
+      "endpoint": "/sepay/orders/ec65e75b-0bc8-4036-b164-f7792be8eba0/payment",
+      "status": 201,
+      "expected": 201
+    },
+    {
+      "method": "POST",
+      "endpoint": "/sepay/orders/ec65e75b-0bc8-4036-b164-f7792be8eba0/payment",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/sepay/orders/ec65e75b-0bc8-4036-b164-f7792be8eba0/payment",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/me/orders/ec65e75b-0bc8-4036-b164-f7792be8eba0",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/me/orders/ec65e75b-0bc8-4036-b164-f7792be8eba0",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/me/order-history/ec65e75b-0bc8-4036-b164-f7792be8eba0",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/me/tickets",
+      "status": 200,
+      "expected": 200
+    },
+    {
+      "method": "GET",
+      "endpoint": "/me/tickets/d8f203f5-e521-49fc-b559-29a46fac20da",
+      "status": 200,
+      "expected": 200
+    }
+  ],
+  "assertions": "create/submit/review/order/idempotency/ownership/SePay/HMAC/PAID/history/tickets"
+}

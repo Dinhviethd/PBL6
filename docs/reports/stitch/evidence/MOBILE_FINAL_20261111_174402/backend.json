@@ -1,0 +1,346 @@
+{
+  "timestamp": "2026-11-11T10:38:30.155Z",
+  "results": [
+    {
+      "file": "admin-organizer-detail.test.cjs",
+      "exitCode": 0,
+      "durationMs": 26306,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "admin-organizer-review.test.cjs",
+      "exitCode": 0,
+      "durationMs": 3325,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "admin-revenue.test.cjs",
+      "exitCode": 0,
+      "durationMs": 547,
+      "isolatedDatabase": false,
+      "tests": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "admin-settings.test.cjs",
+      "exitCode": 0,
+      "durationMs": 3986,
+      "isolatedDatabase": true,
+      "tests": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "attendees.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 7758,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "auth-origin.test.cjs",
+      "exitCode": 0,
+      "durationMs": 864,
+      "isolatedDatabase": false,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "create-event.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 3785,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "create-tickets.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 3999,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "edit-event.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 3876,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "event-analytics.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 5446,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 32069,
+      "isolatedDatabase": true,
+      "tests": 17,
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "media.test.cjs",
+      "exitCode": 0,
+      "durationMs": 484,
+      "isolatedDatabase": false,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "notifications.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 3496,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "notifications.test.cjs",
+      "exitCode": 0,
+      "durationMs": 456,
+      "isolatedDatabase": false,
+      "tests": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "order-details.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 11238,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "order-history.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 4313,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "order-history.test.cjs",
+      "exitCode": 0,
+      "durationMs": 151,
+      "isolatedDatabase": false,
+      "tests": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "order-manager.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 5257,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "organizer-dashboard.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 5947,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "organizer-profile-stats.test.cjs",
+      "exitCode": 0,
+      "durationMs": 177,
+      "isolatedDatabase": false,
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "organizer-profile.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 4596,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "ownership.test.cjs",
+      "exitCode": 0,
+      "durationMs": 1064,
+      "isolatedDatabase": false,
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "qr-scan.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 3471,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "sepay-live-config.test.cjs",
+      "exitCode": 0,
+      "durationMs": 266,
+      "isolatedDatabase": false,
+      "tests": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "sepay-live.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 417,
+      "isolatedDatabase": true,
+      "note": "Suite requires fixed55432; expected skip on isolated55433, do not bypass guard.",
+      "tests": 1,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "file": "sepay-local-guard.test.cjs",
+      "exitCode": 0,
+      "durationMs": 208,
+      "isolatedDatabase": false,
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "sepay-monitor.test.cjs",
+      "exitCode": 0,
+      "durationMs": 148,
+      "isolatedDatabase": false,
+      "tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "sepay-v2.test.cjs",
+      "exitCode": 0,
+      "durationMs": 2197,
+      "isolatedDatabase": false,
+      "tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "sepay.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 10101,
+      "isolatedDatabase": true,
+      "tests": 28,
+      "passed": 28,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "sepay.test.cjs",
+      "exitCode": 0,
+      "durationMs": 574,
+      "isolatedDatabase": false,
+      "tests": 5,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "staff-assignments.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 4155,
+      "isolatedDatabase": true,
+      "tests": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "vnpay.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 3744,
+      "isolatedDatabase": true,
+      "tests": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "vnpay.test.cjs",
+      "exitCode": 0,
+      "durationMs": 159,
+      "isolatedDatabase": false,
+      "tests": 4,
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "file": "wait-queue.integration.test.cjs",
+      "exitCode": 0,
+      "durationMs": 5369,
+      "isolatedDatabase": true,
+      "tests": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}

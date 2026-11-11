@@ -1,0 +1,12 @@
+{
+  "uiFixture": 24,
+  "unit": 34,
+  "localApiUI": 3,
+  "localApiUnexpected": 0,
+  "localReadOnlyHttp": 6,
+  "galleryScreens": 16,
+  "nativeLauncherVerified": true,
+  "nativeDiscoverySmoke": true,
+  "nativeMultiPageAuthenticatedVerified": false,
+  "apkSHA256": "86708791FF584C56A19E3A2A27801686580EBDD361D095B609EA29CE06369DBE"
+}

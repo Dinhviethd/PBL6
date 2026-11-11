@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-11-11T12:03:24.623Z",
+  "device": "emulator-5554",
+  "originalFontScale": "1.0",
+  "checks": [
+    {
+      "flow": "home",
+      "result": "OPENED"
+    },
+    {
+      "flow": "account-guest-gate",
+      "result": "CHECKED"
+    },
+    {
+      "flow": "keyboard-mask-unmask-remask",
+      "result": "PASS"
+    }
+  ]
+}

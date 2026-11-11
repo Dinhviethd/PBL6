@@ -4,6 +4,7 @@ import { SessionProvider } from "../lib/session";
 import { useFonts } from "expo-font";
 import { ActivityIndicator, View } from "react-native";
 import { colors, fonts } from "../components/ui";
+import { homeColors } from "../theme/home";
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     [fonts.regular]: require("../../assets/fonts/be-vietnam-pro-400.ttf"),
@@ -42,13 +43,28 @@ export default function RootLayout() {
         }}
       >
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+        <Stack.Screen name="organizer" options={{ headerShown: false }} />
+        <Stack.Screen name="admin" options={{ headerShown: false }} />
+        <Stack.Screen name="register-organizer" options={{ title: "Đăng ký Ban tổ chức" }} />
+        <Stack.Screen
+          name="explore"
+          options={{
+            title: "Khám phá sự kiện",
+            headerStyle: { backgroundColor: homeColors.bg },
+            headerTintColor: homeColors.text,
+          }}
+        />
         <Stack.Screen name="auth" options={{ title: "Tài khoản EventHub" }} />
+        <Stack.Screen name="profile" options={{ title: "Hồ sơ cá nhân" }} />
+        <Stack.Screen name="change-password" options={{ title: "Bảo mật tài khoản" }} />
+        <Stack.Screen name="reset-password" options={{ title: "Khôi phục mật khẩu" }} />
         <Stack.Screen name="notifications" options={{ title: "Thông báo" }} />
         <Stack.Screen
           name="events/[slug]"
           options={{ title: "Chi tiết sự kiện" }}
         />
         <Stack.Screen name="orders/[id]" options={{ title: "Đơn hàng" }} />
+        <Stack.Screen name="payment-status/[id]" options={{ title: "Kết quả thanh toán" }} />
         <Stack.Screen name="tickets/[id]" options={{ title: "Vé điện tử" }} />
         <Stack.Screen
           name="checkin/[id]"
