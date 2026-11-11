@@ -164,6 +164,8 @@ Ghi chú: quản lý nhân viên check-in (`/organizer/events/:id/staff`) đã c
 
 ### 5.4. Theo dõi review Stitch đã xác minh
 
+Ghi chú A5 — 2026-11-11 22:21:48 UTC+07: sửa header guest tràn ngang làm CI security thất bại (Chromium/Linux 390→391 px trước sửa). Sau sửa không tràn tại 1440/390/375/360/320; regression security 11/11 và smoke 5/5 PASS, build backend/frontend + lint frontend PASS. Đã truy cập và đối chiếu HTML/ảnh Stitch A5; artifact giữ nguyên. Workflow giữ security checks, thêm retry cài Chromium và lưu diagnostics khi lỗi. Chưa push/chạy lại GitHub Actions hoặc deploy live; trạng thái tổng thể A5 vẫn ĐẠT CÓ ĐIỀU KIỆN. [Báo cáo](reports/stitch/A5_20261111_222148_ci_overflow_fix.md).
+
 
 B1 (2026-11-02 00:01:39 UTC+07): đã soạn mô tả chức năng Dashboard để người dùng đưa cho Stitch; chưa render/chỉnh sửa Stitch hoặc tích hợp API. Sidebar hiện chưa nối route Tổng quan; `/organizer` đang mở Quản lý sự kiện. Giữ nguyên trạng thái triển khai; API tổng hợp và giao diện chưa xác minh. [Brief và báo cáo](reports/stitch/B1_20261102_000139_design_brief.md).
 

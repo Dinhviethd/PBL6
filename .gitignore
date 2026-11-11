@@ -14,3 +14,5 @@ opencode.json
 
 # Keep local audit reports out of version control.
 docs/[Aa][Uu][Dd][Ii][Tt]*.md
+
+eventhub-release-001.tar

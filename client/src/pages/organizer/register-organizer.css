@@ -1648,6 +1648,24 @@
 }
 
 @media (max-width: 430px) {
+  /* Keep the shared logo and guest actions inside A5's narrow viewport. */
+  .register-organizer-route .auth-header-inner {
+    height: auto;
+    min-height: 68px;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .register-organizer-route .auth-header .auth-logo {
+    gap: 6px;
+    font-size: 14px;
+  }
+
+  .register-organizer-route .auth-header-actions {
+    gap: 8px;
+  }
+
   .register-hero {
     padding: 24px 18px;
   }

@@ -46,14 +46,23 @@ test("verified A saves and reloads only an allowlisted owner-bound draft", async
 
 test("guest guidance and disabled save remain usable on desktop and mobile", async ({ page, context }, testInfo) => {
   await fixture(context, null);
-  for (const width of [1440, 390]) {
+  for (const width of [1440, 390, 360, 320]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/register-organizer");
     await expect(save(page)).toBeDisabled();
     await expect(page.locator('.reg-alert-info')).toContainText("Đăng nhập trước khi nhập để lưu bản nháp");
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-    expect(await page.locator(".reg-alert-info > div").evaluate(el => el.getBoundingClientRect().width)).toBeGreaterThan(180);
+    await page.evaluate(() => document.fonts.ready);
     await page.screenshot({ path: testInfo.outputPath(`guest-${width}.png`), fullPage: true });
+    const layout = await page.evaluate(() => ({
+      viewport: innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      overflowing: [...document.querySelectorAll("body *")]
+        .filter(el => el.getBoundingClientRect().right > innerWidth + 1)
+        .slice(0, 10)
+        .map(el => ({ tag: el.tagName, className: el.getAttribute("class"), right: el.getBoundingClientRect().right })),
+    }));
+    expect(layout.scrollWidth, JSON.stringify(layout)).toBeLessThanOrEqual(layout.viewport);
+    expect(await page.locator(".reg-alert-info > div").evaluate(el => el.getBoundingClientRect().width)).toBeGreaterThan(180);
   }
 });
 

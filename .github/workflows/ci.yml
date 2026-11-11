@@ -27,10 +27,29 @@ jobs:
       - run: npm ci --prefix mobile
       - run: npm run build
       - run: npm run check
-      - run: npx playwright install --with-deps chromium
+      - name: Install Chromium with retries for transient package mirror failures
         working-directory: client
+        run: |
+          for attempt in 1 2 3; do
+            if npx playwright install --with-deps chromium; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "Chromium installation failed (attempt $attempt/3); retrying in 10 seconds."
+              sleep 10
+            fi
+          done
+          exit 1
       - run: npm run test:security --prefix client
       - run: npm run test:security-smoke --prefix client
+      - name: Upload security test diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-test-results
+          path: client/test-results/
+          if-no-files-found: ignore
+          retention-days: 7
       - run: npm run check:mobile
       - run: npm run export --prefix mobile
       - run: npm test
