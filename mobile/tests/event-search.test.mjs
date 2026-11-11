@@ -63,8 +63,9 @@ test("date filter rejects impossible days and inverted ranges, accepts leap days
       new Date(params.get("from")).getTime(),
     86_399_999,
   );
-  assert.equal(new Date(params.get("from")).getHours(), 0);
-  assert.equal(new Date(params.get("to")).getHours(), 23);
+  // Vietnam's leap day boundaries, independent of the test runner's timezone.
+  assert.equal(params.get("from"), "2028-02-28T17:00:00.000Z");
+  assert.equal(params.get("to"), "2028-02-29T16:59:59.999Z");
 });
 
 test("event cards use Vietnam dates and tolerate invalid timestamps", () => {
