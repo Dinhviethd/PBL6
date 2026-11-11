@@ -31,6 +31,8 @@ export default function OrdersScreen() {
         <Notice error text={r.error} />
         {r.loading ? (
           <Loading />
+        ) : r.error ? (
+          <Button title="Thử lại" onPress={r.reload} />
         ) : !r.data?.length ? (
           <Text style={ui.muted}>Bạn chưa có đơn hàng.</Text>
         ) : (

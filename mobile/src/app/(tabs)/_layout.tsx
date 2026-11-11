@@ -31,7 +31,11 @@ export default function TabLayout() {
           user ? (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Thông báo, ${count.data?.unreadCount ?? 0} chưa đọc`}
+              accessibilityLabel={
+                count.data && !count.error
+                  ? `Thông báo, ${count.data.unreadCount} chưa đọc`
+                  : "Chưa tải được số thông báo"
+              }
               onPress={() => router.push("/notifications")}
               style={{
                 minWidth: 48,
@@ -42,7 +46,7 @@ export default function TabLayout() {
               }}
             >
               <Feather name="bell" color={colors.primary} size={22} />
-              {!!count.data?.unreadCount && (
+              {!count.error && !!count.data?.unreadCount && (
                 <Text
                   style={{
                     position: "absolute",

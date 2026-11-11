@@ -79,7 +79,9 @@ export default function NotificationsScreen() {
         <Text style={ui.title}>Thông báo của bạn.</Text>
         <Text style={ui.muted}>
           Nhắc lịch xuất hiện trong 24 giờ trước sự kiện.{" "}
-          {r.data?.unreadCount ?? 0} thông báo chưa đọc.
+          {r.data && !r.error
+            ? `${r.data.unreadCount} thông báo chưa đọc.`
+            : "Chưa tải được số thông báo."}
         </Text>
         <View style={ui.row}>
           <Button

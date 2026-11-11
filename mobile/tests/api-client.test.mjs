@@ -22,6 +22,30 @@ function memory() {
     },
   };
 }
+
+test("rate limit retains Retry-After metadata without clearing session storage", async () => {
+  const storage = memory();
+  await storage.write("existing-session");
+  const client = createApiClient({
+    baseUrl: "https://example.test/api",
+    native: true,
+    storage,
+    fetcher: async () =>
+      new Response(
+        JSON.stringify({
+          success: false,
+          code: "SEPAY_POLL_LIMIT",
+          message: "limit",
+        }),
+        { status: 429, headers: { "Retry-After": "45" } },
+      ),
+  });
+  await assert.rejects(
+    client.request("/sepay/orders/test/payment"),
+    (e) => e.status === 429 && e.retryAfter === "45",
+  );
+  assert.equal(await storage.read(), "existing-session");
+});
 test("native refresh is single-flight, stores rotated token, preserves booking idempotency", async () => {
   const storage = memory(),
     requests = [];

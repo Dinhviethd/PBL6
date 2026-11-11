@@ -1,5 +1,7 @@
+import { SepayPaymentPanel } from "../../components/sepay-payment";
+import type { PaymentConfig } from "../../lib/sepay";
 import { BookingSteps } from "../../components/booking-steps";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { AppState, Text, View } from "react-native";
 import * as Linking from "expo-linking";
 import { checkoutUrl, paymentMessage } from "../../lib/payment";
@@ -27,7 +29,9 @@ export default function OrderScreen() {
   const { id } = useLocalSearchParams<{ id: string }>(),
     { user } = useSession(),
     r = useResource<Order>(user ? `/me/orders/${id}` : null),
-    config = useResource<{ paymentMode: string }>("/config");
+    config = useResource<PaymentConfig>("/config");
+  const actionLock = useRef(false);
+  const [chooseSepay, setChooseSepay] = useState<string | null>(null);
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [result, setResult] = useState(""),
@@ -36,7 +40,11 @@ export default function OrderScreen() {
     pending = order?.status === "PENDING_PAYMENT",
     payment = order?.payment;
   const reloadOrder = r.reload,
-    paymentId = payment?.id;
+    paymentId = payment?.provider === "sepay" ? undefined : payment?.id;
+  const sepaySelected =
+    chooseSepay === id ||
+    payment?.provider === "sepay" ||
+    (!payment && order?.latest_payment?.provider === "sepay");
   useFocusEffect(
     useCallback(() => {
       if (!pending) return;
@@ -59,6 +67,8 @@ export default function OrderScreen() {
     }, [pending, paymentId, reloadOrder]),
   );
   async function act(action: "start" | "cancel" | "success" | "failure") {
+    if (actionLock.current) return;
+    actionLock.current = true;
     setBusy(true);
     setError("");
     setResult("");
@@ -94,6 +104,7 @@ export default function OrderScreen() {
     } catch (e) {
       setError(errorMessage(e));
     } finally {
+      actionLock.current = false;
       setBusy(false);
     }
   }
@@ -150,14 +161,42 @@ export default function OrderScreen() {
                   text="Giao dịch cần đối soát. Vui lòng liên hệ ban tổ chức."
                 />
               )}
-              {pending && seconds > 0 && (
+              {sepaySelected && (
+                <SepayPaymentPanel
+                  key={id}
+                  orderId={id}
+                  enabled={
+                    !!config.data?.sepayEnabled && !!pending && seconds > 0
+                  }
+                  onPaid={reloadOrder}
+                  onBack={() => setChooseSepay(null)}
+                />
+              )}
+              {pending && seconds > 0 && !sepaySelected && (
                 <>
                   {config.data?.paymentMode === "demo" ? (
                     <Notice text="Thanh toán demo · Không thu tiền thật." />
                   ) : config.data?.paymentMode === "vnpay_sandbox" ? (
                     <Notice text="VNPay Sandbox · Chỉ dùng thông tin thanh toán thử." />
                   ) : (
-                    <Notice text="Thanh toán chưa được bật. Bạn có thể quay lại sau hoặc hủy đơn." />
+                    <Notice
+                      text={
+                        config.error
+                          ? "Không tải được phương thức thanh toán. Hãy thử lại."
+                          : config.loading
+                            ? "Đang tải phương thức thanh toán…"
+                            : config.data?.sepayEnabled
+                              ? "Bạn có thể thanh toán bằng chuyển khoản ngân hàng."
+                              : "Thanh toán chưa được bật. Bạn có thể quay lại sau hoặc hủy đơn."
+                      }
+                    />
+                  )}
+                  {!payment && config.data?.sepayEnabled && (
+                    <Button
+                      title="Chuyển khoản ngân hàng"
+                      disabled={busy}
+                      onPress={() => setChooseSepay(id)}
+                    />
                   )}
                   {!payment && config.data?.paymentMode === "demo" && (
                     <Button
@@ -166,20 +205,22 @@ export default function OrderScreen() {
                       onPress={() => void act("start")}
                     />
                   )}
-                  {config.data?.paymentMode === "vnpay_sandbox" && (
-                    <Button
-                      title="Thanh toán qua VNPay"
-                      disabled={
-                        busy ||
-                        Boolean(
-                          payment?.provider_expires_at &&
+                  {(!payment || payment.provider === "vnpay_sandbox") &&
+                    config.data?.paymentMode === "vnpay_sandbox" && (
+                      <Button
+                        title="Thanh toán qua VNPay"
+                        disabled={
+                          busy ||
+                          Boolean(
+                            payment?.provider_expires_at &&
                             Date.parse(payment.provider_expires_at) <= now,
-                        )
-                      }
-                      onPress={() => void act("start")}
-                    />
-                  )}
-                  {payment?.status === "PENDING" &&
+                          )
+                        }
+                        onPress={() => void act("start")}
+                      />
+                    )}
+                  {payment?.provider === "demo" &&
+                    payment?.status === "PENDING" &&
                     config.data?.paymentMode === "demo" && (
                       <>
                         <Button
@@ -209,7 +250,10 @@ export default function OrderScreen() {
                 title="Cập nhật trạng thái"
                 secondary
                 disabled={r.loading || busy}
-                onPress={r.reload}
+                onPress={() => {
+                  r.reload();
+                  config.reload();
+                }}
               />
             </>
           )

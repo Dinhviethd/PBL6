@@ -58,6 +58,8 @@ export default function StaffScreen() {
         />
         {r.loading ? (
           <Loading />
+        ) : r.error ? (
+          <Button title="Thử lại" onPress={r.reload} />
         ) : !r.data?.length ? (
           <Text style={ui.muted}>
             Chưa có lời mời. Ban tổ chức có thể mời bằng email tài khoản của

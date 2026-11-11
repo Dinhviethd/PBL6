@@ -25,6 +25,8 @@ export default function TicketsScreen() {
         <Notice error text={r.error} />
         {r.loading ? (
           <Loading />
+        ) : r.error ? (
+          <Button title="Thử lại" onPress={r.reload} />
         ) : !r.data?.length ? (
           <Text style={ui.muted}>
             Vé sẽ xuất hiện ở đây sau khi thanh toán thành công.

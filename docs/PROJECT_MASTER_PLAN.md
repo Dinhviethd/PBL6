@@ -1,5 +1,7 @@
 # Project Master Plan — EventHub
 
+> **Kiểm thử native Android / Expo Go 09–10/11/2026:** Samsung SM-G965U / Android 10 / Expo Go 57.0.9, API domain chính thức, 51 ca tổng hợp: **42 PASS / 2 FAIL / 5 BLOCKED / 2 NOT RUN**. Đã kiểm UI đăng nhập/chuyển tài khoản, đặt/hủy đơn TEST, hàng chờ, phân công/thu hồi, quyền camera và đọc QR vật lý, thông báo, LTE/mất mạng/khôi phục. F1: lỗi mạng đồng thời hiện trạng thái rỗng; F2: expo-doctor 20/21, 7 patch mismatch. Live `paymentMode=disabled`, `sepayEnabled=true`, mobile chưa có luồng SePay; chưa nghiệm thu thanh toán → QR mới → check-in hợp lệ/trùng. Fixture đã CANCELLED, 0 pending order/active staff/check-in; không đổi source/dependencies/cấu hình thanh toán. [Báo cáo thiết bị và ma trận](MOBILE-EXPO-QA-20261110-1925.md).
+
 ## 1. Thông tin tài liệu
 
 | Mục | Giá trị |
@@ -373,3 +375,7 @@ Master Plan chỉ điều hướng, không thay thế tài liệu chi tiết.
 | 2026-10-30 | A7: người dùng xác nhận muốn dùng website/runtime khác và Supabase; chưa cung cấp URL frontend/runtime. Repo không có base URL để xác định môi trường đó; local API vẫn không có event, không gửi thông tin đăng nhập hoặc tạo order. Báo cáo `reports/stitch/A7_20261030_220133_supabase_test_target.md`. |
 | 2026-10-30 | A7: kiểm tra URL ngrok do user cung cấp; health/config 200, API có 13 event khác mục tiêu. Read-only Supabase query xác minh `events.id` và `ticket_types.event_id` không có bản ghi; không đăng nhập/tạo order/payment. Cần event được tạo/khôi phục hoặc UUID đúng. Báo cáo `reports/stitch/A7_20261030_220318_supabase_event_check.md`. |
 | 2026-10-30 | A7 post-deploy smoke: bundle hash updated and contains A7 route; existing PAID order browser flow logged in, auto-redirected from Checkout to A7, showed success H1; order and history APIs returned 200/PAID. No new payment. Fresh pending-to-PAID runtime polling still unverified. Report `reports/stitch/A7_20261030_222306_postdeploy_smoke.md`. |
+
+### Mobile — cập nhật 2026-11-11 09:05 (fix-mobile)
+
+Đã triển khai phân biệt lỗi mạng/trạng thái rỗng, số thông báo chưa xác định, SePay qua API hiện có và các bản vá Expo SDK 57. TypeScript/lint + 31 unit tests PASS; Expo Doctor 21/21; export Android/web PASS; backend DB riêng 75 PASS/1 SKIP; UI fixture 4 PASS trên bundle cuối. Không thay API/schema, không ghi giao dịch live. Android chưa kết nối ADB: clipboard/camera/check-in thực tế, Wi-Fi→4G và phiên foreground/background trên máy thật chưa nghiệm thu lại. Chi tiết, bằng chứng và phần còn lại: [MOBILE-FIX-20261111](MOBILE-FIX-20261111.md).

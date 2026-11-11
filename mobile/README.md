@@ -84,3 +84,23 @@ npx eas-cli@latest build --platform ios --profile preview
 Các endpoint native không đặt cookie và từ chối request có Origin trình duyệt. Các API nghiệp vụ giữ nguyên chính sách kiểm quyền/ownership hiện có.
 
 Tài liệu chính thức: [Expo SDK 57](https://docs.expo.dev/versions/v57.0.0/), [Expo Router](https://docs.expo.dev/router/installation/), [Camera](https://docs.expo.dev/versions/v57.0.0/sdk/camera/), [SecureStore](https://docs.expo.dev/versions/v57.0.0/sdk/securestore/).
+
+
+## SePay trên mobile (SDK 57)
+
+Mobile đọc cả `paymentMode` và `sepayEnabled` từ `/api/config`. Khi SePay bật, đơn đang chờ có lựa chọn **Chuyển khoản ngân hàng**, kể cả khi `paymentMode=disabled`. Mở lựa chọn chỉ đọc giao dịch; nút **Tạo giao dịch chuyển khoản** mới gửi POST. Giao dịch đã có được khôi phục bằng GET, không tạo lại tự động.
+
+QR, tài khoản, số tiền và nội dung lấy nguyên từ backend. `expiresAt` là hạn chuyển khoản; `holdUntil` là hạn giữ chỗ/đối soát. Hết hạn QR, lỗi tải hoặc cần đối soát sẽ ẩn hướng dẫn chuyển khoản. Chỉ trạng thái đơn `PAID` từ máy chủ mới mở ví vé. Không có nút tự xác nhận đã chuyển tiền.
+
+App kiểm tra giao dịch mỗi 8 giây khi màn hình đang mở và app foreground, dừng khi kết thúc/hết hạn đối soát; thao tác kiểm tra tay cách nhau tối thiểu 3 giây. HTTP 429 tuân thủ Retry-After (mặc định 60 giây). Clipboard dùng `expo-clipboard` có sẵn trong Expo Go SDK 57, không yêu cầu quyền thư viện ảnh.
+
+Kiểm thử UI bằng API fixture (không chứng nhận Android thật):
+
+```powershell
+# Chạy với mobile web server/export đã được phục vụ tại URL này:
+$env:PLAYWRIGHT_BASE_URL='http://127.0.0.1:8084'
+cd client
+npx playwright test --config playwright.mobile.config.ts fix-mobile.spec.ts notifications-ui.spec.ts wait-queue-ui.spec.ts
+```
+
+Báo cáo triển khai và giới hạn nghiệm thu: [MOBILE-FIX-20261111](../docs/MOBILE-FIX-20261111.md).

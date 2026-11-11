@@ -130,6 +130,8 @@ export default function ExploreScreen() {
       <Notice error text={events.error || categories.error} />
       {events.loading ? (
         <Loading />
+      ) : events.error ? (
+        <Button title="Thử lại" onPress={events.reload} />
       ) : !events.data?.items.length ? (
         <Text style={ui.muted}>
           Chưa có sự kiện phù hợp. Hãy thử bộ lọc khác.

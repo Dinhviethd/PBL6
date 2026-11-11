@@ -12,10 +12,17 @@ export type TokenStorage = {
 export class ApiError extends Error {
   status: number;
   code: string;
-  constructor(message: string, status = 0, code = "NETWORK") {
+  retryAfter: string | null;
+  constructor(
+    message: string,
+    status = 0,
+    code = "NETWORK",
+    retryAfter: string | null = null,
+  ) {
     super(message);
     this.status = status;
     this.code = code;
+    this.retryAfter = retryAfter;
   }
 }
 type Session = { user: User; accessToken: string; refreshToken?: string };
@@ -60,6 +67,7 @@ export function createApiClient(options: {
           result?.message ?? "Máy chủ chưa trả về dữ liệu hợp lệ.",
           response.status,
           result?.code ?? "SERVER",
+          response.headers?.get("Retry-After") ?? null,
         );
       return result.data as T;
     } catch (error) {
