@@ -70,3 +70,70 @@ jobs:
           path: client/test-results/
           if-no-files-found: ignore
           retention-days: 7
+
+  deploy:
+    name: Deploy EventHub to Lightsail
+    needs: [verify, security]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.LIGHTSAIL_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    concurrency:
+      group: lightsail-production
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Build production image
+        run: docker build --platform linux/amd64 -t "eventhub-release:$GITHUB_SHA" .
+
+      - name: Transfer and deploy over SSH
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          LIGHTSAIL_HOST: ${{ vars.LIGHTSAIL_HOST }}
+          LIGHTSAIL_PORT: ${{ vars.LIGHTSAIL_PORT }}
+          LIGHTSAIL_USER: ${{ vars.LIGHTSAIL_USER }}
+          LIGHTSAIL_DEPLOY_SSH_KEY: ${{ secrets.LIGHTSAIL_DEPLOY_SSH_KEY }}
+          LIGHTSAIL_KNOWN_HOSTS: ${{ secrets.LIGHTSAIL_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+
+          latest_sha=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          if [[ "$latest_sha" != "$GITHUB_SHA" ]]; then
+            echo 'A newer commit is on main. Skipping this deployment.'
+            exit 0
+          fi
+
+          : "${LIGHTSAIL_HOST:?Missing repository variable LIGHTSAIL_HOST}"
+          : "${LIGHTSAIL_PORT:?Missing repository variable LIGHTSAIL_PORT}"
+          : "${LIGHTSAIL_USER:?Missing repository variable LIGHTSAIL_USER}"
+          : "${LIGHTSAIL_DEPLOY_SSH_KEY:?Missing secret LIGHTSAIL_DEPLOY_SSH_KEY}"
+          : "${LIGHTSAIL_KNOWN_HOSTS:?Missing secret LIGHTSAIL_KNOWN_HOSTS}"
+
+          ssh_dir=$(mktemp -d)
+          trap 'rm -rf "$ssh_dir"' EXIT
+          umask 077
+          printf '%s\n' "$LIGHTSAIL_DEPLOY_SSH_KEY" | tr -d '\r' > "$ssh_dir/ci_key"
+          printf '%s\n' "$LIGHTSAIL_KNOWN_HOSTS" | tr -d '\r' > "$ssh_dir/known_hosts"
+
+          docker save "eventhub-release:$GITHUB_SHA" | gzip -1 | ssh -T \
+            -i "$ssh_dir/ci_key" \
+            -p "$LIGHTSAIL_PORT" \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o HostKeyAlgorithms=ssh-ed25519 \
+            -o UserKnownHostsFile="$ssh_dir/known_hosts" \
+            -o ConnectTimeout=10 \
+            -- "$LIGHTSAIL_USER@$LIGHTSAIL_HOST" "deploy $GITHUB_SHA" |
+            tee "$ssh_dir/deploy.log"
+
+          if ! grep -Fxq "Deployed eventhub-release:$GITHUB_SHA" "$ssh_dir/deploy.log"; then
+            echo 'Lightsail did not confirm deployment of the requested image.' >&2
+            exit 1
+          fi
