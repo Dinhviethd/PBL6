@@ -1,0 +1,47 @@
+name: Check Lightsail SSH
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+
+    steps:
+      - name: Check production Compose and API health
+        shell: bash
+        env:
+          LIGHTSAIL_HOST: ${{ vars.LIGHTSAIL_HOST }}
+          LIGHTSAIL_PORT: ${{ vars.LIGHTSAIL_PORT }}
+          LIGHTSAIL_USER: ${{ vars.LIGHTSAIL_USER }}
+          LIGHTSAIL_SSH_KEY: ${{ secrets.LIGHTSAIL_SSH_KEY }}
+          LIGHTSAIL_KNOWN_HOSTS: ${{ secrets.LIGHTSAIL_KNOWN_HOSTS }}
+        run: |
+          set -euo pipefail
+
+          : "${LIGHTSAIL_HOST:?Missing repository variable LIGHTSAIL_HOST}"
+          : "${LIGHTSAIL_PORT:?Missing repository variable LIGHTSAIL_PORT}"
+          : "${LIGHTSAIL_USER:?Missing repository variable LIGHTSAIL_USER}"
+          : "${LIGHTSAIL_SSH_KEY:?Missing secret LIGHTSAIL_SSH_KEY}"
+          : "${LIGHTSAIL_KNOWN_HOSTS:?Missing secret LIGHTSAIL_KNOWN_HOSTS}"
+
+          ssh_dir=$(mktemp -d)
+          trap 'rm -rf "$ssh_dir"' EXIT
+          umask 077
+          printf '%s\n' "$LIGHTSAIL_SSH_KEY" | tr -d '\r' > "$ssh_dir/ci_key"
+          printf '%s\n' "$LIGHTSAIL_KNOWN_HOSTS" | tr -d '\r' > "$ssh_dir/known_hosts"
+
+          ssh -T \
+            -i "$ssh_dir/ci_key" \
+            -p "$LIGHTSAIL_PORT" \
+            -o IdentitiesOnly=yes \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=yes \
+            -o HostKeyAlgorithms=ssh-ed25519 \
+            -o UserKnownHostsFile="$ssh_dir/known_hosts" \
+            -o ConnectTimeout=10 \
+            "$LIGHTSAIL_USER@$LIGHTSAIL_HOST"
