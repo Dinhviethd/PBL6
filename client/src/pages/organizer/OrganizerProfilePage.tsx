@@ -144,115 +144,275 @@ function Modal({
   );
 }
 
+const eventPageSize = 6;
+type SelectedEvent = Pick<EventChoice, "id" | "title">;
+
+function publishedEventsUrl(page: number, search = "") {
+  const params = new URLSearchParams({
+    page: String(page),
+    limit: String(eventPageSize),
+    status: "PUBLISHED",
+  });
+  // PostgreSQL ILIKE treats these characters as pattern syntax.
+  if (search) params.set("q", search.replace(/[\\%_]/g, "\\$&"));
+  return `/organizer/events?${params}`;
+}
+
 function EventPicker({
   value,
   onChange,
   disabled,
 }: {
-  value: string;
-  onChange: (id: string) => void;
+  value: SelectedEvent | null;
+  onChange: (event: SelectedEvent) => void;
   disabled: boolean;
 }) {
   const [page, setPage] = useState(0);
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  useEffect(() => {
-    const timer = window.setTimeout(
-      () => setDebouncedSearch(search.trim()),
-      300,
-    );
-    return () => window.clearTimeout(timer);
-  }, [search]);
-  const searchPending = search.trim() !== debouncedSearch;
-  const params = new URLSearchParams({
-    page: String(page),
-    limit: "6",
-    status: "PUBLISHED",
-  });
-  if (debouncedSearch) params.set("q", debouncedSearch);
-  const events = useLoad<EventChoice[]>(`/organizer/events?${params}`);
+  const events = useLoad<EventChoice[]>(publishedEventsUrl(page));
   const total = Number(events.data?.[0]?.total_results ?? 0);
-  const loading = searchPending || events.loading;
+
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [searchPage, setSearchPage] = useState(0);
+  const [attempt, setAttempt] = useState(0);
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const revision = useAuth((state) => state.revision);
+  const [result, setResult] = useState<{
+    url: string;
+    revision: number;
+    attempt: number;
+    items: EventChoice[];
+    error: string;
+  } | null>(null);
+  const keyword = search.trim();
+  const searchUrl = publishedEventsUrl(searchPage, keyword);
+  const currentResult =
+    result?.url === searchUrl &&
+    result.revision === revision &&
+    result.attempt === attempt
+      ? result
+      : null;
+  const matches = currentResult?.items ?? [];
+  const searchTotal = Number(matches[0]?.total_results ?? 0);
+  const expanded = open && !disabled;
+
+  useEffect(() => {
+    if (!expanded) return;
+    let active = true;
+    const timer = window.setTimeout(() => {
+      get<EventChoice[]>(searchUrl)
+        .then((items) => {
+          if (active) {
+            setResult({ url: searchUrl, revision, attempt, items, error: "" });
+          }
+        })
+        .catch((error) => {
+          if (active) {
+            setResult({
+              url: searchUrl,
+              revision,
+              attempt,
+              items: [],
+              error: message(error),
+            });
+          }
+        });
+    }, keyword && searchPage === 0 ? 300 : 0);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [attempt, expanded, keyword, revision, searchPage, searchUrl]);
+
+  useEffect(() => {
+    if (expanded && activeIndex >= 0) {
+      document.getElementById(`b11-event-match-${activeIndex}`)
+        ?.scrollIntoView({ block: "nearest" });
+    }
+  }, [activeIndex, expanded]);
+
+  function closeSearch() {
+    setOpen(false);
+    setActiveIndex(-1);
+  }
+
+  function choose(event: EventChoice) {
+    onChange({ id: event.id, title: event.title });
+    setSearch("");
+    setSearchPage(0);
+    closeSearch();
+  }
+
+  function changeSearchPage(nextPage: number) {
+    inputRef.current?.focus();
+    setSearchPage(nextPage);
+    setActiveIndex(-1);
+  }
+
   return (
     <>
-      <label htmlFor="b11-event-search">Tìm sự kiện đã xuất bản</label>
-      <input
-        id="b11-event-search"
-        type="search"
-        value={search}
-        placeholder="Nhập tên sự kiện"
-        autoComplete="off"
-        disabled={disabled}
-        onChange={(e) => {
-          setSearch(e.target.value);
-          setPage(0);
-          onChange("");
+      <div
+        className="b11-event-picker"
+        onBlur={(event) => {
+          if (!event.currentTarget.contains(event.relatedTarget)) closeSearch();
         }}
-      />
-      <label htmlFor="b11-event-choice">
-        Chọn sự kiện để gửi lời mời check-in
-      </label>
-      {events.error && (
-        <p role="alert">
-          {events.error}
-          <button type="button" onClick={events.reload}>
-            Thử lại
-          </button>
-        </p>
-      )}
-      <select
-        id="b11-event-choice"
-        value={value}
-        required
-        disabled={disabled || loading || Boolean(events.error)}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        <option value="">Chọn sự kiện</option>
-        {events.data?.map((e) => (
-          <option key={e.id} value={e.id}>
-            {e.title}
-          </option>
-        ))}
-      </select>
-      {loading && (
-        <p className="b11-muted" role="status">
-          Đang tải sự kiện…
-        </p>
-      )}
-      {!loading && !events.error && events.data?.length === 0 && (
-        <p className="b11-muted" role="status">
-          {debouncedSearch
-            ? "Không tìm thấy sự kiện đã xuất bản phù hợp."
-            : "Bạn chưa có sự kiện nào đã xuất bản."}
-        </p>
-      )}
-      <div className="b11-pages">
-        <button
-          type="button"
-          disabled={page === 0 || disabled || loading || Boolean(events.error)}
-          onClick={() => {
-            setPage(page - 1);
-            onChange("");
-          }}
-        >
-          Trước
-        </button>
-        <span>Trang {page + 1}</span>
-        <button
-          type="button"
-          disabled={
-            disabled ||
-            loading ||
-            Boolean(events.error) ||
-            (page + 1) * 6 >= total
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && expanded) {
+            event.preventDefault();
+            inputRef.current?.focus();
+            closeSearch();
           }
-          onClick={() => {
-            setPage(page + 1);
-            onChange("");
+        }}
+      >
+        <label htmlFor="b11-event-search">Tìm sự kiện đã xuất bản</label>
+        <input
+          ref={inputRef}
+          id="b11-event-search"
+          type="search"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={expanded}
+          aria-controls={expanded ? "b11-event-matches" : undefined}
+          aria-activedescendant={
+            expanded && matches[activeIndex]
+              ? `b11-event-match-${activeIndex}`
+              : undefined
+          }
+          value={search}
+          placeholder="Nhập tên sự kiện"
+          autoComplete="off"
+          disabled={disabled}
+          onFocus={() => setOpen(true)}
+          onClick={() => setOpen(true)}
+          onChange={(event) => {
+            if (event.target.value.trim() !== keyword) setSearchPage(0);
+            setSearch(event.target.value);
+            setActiveIndex(-1);
+            setOpen(true);
           }}
-        >
-          Sau
-        </button>
+          onKeyDown={(event) => {
+            if (event.nativeEvent.isComposing) return;
+            if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+              event.preventDefault();
+              setOpen(true);
+              if (!matches.length) return;
+              const last = matches.length - 1;
+              if (event.key === "ArrowDown") {
+                setActiveIndex(Math.min(activeIndex + 1, last));
+              } else {
+                setActiveIndex(activeIndex < 0 ? last : Math.max(activeIndex - 1, 0));
+              }
+            } else if (event.key === "Enter") {
+              event.preventDefault();
+              if (expanded && matches[activeIndex]) choose(matches[activeIndex]);
+            }
+          }}
+        />
+        {expanded && (
+          <div className="b11-event-dropdown">
+            <ul id="b11-event-matches" role="listbox" aria-label="Sự kiện phù hợp">
+              {matches.map((event, index) => (
+                <li
+                  key={event.id}
+                  id={`b11-event-match-${index}`}
+                  role="option"
+                  aria-selected={event.id === value?.id}
+                  data-active={index === activeIndex}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={() => choose(event)}
+                >
+                  {event.title}
+                </li>
+              ))}
+            </ul>
+            {!currentResult && <p role="status">Đang tải sự kiện…</p>}
+            {currentResult?.error && (
+              <p role="alert">
+                {currentResult.error}{" "}
+                <button
+                  type="button"
+                  onClick={() => {
+                    inputRef.current?.focus();
+                    setAttempt((previous) => previous + 1);
+                  }}
+                >
+                  Thử lại
+                </button>
+              </p>
+            )}
+            {currentResult && !currentResult.error && !matches.length && (
+              <p role="status">
+                {keyword
+                  ? "Không tìm thấy sự kiện đã xuất bản phù hợp."
+                  : "Bạn chưa có sự kiện nào đã xuất bản."}
+              </p>
+            )}
+            {(searchPage > 0 || searchTotal > eventPageSize) && (
+              <div className="b11-pages">
+                <button
+                  type="button"
+                  disabled={searchPage === 0}
+                  onClick={() => changeSearchPage(searchPage - 1)}
+                >
+                  Kết quả trước
+                </button>
+                <button
+                  type="button"
+                  disabled={(searchPage + 1) * eventPageSize >= searchTotal}
+                  onClick={() => changeSearchPage(searchPage + 1)}
+                >
+                  Xem thêm
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {value && (
+        <p role="status">
+          Sự kiện đã chọn: <strong>{value.title}</strong>
+        </p>
+      )}
+      <div role="group" aria-labelledby="b11-event-choice-label">
+        <p id="b11-event-choice-label">Sự kiện đã xuất bản</p>
+        <ul id="b11-event-choice" aria-labelledby="b11-event-choice-label">
+          {!events.loading && !events.error && events.data?.map((event) => (
+            <li key={event.id}>{event.title}</li>
+          ))}
+        </ul>
+        {events.error && (
+          <p role="alert">
+            {events.error}{" "}
+            <button type="button" onClick={events.reload}>Thử lại</button>
+          </p>
+        )}
+        {events.loading && <p role="status">Đang tải sự kiện…</p>}
+        {!events.loading && !events.error && events.data?.length === 0 && (
+          <p role="status">Bạn chưa có sự kiện nào đã xuất bản.</p>
+        )}
+        <div className="b11-pages">
+          <button
+            type="button"
+            disabled={page === 0 || disabled || events.loading}
+            onClick={() => setPage(page - 1)}
+          >
+            Trước
+          </button>
+          <span>Trang {page + 1}</span>
+          <button
+            type="button"
+            disabled={
+              disabled ||
+              events.loading ||
+              Boolean(events.error) ||
+              (page + 1) * eventPageSize >= total
+            }
+            onClick={() => setPage(page + 1)}
+          >
+            Sau
+          </button>
+        </div>
       </div>
     </>
   );
@@ -263,19 +423,19 @@ function TeamPanel() {
   const [inviteOpen, setInviteOpen] = useState(false),
     [member, setMember] = useState<Member | null>(null),
     [email, setEmail] = useState(""),
-    [eventId, setEventId] = useState(""),
+    [selectedEvent, setSelectedEvent] = useState<SelectedEvent | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   async function invite(e: FormEvent) {
     e.preventDefault();
-    if (busy) return;
+    if (busy || !selectedEvent) return;
     setBusy(true);
     setError("");
     try {
-      await api.post("/organizer/team", { email, eventId });
+      await api.post("/organizer/team", { email, eventId: selectedEvent.id });
       setInviteOpen(false);
       setEmail("");
-      setEventId("");
+      setSelectedEvent(null);
       team.reload();
     } catch (e) {
       setError(message(e));
@@ -385,8 +545,8 @@ function TeamPanel() {
               disabled={busy}
             />
             <EventPicker
-              value={eventId}
-              onChange={setEventId}
+              value={selectedEvent}
+              onChange={setSelectedEvent}
               disabled={busy}
             />
             <p>
@@ -398,7 +558,7 @@ function TeamPanel() {
                 {error}
               </p>
             )}
-            <button className="b11-primary" disabled={busy || !eventId}>
+            <button className="b11-primary" disabled={busy || !selectedEvent}>
               Gửi lời mời
             </button>
           </form>
@@ -426,7 +586,7 @@ function AssignmentModal({
   const assignments = useLoad<Assignment[]>(
     `/organizer/team/${member.id}/events`,
   );
-  const [eventId, setEventId] = useState(""),
+  const [selectedEvent, setSelectedEvent] = useState<SelectedEvent | null>(null),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   async function act(work: () => Promise<unknown>, close = false) {
@@ -487,13 +647,21 @@ function AssignmentModal({
       <form
         onSubmit={(e) => {
           e.preventDefault();
+          if (!selectedEvent) return;
           void act(() =>
-            api.post("/organizer/team", { eventId, email: member.email }),
+            api.post("/organizer/team", {
+              eventId: selectedEvent.id,
+              email: member.email,
+            }),
           );
         }}
       >
-        <EventPicker value={eventId} onChange={setEventId} disabled={busy} />
-        <button className="b11-primary" disabled={busy || !eventId}>
+        <EventPicker
+          value={selectedEvent}
+          onChange={setSelectedEvent}
+          disabled={busy}
+        />
+        <button className="b11-primary" disabled={busy || !selectedEvent}>
           Mời check-in sự kiện
         </button>
       </form>
@@ -1422,6 +1590,16 @@ const styles = `
   display: block; width: 100%; min-width: 0; padding: 11px 12px; border-radius: 8px;
   border: 1px solid transparent; background: #0a0d1c; color: #e0e1f7; font: 13px/1.5 'Be Vietnam Pro', sans-serif;
 }
+.b11-event-picker { position: relative; }
+.b11-event-dropdown { position: absolute; inset: 100% 0 auto; z-index: 1; padding: 8px; border: 1px solid #4a4455; border-radius: 8px; background: #181b2a; box-shadow: 0 8px 24px #080b1a99; }
+.b11-event-dropdown ul, #b11-event-choice { margin: 0; padding: 0; list-style: none; }
+.b11-event-dropdown ul { max-height: 180px; overflow-y: auto; }
+.b11-event-dropdown li, #b11-event-choice li { padding: 6px 10px; overflow-wrap: anywhere; }
+.b11-event-dropdown li { border-radius: 4px; cursor: pointer; }
+.b11-event-dropdown li:hover, .b11-event-dropdown li[data-active="true"] { background: #343951; }
+.b11-event-dropdown [aria-selected="true"] { color: #5de6ff; }
+.b11-event-dropdown .b11-pages { margin: 6px 0 0; }
+#b11-event-choice { border-radius: 8px; background: #0a0d1c; }
 .b11-page textarea { resize: vertical; min-height: 120px; }
 .b11-page input:disabled { opacity: .55; }
 .b11-field-meta { display: flex; justify-content: space-between; gap: 16px; font-size: 10px; color: #aaa3b4; margin-top: 5px; }

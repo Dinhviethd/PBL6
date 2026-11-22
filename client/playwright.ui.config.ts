@@ -9,6 +9,7 @@ export default defineConfig({
     "vnpay-ui.spec.ts",
     "sepay-ui.spec.ts",
     "notifications-ui.spec.ts",
+    "organizer-profile-event-picker.spec.ts",
   ],
   use: { ...base.use, baseURL: "http://127.0.0.1:5174" },
   webServer: {
